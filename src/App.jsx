@@ -3,30 +3,20 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Plans from "./pages/Plans";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
-
-function App() {
+export default function App() {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/plans" element={<Plans />} />
-            import Dashboard from "./pages/Dashboard";
-
-            <Route path="/dashboard" element={<Dashboard />} /> {/* 👈 NEW */}
-
-
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/plans" element={<Plans />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+      <Footer />
     </Router>
   );
 }
-
-export default App;
-
