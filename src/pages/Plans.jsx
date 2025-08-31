@@ -1,30 +1,21 @@
-import { useState } from "react";
-
-function Plans() {
-  const [plans] = useState([
-    { id: 1, name: "Starter Plan", rate: "5% monthly", min: 100, max: 999 },
-    { id: 2, name: "Growth Plan", rate: "8% monthly", min: 1000, max: 4999 },
-    { id: 3, name: "Pro Plan", rate: "12% monthly", min: 5000, max: 20000 },
-  ]);
+export default function Plans() {
+  const plans = [
+    { name: "Starter", price: "$50", returnRate: "5% / week" },
+    { name: "Pro", price: "$200", returnRate: "10% / week" },
+    { name: "Elite", price: "$1000", returnRate: "20% / week" },
+  ];
 
   return (
-    <div className="p-8 text-center bg-slate-50 min-h-[80vh]">
-      <h1 className="text-3xl font-bold mb-6 text-slate-800">
-        Our Investment Plans
-      </h1>
-      <div className="grid gap-6 md:grid-cols-3">
+    <div className="p-8 text-center">
+      <h2 className="text-3xl font-bold mb-6">💼 Investment Plans</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan) => (
-          <div
-            key={plan.id}
-            className="bg-white rounded-xl shadow-lg p-6 text-slate-800 hover:shadow-xl transition"
-          >
-            <h2 className="text-xl font-semibold mb-2">{plan.name}</h2>
-            <p className="text-emerald-600 font-bold">{plan.rate}</p>
-            <p className="text-sm text-slate-500">
-              Invest: ${plan.min} - ${plan.max}
-            </p>
-            <button className="mt-4 bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition">
-              Choose Plan
+          <div key={plan.name} className="bg-white shadow-lg rounded-xl p-6">
+            <h3 className="text-xl font-semibold">{plan.name}</h3>
+            <p className="text-gray-500">{plan.price}</p>
+            <p className="text-emerald-500 font-bold">{plan.returnRate}</p>
+            <button className="mt-4 bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600">
+              Invest Now
             </button>
           </div>
         ))}
@@ -33,4 +24,3 @@ function Plans() {
   );
 }
 
-export default Plans;
