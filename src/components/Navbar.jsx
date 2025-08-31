@@ -22,7 +22,8 @@ export default function Navbar() {
       <div className="flex gap-6 items-center">
         <Link to="/" className="hover:text-emerald-400 transition">Home</Link>
         <Link to="/plans" className="hover:text-emerald-400 transition">Plans</Link>
-        
+        <Link to="/dashboard" className="hover:text-emerald-400 transition">Dashboard</Link>
+
         {/* 🌙☀️ Toggle */}
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -34,4 +35,5 @@ export default function Navbar() {
     </nav>
   );
 }
+
 
