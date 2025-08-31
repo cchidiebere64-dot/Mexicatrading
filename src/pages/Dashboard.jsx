@@ -1,34 +1,74 @@
-
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function Dashboard() {
-  const [investments, setInvestments] = useState([]);
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    const fetchInvestments = async () => {
-      const res = await fetch("http://localhost:5000/api/investments", {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-      const data = await res.json();
-      if (res.ok) setInvestments(data);
-    };
-    fetchInvestments();
+    const token = sessionStorage.getItem("token");
+    axios
+      .get("http://localhost:5000/api/dashboard", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setData(res.data))
+      .catch((err) => console.error("Dashboard fetch error:", err));
   }, []);
 
+  if (!data) return <p className="text-center mt-10">Loading...</p>;
+
   return (
-    <div className="p-6 min-h-screen bg-gray-50">
-      <h2 className="text-3xl font-bold mb-6">👤 Welcome, {user.name}</h2>
-      <h3 className="text-xl mb-4">Your Investments</h3>
-      <div className="space-y-4">
-        {investments.map((inv) => (
-          <div key={inv._id} className="p-4 bg-white rounded shadow">
-            <h4 className="font-semibold">{inv.plan} Plan</h4>
-            <p>Invested: ${inv.amount}</p>
-            <p>Profit: ${inv.profit}</p>
-            <p>Status: {inv.status}</p>
+    <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+      {/* Welcome */}
+      <h2 className="text-3xl font-bold mb-6">👤 Welcome, {data.name}</h2>
+
+      {/* Balance */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-6">
+        <h3 className="text-xl font-semibold">Current Balance</h3>
+        <p className="text-3xl font-bold text-emerald-500">${data.balance}</p>
+      </div>
+
+      {/* Active Plans */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-6">
+        <h3 className="text-xl font-semibold mb-4">📈 Active Plans</h3>
+        {data.plans?.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.plans.map((plan, idx) => (
+              <div
+                key={idx}
+                className="border dark:border-gray-700 p-4 rounded-lg"
+              >
+                <h4 className="font-bold">{plan.name}</h4>
+                <p>Invested: ${plan.invested}</p>
+                <p className="text-emerald-400">Profit: ${plan.profit}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          <p className="text-gray-500">No active plans yet.</p>
+        )}
+      </div>
+
+      {/* Recent History */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+        <h3 className="text-xl font-semibold mb-4">📜 Recent Activity</h3>
+        {data.history?.length > 0 ? (
+          <ul className="space-y-3">
+            {data.history.map((item, idx) => (
+              <li
+                key={idx}
+                className="flex justify-between border-b dark:border-gray-700 pb-2"
+              >
+                <span>{item.action}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {item.date}
+                </span>
+                <span className="font-semibold">{item.amount}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">No activity yet.</p>
+        )}
       </div>
     </div>
   );
