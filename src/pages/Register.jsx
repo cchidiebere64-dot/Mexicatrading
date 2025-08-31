@@ -4,57 +4,87 @@ import { useNavigate } from "react-router-dom";
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (email && password) {
-    sessionStorage.setItem("user", JSON.stringify({ email })); // 👈 sessionStorage
-    navigate("/dashboard");
-  } else {
-    alert("Enter valid details");
-  }
-};
+    if (password !== confirm) {
+      alert("Passwords do not match!");
+      return;
+    }
 
+    if (email && password) {
+      // ✅ Save user details in localStorage (for demo only)
+      localStorage.setItem("user", JSON.stringify({ email, password }));
+
+      alert("✅ Registration successful! Please login.");
+      navigate("/login");
+    } else {
+      alert("Please fill all fields");
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <form
         onSubmit={handleRegister}
-        className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-sm"
+        className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8 w-96"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
-          Register
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
+          📝 Register
         </h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-4 p-3 rounded-lg border dark:border-gray-700 dark:bg-gray-900"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-4 p-3 rounded-lg border dark:border-gray-700 dark:bg-gray-900"
-        />
+
+        <div className="mb-4">
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="********"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">
+            Confirm Password
+          </label>
+          <input
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="********"
+            required
+          />
+        </div>
+
         <button
           type="submit"
-          className="w-full bg-emerald-500 text-white py-2 rounded-lg hover:bg-emerald-600 transition"
+          className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
         >
           Register
         </button>
-        <p className="text-center mt-4 text-gray-600 dark:text-gray-400">
-          Already have an account?{" "}
-          <a href="/login" className="text-emerald-500 hover:underline">
-            Login
-          </a>
-        </p>
       </form>
     </div>
   );
 }
-
