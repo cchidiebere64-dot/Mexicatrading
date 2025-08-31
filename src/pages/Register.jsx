@@ -7,15 +7,16 @@ export default function Register() {
   const navigate = useNavigate();
 
   const handleRegister = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (email && password) {
-      localStorage.setItem("user", JSON.stringify({ email }));
-      navigate("/dashboard"); // auto login
-    } else {
-      alert("Enter valid details");
-    }
-  };
+  if (email && password) {
+    sessionStorage.setItem("user", JSON.stringify({ email })); // 👈 sessionStorage
+    navigate("/dashboard");
+  } else {
+    alert("Enter valid details");
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -56,3 +57,4 @@ export default function Register() {
     </div>
   );
 }
+
