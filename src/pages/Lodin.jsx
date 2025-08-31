@@ -10,7 +10,7 @@ export default function Login() {
     e.preventDefault();
 
     if (email && password) {
-      // ✅ Save user session
+      // ✅ Save user session (clears on browser close)
       sessionStorage.setItem("user", JSON.stringify({ email }));
       navigate("/dashboard");
     } else {
@@ -28,6 +28,7 @@ export default function Login() {
           🔑 Login to Mexicatrading
         </h2>
 
+        {/* Email */}
         <div className="mb-4">
           <label className="block text-gray-700 dark:text-gray-300 mb-2">
             Email
@@ -42,6 +43,7 @@ export default function Login() {
           />
         </div>
 
+        {/* Password */}
         <div className="mb-6">
           <label className="block text-gray-700 dark:text-gray-300 mb-2">
             Password
@@ -56,6 +58,7 @@ export default function Login() {
           />
         </div>
 
+        {/* Button */}
         <button
           type="submit"
           className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
