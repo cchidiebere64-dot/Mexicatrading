@@ -1,29 +1,58 @@
+import { useNavigate } from "react-router-dom";
+
 export default function Plans() {
-  const plans = [
-    { name: "Starter", price: "$50", returnRate: "5% / week" },
-    { name: "Pro", price: "$200", returnRate: "10% / week" },
-    { name: "Elite", price: "$1000", returnRate: "20% / week" },
-  ];
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const handleInvest = async (plan, amount) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/investments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ plan, amount }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(`✅ Invested in ${plan} plan successfully!`);
+        navigate("/dashboard");
+      } else {
+        alert(data.msg);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Investment failed");
+    }
+  };
 
   return (
-    <div className="p-8 text-center bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">💼 Investment Plans</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <div
-            key={plan.name}
-            className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 border border-gray-200 dark:border-gray-700"
+    <div className="p-8">
+      <h2 className="text-3xl font-bold mb-6">💼 Investment Plans</h2>
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Starter Plan</h3>
+          <p>$50 Minimum</p>
+          <button
+            onClick={() => handleInvest("Starter", 50)}
+            className="mt-4 bg-emerald-600 text-white px-4 py-2 rounded"
           >
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{plan.name}</h3>
-            <p className="text-gray-500 dark:text-gray-300">{plan.price}</p>
-            <p className="text-emerald-500 font-bold">{plan.returnRate}</p>
-            <button className="mt-4 bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition">
-              Invest Now
-            </button>
-          </div>
-        ))}
+            Invest $50
+          </button>
+        </div>
+        <div className="bg-white p-6 rounded shadow">
+          <h3 className="text-xl font-semibold mb-2">Pro Plan</h3>
+          <p>$200 Minimum</p>
+          <button
+            onClick={() => handleInvest("Pro", 200)}
+            className="mt-4 bg-emerald-600 text-white px-4 py-2 rounded"
+          >
+            Invest $200
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-
