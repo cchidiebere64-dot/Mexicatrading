@@ -6,22 +6,16 @@ import Home from "./pages/Home";
 import Plans from "./pages/Plans";
 import Dashboard from "./pages/Dashboard";
 
-function App() {
+export default function App() {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/plans" element={<Plans />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <div className="h-screen flex items-center justify-center bg-slate-900">
+      <h1 className="text-5xl font-bold text-emerald-400">
+        🚀 Tailwind v3 is working!
+      </h1>
+    </div>
   );
 }
 
+
 export default App;
+
