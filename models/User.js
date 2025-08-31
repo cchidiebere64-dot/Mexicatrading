@@ -1,27 +1,29 @@
 
-import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
-
-const planSchema = new mongoose.Schema({
-  name: String,
-  invested: Number,
-  profit: Number,
-});
 
 const historySchema = new mongoose.Schema({
   action: String,
-  amount: String,
-  date: String,
+  amount: Number,
+  date: { type: Date, default: Date.now },
 });
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, default: "user" },
   balance: { type: Number, default: 0 },
-  plans: [planSchema],
+  plans: [
+    {
+      name: String,
+      invested: Number,
+      profit: Number,
+    },
+  ],
   history: [historySchema],
+  role: { type: String, default: "user" }, // can be "admin"
 });
 
-export default mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+
+export default User;
+
