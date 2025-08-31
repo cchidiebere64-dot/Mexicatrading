@@ -1,11 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("theme") === "dark"
   );
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("loggedInUser")
+  );
+  const navigate = useNavigate();
 
+  // 🌙 Dark mode toggle
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -16,15 +21,38 @@ export default function Navbar() {
     }
   }, [darkMode]);
 
+  // 🔐 Logout
+  const handleLogout = () => {
+    localStorage.removeItem("loggedInUser");
+    setIsLoggedIn(false);
+    navigate("/login");
+  };
+
   return (
     <nav className="bg-slate-900 dark:bg-gray-100 text-white dark:text-gray-900 p-4 flex justify-between items-center shadow-lg">
       <h1 className="text-2xl font-bold text-emerald-400">Mexicatrading 🚀</h1>
       <div className="flex gap-6 items-center">
         <Link to="/" className="hover:text-emerald-400 transition">Home</Link>
         <Link to="/plans" className="hover:text-emerald-400 transition">Plans</Link>
-        <Link to="/dashboard" className="hover:text-emerald-400 transition">Dashboard</Link>
-        <Link to="/login" className="hover:text-emerald-400">Login</Link>
-<Link to="/register" className="hover:text-emerald-400">Register</Link>
+
+        {isLoggedIn ? (
+          <>
+            <Link to="/dashboard" className="hover:text-emerald-400 transition">
+              Dashboard
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-red-400 hover:text-red-600 transition"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" className="hover:text-emerald-400 transition">Login</Link>
+            <Link to="/register" className="hover:text-emerald-400 transition">Register</Link>
+          </>
+        )}
 
         {/* 🌙☀️ Toggle */}
         <button
@@ -37,6 +65,7 @@ export default function Navbar() {
     </nav>
   );
 }
+
 
 
 
