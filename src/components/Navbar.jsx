@@ -23,6 +23,8 @@ export default function Navbar() {
         <Link to="/" className="hover:text-emerald-400 transition">Home</Link>
         <Link to="/plans" className="hover:text-emerald-400 transition">Plans</Link>
         <Link to="/dashboard" className="hover:text-emerald-400 transition">Dashboard</Link>
+        <Link to="/login" className="hover:text-emerald-400">Login</Link>
+<Link to="/register" className="hover:text-emerald-400">Register</Link>
 
         {/* 🌙☀️ Toggle */}
         <button
@@ -35,5 +37,6 @@ export default function Navbar() {
     </nav>
   );
 }
+
 
 
