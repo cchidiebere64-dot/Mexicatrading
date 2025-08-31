@@ -3,6 +3,8 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Plans from "./pages/Plans";
+import Dashboard from "./pages/Dashboard";
+
 
 function App() {
   return (
@@ -13,6 +15,11 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/plans" element={<Plans />} />
+            import Dashboard from "./pages/Dashboard";
+
+            <Route path="/dashboard" element={<Dashboard />} /> {/* 👈 NEW */}
+
+
           </Routes>
         </main>
         <Footer />
@@ -22,3 +29,4 @@ function App() {
 }
 
 export default App;
+
