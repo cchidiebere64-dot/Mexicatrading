@@ -1,41 +1,41 @@
-// routes/dashboardRoutes.js
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 
 const router = express.Router();
 
-// 💰 Deposit route
+// ✅ Get dashboard data
+router.get("/", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    res.json({
+      name: user.name,
+      balance: user.balance,
+      plans: user.plans,
+      profits: user.profits,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ✅ Deposit endpoint
 router.post("/deposit", authMiddleware, async (req, res) => {
   try {
     const { amount } = req.body;
     if (!amount || amount <= 0) {
-      return res.status(400).json({ msg: "Invalid deposit amount" });
+      return res.status(400).json({ message: "Invalid deposit amount" });
     }
 
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ msg: "User not found" });
-
-    // update balance
     user.balance += amount;
-
-    // add to history
-    user.history.push({
-      action: "Deposit",
-      amount: `$${amount}`,
-      date: new Date().toISOString().split("T")[0],
-    });
-
     await user.save();
 
-    res.json({
-      msg: "Deposit successful",
-      balance: user.balance,
-      history: user.history,
-    });
+    res.json({ message: "Deposit successful", balance: user.balance });
   } catch (err) {
-    res.status(500).json({ msg: "Server error", error: err.message });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 export default router;
+
