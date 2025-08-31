@@ -1,59 +1,109 @@
+import { Link } from "react-router-dom";
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center text-center py-20 px-6">
-        <h1 className="text-4xl md:text-6xl font-extrabold text-emerald-500">
-          Welcome to Mexicatrading 🚀
+    <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+      
+      {/* HERO SECTION */}
+      <section className="min-h-screen flex flex-col items-center justify-center text-center px-6">
+        <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          Invest Smart with <span className="text-emerald-500">Mexicatrading 🚀</span>
         </h1>
-        <p className="mt-6 text-lg md:text-xl max-w-2xl text-gray-600 dark:text-gray-300">
-          Invest smartly, grow your wealth, and manage your trading plans all in one place.
+        <p className="text-lg md:text-xl max-w-2xl mb-8">
+          Your trusted platform for secure and profitable investments. 
+          Grow your wealth with tailored plans that suit your lifestyle.
         </p>
-        <div className="mt-8 flex gap-4">
-          <a
-            href="/register"
-            className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition"
+        <div className="flex gap-4">
+          <Link
+            to="/register"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Get Started
-          </a>
-          <a
-            href="/login"
-            className="border border-emerald-600 text-emerald-600 dark:text-emerald-400 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-emerald-600 hover:text-white transition"
+          </Link>
+          <Link
+            to="/plans"
+            className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
           >
-            Login
-          </a>
+            View Plans
+          </Link>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-16 bg-white dark:bg-gray-800">
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-10 text-center">
-          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow">
-            <h3 className="text-xl font-bold mb-3">📈 Smart Investments</h3>
-            <p>Choose from multiple plans that suit your trading goals and risk profile.</p>
+      {/* FEATURES SECTION */}
+      <section className="py-20 px-6 bg-white dark:bg-gray-800 text-center">
+        <h2 className="text-3xl font-bold mb-10">Why Choose Us?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-4">🔒 Secure</h3>
+            <p>Your funds are protected with bank-level security and encryption.</p>
           </div>
-          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow">
-            <h3 className="text-xl font-bold mb-3">💳 Secure Wallet</h3>
-            <p>Track your deposits, withdrawals, and balances with full transparency.</p>
+          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-4">⚡ Profitable</h3>
+            <p>Earn consistent returns based on your chosen investment plan.</p>
           </div>
-          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow">
-            <h3 className="text-xl font-bold mb-3">🚀 Easy Dashboard</h3>
-            <p>Monitor all your investments and profits in real time with our dashboard.</p>
+          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-4">🌍 Accessible</h3>
+            <p>Invest from anywhere in the world with a simple and easy-to-use platform.</p>
           </div>
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-20 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">
-          Ready to start your trading journey?
-        </h2>
-        <a
-          href="/register"
-          className="bg-emerald-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition"
+      {/* PLANS SECTION */}
+      <section className="py-20 px-6 text-center bg-gray-50 dark:bg-gray-900">
+        <h2 className="text-3xl font-bold mb-10">Our Investment Plans</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-4">Starter</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">Begin with as low as $50.</p>
+            <p className="font-bold text-emerald-500 text-lg mb-6">10% ROI / week</p>
+            <Link to="/register" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg">
+              Invest Now
+            </Link>
+          </div>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-4">Pro</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">For consistent investors.</p>
+            <p className="font-bold text-emerald-500 text-lg mb-6">15% ROI / week</p>
+            <Link to="/register" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg">
+              Invest Now
+            </Link>
+          </div>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-4">Premium</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">Maximize your profits.</p>
+            <p className="font-bold text-emerald-500 text-lg mb-6">20% ROI / week</p>
+            <Link to="/register" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg">
+              Invest Now
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS SECTION */}
+      <section className="py-20 px-6 bg-white dark:bg-gray-800 text-center">
+        <h2 className="text-3xl font-bold mb-10">What Our Investors Say</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow">
+            <p>"Mexicatrading has completely changed how I invest. I earn passive income weekly!"</p>
+            <h4 className="mt-4 font-semibold">– John D.</h4>
+          </div>
+          <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-xl shadow">
+            <p>"Safe, reliable, and profitable. I’ve grown my savings by 30% in just 3 months."</p>
+            <h4 className="mt-4 font-semibold">– Sarah K.</h4>
+          </div>
+        </div>
+      </section>
+
+      {/* CALL TO ACTION */}
+      <section className="py-20 px-6 text-center bg-emerald-600 text-white">
+        <h2 className="text-3xl font-bold mb-6">Ready to Grow Your Wealth?</h2>
+        <p className="mb-8">Join thousands of smart investors today and secure your financial future.</p>
+        <Link
+          to="/register"
+          className="bg-white text-emerald-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-200 transition"
         >
-          Join Now
-        </a>
+          Create Account
+        </Link>
       </section>
     </div>
   );
