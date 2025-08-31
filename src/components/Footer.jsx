@@ -1,12 +1,7 @@
-import React from "react";
-
-function Footer() {
+export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-white p-4 text-center mt-8">
-      © {new Date().getFullYear()} Mexicatrading. All rights reserved.
+    <footer className="bg-slate-900 text-white text-center py-4 mt-12">
+      <p>© {new Date().getFullYear()} Mexicatrading. All rights reserved.</p>
     </footer>
   );
 }
-
-export default Footer;
-
