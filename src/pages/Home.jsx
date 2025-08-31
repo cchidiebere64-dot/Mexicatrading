@@ -1,3 +1,5 @@
+import React from "react";
+
 function Home() {
   return (
     <div className="p-8 text-center bg-gradient-to-b from-emerald-50 to-white min-h-[80vh] flex flex-col items-center justify-center">
@@ -20,3 +22,4 @@ function Home() {
 }
 
 export default Home;
+
