@@ -5,8 +5,9 @@ import connectDB from "./config/db.js";
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";
-import planRoutes from "./routes/planRoutes.js";   // ✅ add plans
-import investmentRoutes from "./routes/investmentRoutes.js"; // ✅ add investments (later)
+import planRoutes from "./routes/planRoutes.js";        // ✅ Plans
+import investmentRoutes from "./routes/investmentRoutes.js"; // ✅ Investments
+import depositRoutes from "./routes/depositRoutes.js";  // ✅ Deposits (add this)
 
 dotenv.config();
 const app = express();
@@ -21,10 +22,11 @@ connectDB();
 // Test route
 app.get("/", (req, res) => res.send("API Running 🚀"));
 
-// Routes
+// API Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/plans", planRoutes);         // ✅ plans API
-app.use("/api/investments", investmentRoutes); // ✅ investments API
+app.use("/api/plans", planRoutes);
+app.use("/api/investments", investmentRoutes);
+app.use("/api/deposit", depositRoutes); // ✅ Deposit route added
 
 // Server
 const PORT = process.env.PORT || 5000;
