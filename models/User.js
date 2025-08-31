@@ -1,5 +1,18 @@
-import mongoose from "mongoose";
+
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
+
+const planSchema = new mongoose.Schema({
+  name: String,
+  invested: Number,
+  profit: Number,
+});
+
+const historySchema = new mongoose.Schema({
+  action: String,
+  amount: String,
+  date: String,
+});
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -7,12 +20,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, default: "user" },
   balance: { type: Number, default: 0 },
-}, { timestamps: true });
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
+  plans: [planSchema],
+  history: [historySchema],
 });
 
 export default mongoose.model("User", userSchema);
