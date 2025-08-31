@@ -7,11 +7,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminRoute from "./components/AdminRoute";
-import AdminDashboard from "./pages/AdminDashboard";
-
+import AdminRoute from "./components/AdminRoute";          // ✅ only once
+import AdminDashboard from "./pages/AdminDashboard";      // ✅ only once
 
 export default function App() {
   return (
@@ -25,7 +22,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* ✅ User Dashboard */}
+            {/* ✅ Protected Dashboard */}
             <Route
               path="/dashboard"
               element={
@@ -51,4 +48,3 @@ export default function App() {
     </Router>
   );
 }
-
