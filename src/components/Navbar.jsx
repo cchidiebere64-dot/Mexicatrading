@@ -17,16 +17,16 @@ export default function Navbar() {
   }, [darkMode]);
 
   return (
-    <nav className="bg-slate-900 dark:bg-gray-800 text-white p-4 flex justify-between items-center shadow-lg">
+    <nav className="bg-slate-900 dark:bg-gray-100 text-white dark:text-gray-900 p-4 flex justify-between items-center shadow-lg">
       <h1 className="text-2xl font-bold text-emerald-400">Mexicatrading 🚀</h1>
       <div className="flex gap-6 items-center">
         <Link to="/" className="hover:text-emerald-400 transition">Home</Link>
         <Link to="/plans" className="hover:text-emerald-400 transition">Plans</Link>
         
-        {/* 🌙☀️ Dark Mode Toggle */}
+        {/* 🌙☀️ Toggle */}
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className="ml-4 bg-emerald-500 px-3 py-1 rounded-lg text-sm hover:bg-emerald-600 transition"
+          className="ml-4 bg-emerald-500 text-white dark:text-white px-3 py-1 rounded-lg text-sm hover:bg-emerald-600 transition"
         >
           {darkMode ? "☀️ Light" : "🌙 Dark"}
         </button>
@@ -34,5 +34,4 @@ export default function Navbar() {
     </nav>
   );
 }
-
 
