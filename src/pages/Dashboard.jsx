@@ -1,3 +1,6 @@
+import React from "react";
+
+
 function Dashboard() {
   return (
     <div className="p-8 bg-slate-50 min-h-[80vh]">
@@ -23,4 +26,5 @@ function Dashboard() {
 }
 
 export default Dashboard;
+
 
