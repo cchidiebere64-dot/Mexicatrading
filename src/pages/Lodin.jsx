@@ -7,16 +7,15 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleLogin = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // fake auth (store in localStorage)
-    if (email && password) {
-      localStorage.setItem("user", JSON.stringify({ email }));
-      navigate("/dashboard"); // redirect
-    } else {
-      alert("Enter email & password");
-    }
-  };
+  if (email && password) {
+    sessionStorage.setItem("user", JSON.stringify({ email })); // 👈 sessionStorage
+    navigate("/dashboard");
+  } else {
+    alert("Enter email & password");
+  }
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -57,3 +56,4 @@ export default function Login() {
     </div>
   );
 }
+
