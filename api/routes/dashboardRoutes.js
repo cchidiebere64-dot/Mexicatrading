@@ -1,24 +1,32 @@
 import express from "express";
 import User from "../models/User.js";
-import authMiddleware from "../middleware/authMiddleware.js"; // to check token
+import Investment from "../models/Investment.js";
 
 const router = express.Router();
 
-// ✅ Get user dashboard
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/:userId", async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ msg: "User not found" });
+    const { userId } = req.params;
+
+    // get user
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // get investments
+    const investments = await Investment.find({ user: userId }).populate("plan");
+
+    // calculate totals
+    const activePlans = investments.filter((inv) => inv.status === "active");
+    const totalProfit = investments.reduce((acc, inv) => acc + inv.profit, 0);
 
     res.json({
       name: user.name,
       balance: user.balance,
-      plans: user.plans,
-      history: user.history,
+      activePlans,
+      totalProfit,
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    res.status(500).json({ message: err.message });
   }
 });
 
