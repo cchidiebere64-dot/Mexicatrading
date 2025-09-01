@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../utils/api"; // ✅ use our axios wrapper
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,22 +12,20 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      // ✅ Call backend login API
-      const res = await API.post("/auth/login", { email, password });
+      const res = await axios.post("https://mexicatradingbackend.onrender.com/api/auth/login", {
+        email,
+        password,
+      });
 
-      // Save token + user in session
+      // ✅ Save token & user info
       sessionStorage.setItem("token", res.data.token);
       sessionStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Redirect based on role
-      if (res.data.user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
-      }
+      alert("✅ Login successful!");
+      navigate("/dashboard");
     } catch (err) {
-      console.error("❌ Login error:", err);
-      alert(err.response?.data?.message || "Invalid credentials");
+      console.error(err.response?.data || err.message);
+      alert(err.response?.data?.message || "Login failed");
     }
   };
 
@@ -42,9 +40,7 @@ export default function Login() {
         </h2>
 
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">
-            Email
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">Email</label>
           <input
             type="email"
             value={email}
@@ -56,9 +52,7 @@ export default function Login() {
         </div>
 
         <div className="mb-6">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">
-            Password
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">Password</label>
           <input
             type="password"
             value={password}
