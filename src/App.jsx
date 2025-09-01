@@ -22,7 +22,7 @@ export default function App() {
             <Route path="/plans" element={<Plans />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-
+            <Route path="/deposit" element={<Deposit />} />
             {/* ✅ Protected Dashboard */}
             <Route
               path="/dashboard"
@@ -49,4 +49,5 @@ export default function App() {
     </Router>
   );
 }
+
 
