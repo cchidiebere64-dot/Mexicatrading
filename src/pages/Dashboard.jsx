@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -78,13 +79,19 @@ export default function Dashboard() {
             onClick={handleDeposit}
             className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition"
           >
-            Deposit
+            💰 Deposit
           </button>
           <button
             onClick={handleWithdraw}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
           >
-            Withdraw
+            🏧 Withdraw
+          </button>
+          <button
+            onClick={() => (window.location.href = "/plans")}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+          >
+            📈 Invest
           </button>
         </div>
       </div>
@@ -135,4 +142,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
