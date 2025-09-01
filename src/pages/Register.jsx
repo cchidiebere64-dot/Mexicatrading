@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../utils/api"; // ✅ axios wrapper
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -7,22 +8,26 @@ export default function Register() {
   const [confirm, setConfirm] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     if (password !== confirm) {
-      alert("Passwords do not match!");
+      alert("❌ Passwords do not match!");
       return;
     }
 
-    if (email && password) {
-      // ✅ Save user details in localStorage (for demo only)
-      localStorage.setItem("user", JSON.stringify({ email, password }));
+    try {
+      // ✅ Call backend API
+      const res = await API.post("/auth/register", {
+        email,
+        password,
+      });
 
       alert("✅ Registration successful! Please login.");
       navigate("/login");
-    } else {
-      alert("Please fill all fields");
+    } catch (err) {
+      console.error("❌ Registration error:", err);
+      alert(err.response?.data?.message || "Registration failed");
     }
   };
 
