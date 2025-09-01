@@ -1,6 +1,9 @@
+
 import { useState } from "react";
 
 export default function Plans() {
+  const API_URL = "https://mexicatradingbackend.onrender.com"; // ✅ Backend URL
+
   const plans = [
     {
       name: "Starter",
@@ -32,7 +35,7 @@ export default function Plans() {
     setMessage("");
 
     try {
-      const res = await fetch("/api/transactions/deposit", {
+      const res = await fetch(`${API_URL}/api/transactions/deposit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,4 +129,3 @@ export default function Plans() {
     </div>
   );
 }
-
