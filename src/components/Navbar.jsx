@@ -23,6 +23,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("token"); // ✅ clear token too
     navigate("/login");
   };
 
@@ -39,9 +40,14 @@ export default function Navbar() {
           <div className="hidden md:flex space-x-8 items-center">
             <Link to="/" className="hover:text-emerald-600">Home</Link>
             <Link to="/plans" className="hover:text-emerald-600">Plans</Link>
+
             {user && (
-              <Link to="/dashboard" className="hover:text-emerald-600">Dashboard</Link>
+              <>
+                <Link to="/deposit" className="hover:text-emerald-600">Deposit</Link>
+                <Link to="/dashboard" className="hover:text-emerald-600">Dashboard</Link>
+              </>
             )}
+
             {user?.role === "admin" && (
               <Link to="/admin" className="hover:text-emerald-600">Admin</Link>
             )}
@@ -97,9 +103,14 @@ export default function Navbar() {
         <div className="md:hidden bg-white dark:bg-gray-900 px-4 py-3 space-y-3 shadow-lg">
           <Link to="/" className="block hover:text-emerald-600" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link to="/plans" className="block hover:text-emerald-600" onClick={() => setMenuOpen(false)}>Plans</Link>
+
           {user && (
-            <Link to="/dashboard" className="block hover:text-emerald-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+            <>
+              <Link to="/deposit" className="block hover:text-emerald-600" onClick={() => setMenuOpen(false)}>Deposit</Link>
+              <Link to="/dashboard" className="block hover:text-emerald-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+            </>
           )}
+
           {user?.role === "admin" && (
             <Link to="/admin" className="block hover:text-emerald-600" onClick={() => setMenuOpen(false)}>Admin</Link>
           )}
