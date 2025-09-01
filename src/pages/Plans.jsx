@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 export default function Plans() {
@@ -39,7 +38,7 @@ export default function Plans() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // user auth token
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`, // 🔑 use sessionStorage for consistency with Dashboard
         },
         body: JSON.stringify({ plan: plan.name, amount: plan.price }),
       });
@@ -53,6 +52,7 @@ export default function Plans() {
         setMessage(`❌ ${data.message || "Failed to process transaction"}`);
       }
     } catch (error) {
+      console.error("Investment error:", error);
       setMessage("❌ Network error. Please try again.");
     }
 
