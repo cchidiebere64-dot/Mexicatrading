@@ -6,16 +6,19 @@ import Plans from "./pages/Plans";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";          // ✅ only once
-import AdminDashboard from "./pages/AdminDashboard";      // ✅ only once
 import Deposit from "./pages/Deposit";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
+        {/* Navbar always visible */}
         <Navbar />
+
+        {/* Main Content */}
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -23,7 +26,8 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/deposit" element={<Deposit />} />
-            {/* ✅ Protected Dashboard */}
+
+            {/* Protected User Dashboard */}
             <Route
               path="/dashboard"
               element={
@@ -33,7 +37,7 @@ export default function App() {
               }
             />
 
-            {/* ✅ Admin Dashboard */}
+            {/* Admin Dashboard */}
             <Route
               path="/admin"
               element={
@@ -44,10 +48,10 @@ export default function App() {
             />
           </Routes>
         </main>
+
+        {/* Footer always visible */}
         <Footer />
       </div>
     </Router>
   );
 }
-
-
