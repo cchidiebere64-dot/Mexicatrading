@@ -1,30 +1,33 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../utils/api"; // ✅ use our axios wrapper
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (email && password) {
-      let role = "user";
-      if (email === "admin@example.com") {
-        role = "admin";
-      }
+    try {
+      // ✅ Call backend login API
+      const res = await API.post("/auth/login", { email, password });
 
-      // ✅ Save user session with role
-      sessionStorage.setItem("user", JSON.stringify({ email, role }));
+      // Save token + user in session
+      sessionStorage.setItem("token", res.data.token);
+      sessionStorage.setItem("user", JSON.stringify(res.data.user));
 
-      if (role === "admin") {
+      // Redirect based on role
+      if (res.data.user.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/dashboard");
       }
-    } else {
-      alert("Please enter email and password");
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      alert(err.response?.data?.message || "Invalid credentials");
     }
   };
 
