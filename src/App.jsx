@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";          // ✅ only once
 import AdminDashboard from "./pages/AdminDashboard";      // ✅ only once
+import Deposit from "./pages/Deposit";
 
 export default function App() {
   return (
@@ -48,3 +49,4 @@ export default function App() {
     </Router>
   );
 }
+
