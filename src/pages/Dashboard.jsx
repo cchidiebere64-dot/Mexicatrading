@@ -1,21 +1,22 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function Dashboard() {
+  const API_URL = "https://mexicatradingbackend.onrender.com"; // ✅ Backend URL
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch dashboard data
   const fetchDashboard = async () => {
     try {
-      const token = sessionStorage.getItem("token");
-      const res = await axios.get("https://mexicatradingbackend.onrender.com/api/dashboard", {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/api/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data);
     } catch (err) {
       console.error(err.response?.data || err.message);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -30,16 +31,16 @@ export default function Dashboard() {
     const amount = prompt("💰 Enter deposit amount:");
     if (!amount) return;
     try {
-      const token = sessionStorage.getItem("token");
+      const token = localStorage.getItem("token");
       await axios.post(
-        "https://mexicatradingbackend.onrender.com/api/deposit",
+        `${API_URL}/api/deposit`,
         { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert("✅ Deposit successful!");
       fetchDashboard(); // refresh balance
     } catch (err) {
-      alert(err.response?.data?.message || "Deposit failed");
+      alert(err.response?.data?.message || "❌ Deposit failed");
     }
   };
 
@@ -48,16 +49,16 @@ export default function Dashboard() {
     const amount = prompt("🏧 Enter withdrawal amount:");
     if (!amount) return;
     try {
-      const token = sessionStorage.getItem("token");
+      const token = localStorage.getItem("token");
       await axios.post(
-        "https://mexicatradingbackend.onrender.com/api/withdraw",
+        `${API_URL}/api/withdraw`,
         { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert("✅ Withdrawal successful!");
       fetchDashboard(); // refresh balance
     } catch (err) {
-      alert(err.response?.data?.message || "Withdrawal failed");
+      alert(err.response?.data?.message || "❌ Withdrawal failed");
     }
   };
 
@@ -100,7 +101,7 @@ export default function Dashboard() {
       <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-6">
         <h3 className="text-xl font-semibold mb-4">Active Plans</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.plans.length > 0 ? (
+          {data.plans && data.plans.length > 0 ? (
             data.plans.map((plan, idx) => (
               <div key={idx} className="border dark:border-gray-700 p-4 rounded-lg">
                 <h4 className="font-bold">{plan.name}</h4>
@@ -118,7 +119,7 @@ export default function Dashboard() {
       <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
         <h3 className="text-xl font-semibold mb-4">📜 Recent Activity</h3>
         <ul className="space-y-3">
-          {data.history.length > 0 ? (
+          {data.history && data.history.length > 0 ? (
             data.history.map((item, idx) => (
               <li key={idx} className="flex justify-between border-b dark:border-gray-700 pb-2">
                 <span>{item.action}</span>
