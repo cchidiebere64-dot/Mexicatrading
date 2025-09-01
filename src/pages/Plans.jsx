@@ -23,6 +23,38 @@ export default function Plans() {
   ];
 
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  // Call backend when user selects a plan
+  const handleChoosePlan = async (plan) => {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/transactions/deposit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // user auth token
+        },
+        body: JSON.stringify({ plan: plan.name, amount: plan.price }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage(`✅ Successfully invested in ${plan.name} plan!`);
+        setSelectedPlan(plan.name);
+      } else {
+        setMessage(`❌ ${data.message || "Failed to process transaction"}`);
+      }
+    } catch (error) {
+      setMessage("❌ Network error. Please try again.");
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -34,6 +66,19 @@ export default function Plans() {
         </p>
       </div>
 
+      {/* Message */}
+      {message && (
+        <div
+          className={`mb-6 p-4 rounded-xl text-center font-semibold ${
+            message.startsWith("✅")
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {message}
+        </div>
+      )}
+
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan, idx) => (
@@ -44,7 +89,6 @@ export default function Plans() {
                 ? "border-emerald-500 ring-2 ring-emerald-400"
                 : "border-gray-200 dark:border-gray-700"
             } bg-white dark:bg-gray-800`}
-            onClick={() => setSelectedPlan(plan.name)}
           >
             <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
             <p className="text-gray-500 dark:text-gray-400 mb-4">{plan.profit}</p>
@@ -67,8 +111,14 @@ export default function Plans() {
                   ? "bg-emerald-500 text-white"
                   : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-emerald-500 hover:text-white"
               }`}
+              onClick={() => handleChoosePlan(plan)}
+              disabled={loading}
             >
-              {selectedPlan === plan.name ? "Selected ✅" : "Choose Plan"}
+              {loading
+                ? "Processing..."
+                : selectedPlan === plan.name
+                ? "Selected ✅"
+                : "Choose Plan"}
             </button>
           </div>
         ))}
@@ -76,3 +126,4 @@ export default function Plans() {
     </div>
   );
 }
+
