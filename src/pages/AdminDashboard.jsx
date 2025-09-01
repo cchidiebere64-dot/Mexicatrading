@@ -1,25 +1,123 @@
-export default function AdminDashboard() {
+import { useState } from "react";
+
+export default function Deposit() {
+  const API_URL = "https://mexicatradingbackend.onrender.com";
+  const [plan, setPlan] = useState("");
+  const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const plans = [
+    { name: "Starter", min: 50 },
+    { name: "Pro", min: 200 },
+    { name: "Elite", min: 1000 },
+  ];
+
+  const handleDeposit = async (e) => {
+    e.preventDefault();
+
+    if (!plan || !amount || isNaN(amount)) {
+      setMessage("❌ Please select a plan and enter a valid amount.");
+      return;
+    }
+
+    const selectedPlan = plans.find((p) => p.name === plan);
+    if (Number(amount) < selectedPlan.min) {
+      setMessage(`❌ Minimum investment for ${plan} is $${selectedPlan.min}`);
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const res = await fetch(`${API_URL}/api/transactions/deposit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ plan, amount }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage("✅ Deposit request submitted! Waiting for admin approval.");
+        setPlan("");
+        setAmount("");
+      } else {
+        setMessage(`❌ ${data.message || "Failed to submit deposit"}`);
+      }
+    } catch (error) {
+      setMessage("❌ Network error. Please try again.");
+    }
+
+    setLoading(false);
+  };
+
   return (
     <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <h2 className="text-3xl font-bold mb-6">🛠 Admin Dashboard</h2>
-      <p className="mb-4">
-        Welcome, Admin! Manage users, investments, and site settings here.
-      </p>
+      <div className="max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+        <h2 className="text-3xl font-bold mb-4 text-center">💰 Make a Deposit</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
+          Select your plan, enter amount, and wait for admin approval.
+        </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-          <h3 className="font-bold">📊 User Stats</h3>
-          <p>200 Active Users</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-          <h3 className="font-bold">💰 Total Investments</h3>
-          <p>$150,000</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-          <h3 className="font-bold">⚙️ Settings</h3>
-          <p>Manage Plans & System Config</p>
-        </div>
+        {message && (
+          <div
+            className={`mb-6 p-4 rounded-xl text-center font-semibold ${
+              message.startsWith("✅")
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleDeposit} className="space-y-4">
+          {/* Plan Select */}
+          <select
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
+            className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+          >
+            <option value="">-- Select Plan --</option>
+            {plans.map((p, i) => (
+              <option key={i} value={p.name}>
+                {p.name} (Min: ${p.min})
+              </option>
+            ))}
+          </select>
+
+          {/* Amount Input */}
+          <input
+            type="number"
+            min="1"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Enter amount"
+            className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+          />
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 rounded-xl font-semibold transition ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-emerald-500 hover:bg-emerald-600 text-white"
+            }`}
+          >
+            {loading ? "Processing..." : "Submit Deposit"}
+          </button>
+        </form>
       </div>
     </div>
   );
 }
+
+}
+
