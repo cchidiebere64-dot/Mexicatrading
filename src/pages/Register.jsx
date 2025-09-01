@@ -1,88 +1,103 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const API_URL = "https://mexicatradingbackend.onrender.com";
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (password !== confirm) {
-      alert("❌ Passwords do not match!");
-      return;
-    }
-
     try {
-      const res = await axios.post("https://mexicatradingbackend.onrender.com/api/auth/register", {
-        email,
-        password,
-      });
-
-      alert("✅ Registration successful! Please login.");
-      console.log("Registered User:", res.data);
-      navigate("/login");
+      const res = await axios.post(`${API_URL}/api/auth/register`, form);
+      if (res.data.token) {
+        sessionStorage.setItem("token", res.data.token);
+        navigate("/dashboard");
+      }
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      alert(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || "Registration failed");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <form
-        onSubmit={handleRegister}
-        className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8 w-96"
+        onSubmit={handleSubmit}
+        className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-          📝 Register
+        <h2 className="text-2xl font-bold mb-6 text-center text-emerald-600">
+          Create an Account 🚀
         </h2>
 
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+
+        {/* Name Field */}
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">Email</label>
+          <label className="block mb-2 font-medium">Full Name</label>
+          <input
+            type="text"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="John Doe"
+          />
+        </div>
+
+        {/* Email Field */}
+        <div className="mb-4">
+          <label className="block mb-2 font-medium">Email</label>
           <input
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             placeholder="you@example.com"
-            required
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="********"
-            required
-          />
-        </div>
-
+        {/* Password Field */}
         <div className="mb-6">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
+          <label className="block mb-2 font-medium">Password</label>
           <input
             type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="********"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
             required
+            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="********"
           />
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-semibold transition"
         >
           Register
         </button>
+
+        <p className="text-sm text-center mt-4 text-gray-600 dark:text-gray-400">
+          Already have an account?{" "}
+          <a href="/login" className="text-emerald-600 hover:underline">
+            Login
+          </a>
+        </p>
       </form>
     </div>
   );
