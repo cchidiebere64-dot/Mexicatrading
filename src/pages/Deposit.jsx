@@ -21,8 +21,9 @@ export default function Deposit() {
       return;
     }
 
-    if (Number(amount) < plans.find((p) => p.name === plan).min) {
-      setMessage(`❌ Minimum investment for ${plan} is $${plans.find((p) => p.name === plan).min}`);
+    const selectedPlan = plans.find((p) => p.name === plan);
+    if (Number(amount) < selectedPlan.min) {
+      setMessage(`❌ Minimum investment for ${plan} is $${selectedPlan.min}`);
       return;
     }
 
@@ -76,6 +77,7 @@ export default function Deposit() {
         )}
 
         <form onSubmit={handleDeposit} className="space-y-4">
+          {/* Plan Select */}
           <select
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
@@ -89,18 +91,25 @@ export default function Deposit() {
             ))}
           </select>
 
+          {/* Amount Input */}
           <input
             type="number"
+            min="1"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Enter amount"
             className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
           />
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition"
+            className={`w-full py-3 rounded-xl font-semibold transition ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-emerald-500 hover:bg-emerald-600 text-white"
+            }`}
           >
             {loading ? "Processing..." : "Submit Deposit"}
           </button>
