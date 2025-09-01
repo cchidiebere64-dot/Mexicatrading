@@ -9,7 +9,7 @@ export default function Dashboard() {
   // Fetch dashboard data
   const fetchDashboard = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token"); // ✅ fixed here
       const res = await axios.get(`${API_URL}/api/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -31,13 +31,13 @@ export default function Dashboard() {
     const amount = prompt("💰 Enter deposit amount:");
     if (!amount) return;
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token"); // ✅ fixed here
       await axios.post(
         `${API_URL}/api/deposit`,
         { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("✅ Deposit successful!");
+      alert("✅ Deposit request submitted! Wait for admin approval.");
       fetchDashboard(); // refresh balance
     } catch (err) {
       alert(err.response?.data?.message || "❌ Deposit failed");
@@ -49,7 +49,7 @@ export default function Dashboard() {
     const amount = prompt("🏧 Enter withdrawal amount:");
     if (!amount) return;
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token"); // ✅ fixed here
       await axios.post(
         `${API_URL}/api/withdraw`,
         { amount },
