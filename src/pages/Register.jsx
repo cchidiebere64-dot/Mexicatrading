@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../utils/api"; // ✅ axios wrapper
+import axios from "axios";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -17,16 +17,16 @@ export default function Register() {
     }
 
     try {
-      // ✅ Call backend API
-      const res = await API.post("/auth/register", {
+      const res = await axios.post("https://mexicatradingbackend.onrender.com/api/auth/register", {
         email,
         password,
       });
 
       alert("✅ Registration successful! Please login.");
+      console.log("Registered User:", res.data);
       navigate("/login");
     } catch (err) {
-      console.error("❌ Registration error:", err);
+      console.error(err.response?.data || err.message);
       alert(err.response?.data?.message || "Registration failed");
     }
   };
@@ -42,9 +42,7 @@ export default function Register() {
         </h2>
 
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">
-            Email
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">Email</label>
           <input
             type="email"
             value={email}
@@ -56,9 +54,7 @@ export default function Register() {
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">
-            Password
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">Password</label>
           <input
             type="password"
             value={password}
@@ -70,9 +66,7 @@ export default function Register() {
         </div>
 
         <div className="mb-6">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2">
-            Confirm Password
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
           <input
             type="password"
             value={confirm}
