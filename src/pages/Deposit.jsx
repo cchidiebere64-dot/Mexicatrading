@@ -2,76 +2,90 @@ import { useState } from "react";
 import axios from "axios";
 
 export default function Deposit() {
+  const API_URL = "https://mexicatradingbackend.onrender.com";
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("Bank Transfer");
-  const [loading, setLoading] = useState(false);
 
-  const handleDeposit = async (e) => {
+  const handleCopy = () => {
+    navigator.clipboard.writeText("UQDFCUmoi5-9Uln74UFEhBzRgySsWUKkg6pYc4OX5ql2GWmy");
+    alert("✅ Address copied to clipboard!");
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!amount || amount <= 0) {
-      alert("Please enter a valid amount");
-      return;
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return alert("❌ Enter a valid deposit amount.");
     }
 
     try {
-      setLoading(true);
-
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "https://mexicatradingbackend.onrender.com/api/transactions/deposit",
-        { amount, method },
+      const token = sessionStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/api/deposit`,
+        { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      alert(res.data.message || "Deposit successful!");
+      alert("✅ Deposit request submitted! Wait for admin approval.");
       setAmount("");
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
+      alert(err.response?.data?.message || "❌ Deposit failed");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-emerald-500 mb-6">
-          💰 Deposit Funds
-        </h2>
+    <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex justify-center">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold text-emerald-600 mb-4">💰 Make a Deposit</h2>
 
-        <form onSubmit={handleDeposit} className="space-y-4">
+        {/* Payment Method */}
+        <p className="font-medium">Select Payment Method:</p>
+        <div className="my-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <p className="font-bold">TON</p>
+          <p className="text-sm text-red-500">
+            ⚠️ Only send TON assets to this address. Other assets will be lost forever.
+          </p>
+        </div>
+
+        {/* Wallet Address */}
+        <div className="mb-4">
+          <p className="font-medium mb-1">TON Address / Account:</p>
+          <div className="flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-lg justify-between">
+            <span className="text-sm break-all">
+              UQDFCUmoi5-9Uln74UFEhBzRgySsWUKkg6pYc4OX5ql2GWmy
+            </span>
+            <button
+              onClick={handleCopy}
+              className="ml-2 bg-emerald-600 text-white px-3 py-1 rounded-lg hover:bg-emerald-700 transition"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+
+        {/* Deposit Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Amount</label>
+            <label className="block font-medium mb-1">Enter Deposit Amount ($):</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount"
-              className="w-full p-3 rounded-lg text-black"
+              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              placeholder="e.g. 100"
+              required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">Payment Method</label>
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className="w-full p-3 rounded-lg text-black"
-            >
-              <option>Bank Transfer</option>
-              <option>Crypto (USDT/BTC)</option>
-              <option>PayPal</option>
-            </select>
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition"
+            className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
           >
-            {loading ? "Processing..." : "Deposit"}
+            Submit Deposit
           </button>
         </form>
+
+        {/* Note */}
+        <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+          📌 Please make payment to the wallet address above and wait for deposit approval.
+        </p>
       </div>
     </div>
   );
