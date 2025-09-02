@@ -28,24 +28,8 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
-  const handleWithdraw = async () => {
-    const amount = prompt("🏧 Enter withdrawal amount:");
-    if (!amount) return;
-    try {
-      const token = sessionStorage.getItem("token");
-      await axios.post(
-        `${API_URL}/api/withdraw`,
-        { amount },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("✅ Withdrawal successful!");
-      fetchDashboard();
-    } catch (err) {
-      alert(err.response?.data?.message || "❌ Withdrawal failed");
-    }
-  };
-
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (loading)
+    return <p className="text-center mt-10">Loading...</p>;
   if (!data)
     return (
       <p className="text-center mt-10 text-red-500">
@@ -75,21 +59,18 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="space-x-3">
-            {/* ✅ Navigate to Deposit Page */}
             <button
               onClick={() => navigate("/deposit")}
               className="bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition"
             >
               💰 Deposit
             </button>
-
             <button
-              onClick={handleWithdraw}
+              onClick={() => navigate("/withdraw")}
               className="bg-red-600 text-white px-5 py-2 rounded-xl hover:bg-red-700 transition"
             >
               🏧 Withdraw
             </button>
-
             <button
               onClick={() => navigate("/plans")}
               className="bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 transition"
