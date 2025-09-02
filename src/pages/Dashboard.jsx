@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Fetch dashboard data
   const fetchDashboard = async () => {
@@ -26,23 +28,6 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
-  const handleDeposit = async () => {
-    const amount = prompt("💰 Enter deposit amount:");
-    if (!amount) return;
-    try {
-      const token = sessionStorage.getItem("token");
-      await axios.post(
-        `${API_URL}/api/deposit`,
-        { amount },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("✅ Deposit request submitted! Wait for admin approval.");
-      fetchDashboard();
-    } catch (err) {
-      alert(err.response?.data?.message || "❌ Deposit failed");
-    }
-  };
-
   const handleWithdraw = async () => {
     const amount = prompt("🏧 Enter withdrawal amount:");
     if (!amount) return;
@@ -61,7 +46,12 @@ export default function Dashboard() {
   };
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
-  if (!data) return <p className="text-center mt-10 text-red-500">❌ Failed to load dashboard</p>;
+  if (!data)
+    return (
+      <p className="text-center mt-10 text-red-500">
+        ❌ Failed to load dashboard
+      </p>
+    );
 
   return (
     <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -85,20 +75,23 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="space-x-3">
+            {/* ✅ Navigate to Deposit Page */}
             <button
-              onClick={handleDeposit}
+              onClick={() => navigate("/deposit")}
               className="bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition"
             >
               💰 Deposit
             </button>
+
             <button
               onClick={handleWithdraw}
               className="bg-red-600 text-white px-5 py-2 rounded-xl hover:bg-red-700 transition"
             >
               🏧 Withdraw
             </button>
+
             <button
-              onClick={() => (window.location.href = "/plans")}
+              onClick={() => navigate("/plans")}
               className="bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 transition"
             >
               📈 Invest
@@ -119,7 +112,8 @@ export default function Dashboard() {
               >
                 <h4 className="font-bold text-lg">{plan.name}</h4>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Invested: <span className="font-semibold">${plan.invested}</span>
+                  Invested:{" "}
+                  <span className="font-semibold">${plan.invested}</span>
                 </p>
                 <p className="text-emerald-500 font-semibold">
                   Profit: ${plan.profit}
@@ -148,7 +142,9 @@ export default function Dashboard() {
                 </span>
                 <span
                   className={`font-semibold ${
-                    item.action === "Deposit" ? "text-emerald-500" : "text-red-500"
+                    item.action === "Deposit"
+                      ? "text-emerald-500"
+                      : "text-red-500"
                   }`}
                 >
                   ${item.amount}
