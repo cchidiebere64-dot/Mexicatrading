@@ -1,123 +1,117 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-export default function Deposit() {
+export default function AdminDashboard() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
-  const [plan, setPlan] = useState("");
-  const [amount, setAmount] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [users, setUsers] = useState([]);
+  const [deposits, setDeposits] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const plans = [
-    { name: "Starter", min: 50 },
-    { name: "Pro", min: 200 },
-    { name: "Elite", min: 1000 },
-  ];
-
-  const handleDeposit = async (e) => {
-    e.preventDefault();
-
-    if (!plan || !amount || isNaN(amount)) {
-      setMessage("❌ Please select a plan and enter a valid amount.");
-      return;
-    }
-
-    const selectedPlan = plans.find((p) => p.name === plan);
-    if (Number(amount) < selectedPlan.min) {
-      setMessage(`❌ Minimum investment for ${plan} is $${selectedPlan.min}`);
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/transactions/deposit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ plan, amount }),
+      const token = sessionStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/api/admin/overview`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage("✅ Deposit request submitted! Waiting for admin approval.");
-        setPlan("");
-        setAmount("");
-      } else {
-        setMessage(`❌ ${data.message || "Failed to submit deposit"}`);
-      }
-    } catch (error) {
-      setMessage("❌ Network error. Please try again.");
+      setUsers(res.data.users);
+      setDeposits(res.data.deposits);
+      setWithdrawals(res.data.withdrawals);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const approveDeposit = async (id) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/api/admin/deposits/approve/${id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("✅ Deposit approved");
+      fetchData();
+    } catch (err) {
+      alert("❌ Failed to approve deposit");
+    }
+  };
+
+  const approveWithdrawal = async (id) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/api/admin/withdrawals/approve/${id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("✅ Withdrawal approved");
+      fetchData();
+    } catch (err) {
+      alert("❌ Failed to approve withdrawal");
+    }
+  };
+
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
+
   return (
-    <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <div className="max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
-        <h2 className="text-3xl font-bold mb-4 text-center">💰 Make a Deposit</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
-          Select your plan, enter amount, and wait for admin approval.
-        </p>
+    <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <h2 className="text-3xl font-bold text-indigo-600 mb-6">⚙️ Admin Dashboard</h2>
 
-        {message && (
-          <div
-            className={`mb-6 p-4 rounded-xl text-center font-semibold ${
-              message.startsWith("✅")
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message}
-          </div>
-        )}
+      {/* Users */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-6">
+        <h3 className="text-xl font-semibold mb-3">👥 Users</h3>
+        <ul>
+          {users.map((u) => (
+            <li key={u._id} className="border-b py-2 flex justify-between">
+              <span>{u.name} ({u.email})</span>
+              <span className="font-bold">${u.balance}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-        <form onSubmit={handleDeposit} className="space-y-4">
-          {/* Plan Select */}
-          <select
-            value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-            className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
-          >
-            <option value="">-- Select Plan --</option>
-            {plans.map((p, i) => (
-              <option key={i} value={p.name}>
-                {p.name} (Min: ${p.min})
-              </option>
-            ))}
-          </select>
+      {/* Deposits */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-6">
+        <h3 className="text-xl font-semibold mb-3">💰 Pending Deposits</h3>
+        <ul>
+          {deposits.map((d) => (
+            <li key={d._id} className="border-b py-2 flex justify-between items-center">
+              <span>{d.user.name} - ${d.amount}</span>
+              <button
+                onClick={() => approveDeposit(d._id)}
+                className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700"
+              >
+                Approve
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-          {/* Amount Input */}
-          <input
-            type="number"
-            min="1"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
-          />
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-3 rounded-xl font-semibold transition ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-emerald-500 hover:bg-emerald-600 text-white"
-            }`}
-          >
-            {loading ? "Processing..." : "Submit Deposit"}
-          </button>
-        </form>
+      {/* Withdrawals */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+        <h3 className="text-xl font-semibold mb-3">🏧 Pending Withdrawals</h3>
+        <ul>
+          {withdrawals.map((w) => (
+            <li key={w._id} className="border-b py-2 flex justify-between items-center">
+              <span>{w.user.name} - ${w.amount}</span>
+              <button
+                onClick={() => approveWithdrawal(w._id)}
+                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+              >
+                Approve
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
 }
-
-
-
