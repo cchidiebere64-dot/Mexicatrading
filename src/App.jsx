@@ -7,10 +7,14 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Deposit from "./pages/Deposit";
+import Withdraw from "./pages/Withdraw";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AdminDashboard from "./pages/AdminDashboard";
-import Withdraw from "./pages/Withdraw";
+import AdminUsers from "./pages/AdminUsers";
+import AdminDeposits from "./pages/AdminDeposits";
+import AdminWithdrawals from "./pages/AdminWithdrawals";
+import AdminPlans from "./pages/AdminPlans";
 
 export default function App() {
   return (
@@ -22,13 +26,13 @@ export default function App() {
         {/* Main Content */}
         <main className="flex-grow">
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/plans" element={<Plans />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/deposit" element={<Deposit />} />
-            <Route path="/withdraw" element={<Withdraw />} />
-            {/* Protected User Dashboard */}
+
+            {/* User Routes */}
             <Route
               path="/dashboard"
               element={
@@ -37,13 +41,61 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/deposit"
+              element={
+                <ProtectedRoute>
+                  <Deposit />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/withdraw"
+              element={
+                <ProtectedRoute>
+                  <Withdraw />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* Admin Dashboard */}
+            {/* Admin Routes */}
             <Route
               path="/admin"
               element={
                 <AdminRoute>
                   <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminRoute>
+                  <AdminUsers />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/deposits"
+              element={
+                <AdminRoute>
+                  <AdminDeposits />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/withdrawals"
+              element={
+                <AdminRoute>
+                  <AdminWithdrawals />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/plans"
+              element={
+                <AdminRoute>
+                  <AdminPlans />
                 </AdminRoute>
               }
             />
@@ -56,4 +108,3 @@ export default function App() {
     </Router>
   );
 }
-
