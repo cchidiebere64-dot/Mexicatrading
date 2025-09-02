@@ -1,117 +1,75 @@
 import { useState } from "react";
+import axios from "axios";
 
 export default function Deposit() {
-  const API_URL = "https://mexicatradingbackend.onrender.com";
-  const [plan, setPlan] = useState("");
   const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("Bank Transfer");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-
-  const plans = [
-    { name: "Starter", min: 50 },
-    { name: "Pro", min: 200 },
-    { name: "Elite", min: 1000 },
-  ];
 
   const handleDeposit = async (e) => {
     e.preventDefault();
-
-    if (!plan || !amount || isNaN(amount)) {
-      setMessage("❌ Please select a plan and enter a valid amount.");
+    if (!amount || amount <= 0) {
+      alert("Please enter a valid amount");
       return;
     }
-
-    const selectedPlan = plans.find((p) => p.name === plan);
-    if (Number(amount) < selectedPlan.min) {
-      setMessage(`❌ Minimum investment for ${plan} is $${selectedPlan.min}`);
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
 
     try {
-      const res = await fetch(`${API_URL}/api/transactions/deposit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ plan, amount }),
-      });
+      setLoading(true);
 
-      const data = await res.json();
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        "https://mexicatradingbackend.onrender.com/api/transactions/deposit",
+        { amount, method },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      if (res.ok) {
-        setMessage("✅ Deposit request submitted! Waiting for admin approval.");
-        setPlan("");
-        setAmount("");
-      } else {
-        setMessage(`❌ ${data.message || "Failed to submit deposit"}`);
-      }
-    } catch (error) {
-      setMessage("❌ Network error. Please try again.");
+      alert(res.data.message || "Deposit successful!");
+      setAmount("");
+    } catch (err) {
+      alert(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <div className="max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
-        <h2 className="text-3xl font-bold mb-4 text-center">💰 Make a Deposit</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
-          Select your plan, enter amount, and wait for admin approval.
-        </p>
-
-        {message && (
-          <div
-            className={`mb-6 p-4 rounded-xl text-center font-semibold ${
-              message.startsWith("✅")
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message}
-          </div>
-        )}
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h2 className="text-2xl font-bold text-center text-emerald-500 mb-6">
+          💰 Deposit Funds
+        </h2>
 
         <form onSubmit={handleDeposit} className="space-y-4">
-          {/* Plan Select */}
-          <select
-            value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-            className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
-          >
-            <option value="">-- Select Plan --</option>
-            {plans.map((p, i) => (
-              <option key={i} value={p.name}>
-                {p.name} (Min: ${p.min})
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">Amount</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Enter amount"
+              className="w-full p-3 rounded-lg text-black"
+            />
+          </div>
 
-          {/* Amount Input */}
-          <input
-            type="number"
-            min="1"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
-          />
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">Payment Method</label>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              className="w-full p-3 rounded-lg text-black"
+            >
+              <option>Bank Transfer</option>
+              <option>Crypto (USDT/BTC)</option>
+              <option>PayPal</option>
+            </select>
+          </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 rounded-xl font-semibold transition ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-emerald-500 hover:bg-emerald-600 text-white"
-            }`}
+            className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition"
           >
-            {loading ? "Processing..." : "Submit Deposit"}
+            {loading ? "Processing..." : "Deposit"}
           </button>
         </form>
       </div>
