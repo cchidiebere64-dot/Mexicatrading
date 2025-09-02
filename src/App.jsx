@@ -10,6 +10,7 @@ import Deposit from "./pages/Deposit";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AdminDashboard from "./pages/AdminDashboard";
+import Withdraw from "./pages/Withdraw";
 
 export default function App() {
   return (
@@ -26,7 +27,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/deposit" element={<Deposit />} />
-
+            <Route path="/withdraw" element={<Withdraw />} />
             {/* Protected User Dashboard */}
             <Route
               path="/dashboard"
@@ -55,3 +56,4 @@ export default function App() {
     </Router>
   );
 }
+
