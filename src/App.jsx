@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Plans from "./pages/Plans";
 import Login from "./pages/Login";
@@ -108,3 +107,4 @@ export default function App() {
     </Router>
   );
 }
+
