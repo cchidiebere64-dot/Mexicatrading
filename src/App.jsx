@@ -1,14 +1,13 @@
-import React, { useState } from "react"; // ✅ You must import useState
+import React, { useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 
 export default function App() {
-  const [token, setToken] = useState(sessionStorage.getItem("token") || "");
+  const rawUser = sessionStorage.getItem("user");
   const [user, setUser] = useState(
-    sessionStorage.getItem("user")
-      ? JSON.parse(sessionStorage.getItem("user"))
-      : null
+    rawUser && rawUser !== "undefined" ? JSON.parse(rawUser) : null
   );
+  const [token, setToken] = useState(sessionStorage.getItem("token") || "");
 
   return (
     <div className="flex flex-col min-h-screen">
