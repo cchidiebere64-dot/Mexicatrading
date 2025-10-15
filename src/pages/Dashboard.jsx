@@ -9,11 +9,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const fetchDashboard = async () => {
-    // ✅ Read token as plain string (no JSON.parse)
-    const token = sessionStorage.getItem("token");
+    const token = sessionStorage.getItem("token"); // ✅ plain string
 
     if (!token) {
-      console.error("No token found. Redirecting to login.");
       navigate("/login");
       return;
     }
@@ -22,10 +20,9 @@ export default function Dashboard() {
       const res = await axios.get(`${API_URL}/api/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Dashboard data:", res.data);
       setData(res.data);
     } catch (err) {
-      console.error("Dashboard fetch error:", err.response?.data || err.message);
+      console.error(err.response?.data || err.message);
       setData(null);
     } finally {
       setLoading(false);
@@ -49,7 +46,6 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-      {/* Header */}
       <div className="mb-8 text-center">
         <h2 className="text-4xl font-bold text-emerald-600">
           👋 Welcome, {data.name || "User"}
@@ -67,26 +63,6 @@ export default function Dashboard() {
             <p className="text-4xl font-extrabold text-emerald-500 mt-2">
               ${data.balance ?? 0}
             </p>
-          </div>
-          <div className="space-x-3">
-            <button
-              onClick={() => navigate("/deposit")}
-              className="bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition"
-            >
-              💰 Deposit
-            </button>
-            <button
-              onClick={() => navigate("/withdraw")}
-              className="bg-red-600 text-white px-5 py-2 rounded-xl hover:bg-red-700 transition"
-            >
-              🏧 Withdraw
-            </button>
-            <button
-              onClick={() => navigate("/plans")}
-              className="bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 transition"
-            >
-              📈 Invest
-            </button>
           </div>
         </div>
       </div>
