@@ -1,18 +1,15 @@
 // src/utils/storage.js
-export const getJSON = (key) => {
-  try {
-    const raw = sessionStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch (err) {
-    console.error(`Failed to parse JSON from ${key}:`, err);
-    return null;
-  }
-
-  // Optional helper to get user object safely
-export function getJSON(key) {
-  const item = sessionStorage.getItem(key);
-  return item ? JSON.parse(item) : null;
+export function getToken() {
+  const token = sessionStorage.getItem("token");
+  return token ? token : null;
 }
 
-};
-
+export function getUser() {
+  const userStr = sessionStorage.getItem("user");
+  try {
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (err) {
+    console.error("Failed to parse user from sessionStorage", err);
+    return null;
+  }
+}
