@@ -1,15 +1,15 @@
 // src/utils/storage.js
 export function getToken() {
-  const token = sessionStorage.getItem("token");
-  return token ? token : null;
+  return sessionStorage.getItem("token") || null;
 }
 
 export function getUser() {
-  const userStr = sessionStorage.getItem("user");
+  const raw = sessionStorage.getItem("user");
+  if (!raw) return null;
   try {
-    return userStr ? JSON.parse(userStr) : null;
+    return JSON.parse(raw);
   } catch (err) {
-    console.error("Failed to parse user from sessionStorage", err);
+    console.warn("Failed to parse user from sessionStorage", err);
     return null;
   }
 }
