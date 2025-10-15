@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -12,14 +11,14 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("https://mexicatradingbackend.onrender.com/api/auth/login", {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        "https://mexicatradingbackend.onrender.com/api/auth/login",
+        { email, password }
+      );
 
-      // ✅ Save token & user info
-      sessionStorage.setItem("token", res.data.token);
-      sessionStorage.setItem("user", JSON.stringify(res.data.user));
+      // ✅ Save token and user info
+      sessionStorage.setItem("token", res.data.token); // plain string
+      sessionStorage.setItem("user", JSON.stringify(res.data.user)); // JSON string
 
       alert("✅ Login successful!");
       navigate("/dashboard");
