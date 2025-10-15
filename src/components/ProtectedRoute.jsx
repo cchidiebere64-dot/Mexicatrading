@@ -1,10 +1,8 @@
-// src/components/ProtectedRoute.js
 import React from "react";
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }) {
-  // ✅ Read token as plain string (no JSON.parse)
-  const token = sessionStorage.getItem("token");
+  const token = sessionStorage.getItem("token"); // ✅ plain string
 
   if (!token) {
     // If no token, redirect to login
