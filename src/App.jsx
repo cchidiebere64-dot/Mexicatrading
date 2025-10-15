@@ -1,37 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import { getToken, getUser } from "./utils/storage";
 
 export default function App() {
-  const [token, setToken] = useState(sessionStorage.getItem("token") || "");
-  const [user, setUser] = useState(() => {
-    const rawUser = sessionStorage.getItem("user");
-    if (!rawUser) return null;
-    try {
-      return JSON.parse(rawUser);
-    } catch {
-      console.warn("Failed to parse user from sessionStorage");
-      return null;
-    }
-  });
-
-  // Sync state if sessionStorage changes (e.g., login/logout)
-  useEffect(() => {
-    const handleStorage = () => {
-      setToken(sessionStorage.getItem("token") || "");
-      const rawUser = sessionStorage.getItem("user");
-      if (!rawUser) return setUser(null);
-      try {
-        setUser(JSON.parse(rawUser));
-      } catch {
-        setUser(null);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+  const [token, setToken] = useState(getToken());
+  const [user, setUser] = useState(getUser());
 
   return (
     <div className="flex flex-col min-h-screen">
