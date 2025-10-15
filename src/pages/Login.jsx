@@ -13,26 +13,37 @@ export default function Login({ setToken, setUser }) {
     setError("");
 
     try {
-      console.log("Logging in...");
+      console.log("🔹 Sending login request...");
       const res = await axios.post(
         "https://mexicatradingbackend.onrender.com/api/auth/login",
         { email, password }
       );
 
-      console.log("Response:", res.data);
+      console.log("✅ Login response:", res.data);
 
       if (res.data?.token) {
-        sessionStorage.setItem("token", res.data.token);
-        sessionStorage.setItem("user", JSON.stringify(res.data.user));
+        const userData = {
+          _id: res.data._id,
+          name: res.data.name,
+          email: res.data.email,
+          balance: res.data.balance,
+        };
 
+        // Save to sessionStorage
+        sessionStorage.setItem("token", res.data.token);
+        sessionStorage.setItem("user", JSON.stringify(userData));
+
+        // Update state
         setToken(res.data.token);
-        setUser(res.data.user);
+        setUser(userData);
+
+        console.log("🎯 Login success, switching to Dashboard...");
       } else {
-        setError("Invalid login response");
+        setError("Invalid response from server.");
       }
     } catch (err) {
-      console.error("Login failed:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Login failed");
+      console.error("❌ Login failed:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Login failed. Try again.");
     } finally {
       setLoading(false);
     }
