@@ -1,17 +1,24 @@
-import { useState } from "react";
-import Login from "./pages/Login";
+import React, { useState } from "react"; // ✅ You must import useState
 import Dashboard from "./pages/Dashboard";
-import { getToken, getUser } from "./utils/storage";
+import Login from "./pages/Login";
 
 export default function App() {
-  const [token, setToken] = useState(getToken());
-  const [user, setUser] = useState(getUser());
+  const [token, setToken] = useState(sessionStorage.getItem("token") || "");
+  const [user, setUser] = useState(
+    sessionStorage.getItem("user")
+      ? JSON.parse(sessionStorage.getItem("user"))
+      : null
+  );
 
-  // Show Login if not logged in
-  if (!token || !user) {
-    return <Login setToken={setToken} setUser={setUser} />;
-  }
-
-  // Once logged in, show Dashboard
-  return <Dashboard />;
+  return (
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-grow">
+        {token && user ? (
+          <Dashboard />
+        ) : (
+          <Login setToken={setToken} setUser={setUser} />
+        )}
+      </main>
+    </div>
+  );
 }
