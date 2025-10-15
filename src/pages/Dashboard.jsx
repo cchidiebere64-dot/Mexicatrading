@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getToken, getUser } from "../utils/storage";
 
 export default function Dashboard() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
@@ -8,30 +9,30 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchDashboard = async () => {
-    const token = sessionStorage.getItem("token"); // ✅ plain string
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const res = await axios.get(`${API_URL}/api/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setData(res.data);
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchDashboard = async () => {
+      const token = getToken();
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${API_URL}/api/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setData(res.data);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err.response?.data || err.message);
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDashboard();
-  }, []);
+  }, [navigate]);
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
   if (!data)
@@ -46,6 +47,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      {/* Header */}
       <div className="mb-8 text-center">
         <h2 className="text-4xl font-bold text-emerald-600">
           👋 Welcome, {data.name || "User"}
