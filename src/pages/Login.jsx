@@ -13,26 +13,26 @@ export default function Login({ setToken, setUser }) {
     setError("");
 
     try {
-      console.log("🔹 Sending login request...");
+      console.log("Logging in...");
       const res = await axios.post(
         "https://mexicatradingbackend.onrender.com/api/auth/login",
         { email, password }
       );
 
-      console.log("✅ Login response:", res.data);
+      console.log("Response:", res.data);
 
-      if (res.data && res.data.token) {
+      if (res.data?.token) {
         sessionStorage.setItem("token", res.data.token);
         sessionStorage.setItem("user", JSON.stringify(res.data.user));
 
         setToken(res.data.token);
         setUser(res.data.user);
       } else {
-        throw new Error("Invalid response from server");
+        setError("Invalid login response");
       }
     } catch (err) {
-      console.error("❌ Login failed:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Login failed, please try again.");
+      console.error("Login failed:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -45,7 +45,7 @@ export default function Login({ setToken, setUser }) {
         className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-96"
       >
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-          🔐 Login to Your Account
+          Login to Mexicatrading
         </h2>
 
         {error && (
