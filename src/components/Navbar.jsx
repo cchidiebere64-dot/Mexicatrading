@@ -4,13 +4,25 @@ import { Menu, X, Sun, Moon, LogOut } from "lucide-react";
 
 export default function Navbar() {
   const navigate = useNavigate();
+
+  // Safe user parsing
+  const [user, setUser] = useState(() => {
+    const rawUser = sessionStorage.getItem("user");
+    if (!rawUser) return null;
+    try {
+      return JSON.parse(rawUser);
+    } catch {
+      console.warn("Failed to parse user from sessionStorage");
+      return null;
+    }
+  });
+
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("theme") === "dark"
   );
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const user = JSON.parse(sessionStorage.getItem("user"));
-
+  // Dark mode effect
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -21,9 +33,11 @@ export default function Navbar() {
     }
   }, [darkMode]);
 
+  // Logout handler
   const handleLogout = () => {
     sessionStorage.removeItem("user");
-    sessionStorage.removeItem("token"); // ✅ clear token too
+    sessionStorage.removeItem("token");
+    setUser(null);
     navigate("/login");
   };
 
@@ -52,7 +66,6 @@ export default function Navbar() {
               <Link to="/admin" className="hover:text-emerald-600">Admin</Link>
             )}
 
-            {/* Auth Buttons */}
             {!user ? (
               <>
                 <Link
