@@ -16,6 +16,9 @@ export default function Login() {
         { email, password }
       );
 
+      sessionStorage.setItem("token", res.data.token); // plain string
+sessionStorage.setItem("user", JSON.stringify(res.data.user)); // JSON for user
+
       // ✅ Save token and user info
       sessionStorage.setItem("token", res.data.token); // plain string
       sessionStorage.setItem("user", JSON.stringify(res.data.user)); // JSON string
@@ -72,3 +75,4 @@ export default function Login() {
     </div>
   );
 }
+
