@@ -5,15 +5,14 @@ import Dashboard from "./pages/Dashboard";
 export default function App() {
   const [token, setToken] = useState(sessionStorage.getItem("token") || "");
   const [user, setUser] = useState(() => {
-    const saved = sessionStorage.getItem("user");
+    const savedUser = sessionStorage.getItem("user");
     try {
-      return saved ? JSON.parse(saved) : null;
+      return savedUser ? JSON.parse(savedUser) : null;
     } catch {
       return null;
     }
   });
 
-  // When token or user changes, update sessionStorage
   useEffect(() => {
     if (token && user) {
       sessionStorage.setItem("token", token);
@@ -21,11 +20,13 @@ export default function App() {
     }
   }, [token, user]);
 
-  // If token/user missing, show login
+  console.log("Rendering App.jsx...");
+  console.log("Token:", token ? "✅ Present" : "❌ Missing");
+  console.log("User:", user);
+
   if (!token || !user) {
     return <Login setToken={setToken} setUser={setUser} />;
   }
 
-  // Otherwise show dashboard
   return <Dashboard />;
 }
