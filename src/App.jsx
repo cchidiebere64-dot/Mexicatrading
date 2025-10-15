@@ -5,11 +5,18 @@ import Navbar from "./components/Navbar";
 
 export default function App() {
   const [token, setToken] = useState(sessionStorage.getItem("token") || "");
-  const [user, setUser] = useState(
-    sessionStorage.getItem("user")
-      ? JSON.parse(sessionStorage.getItem("user"))
-      : null
-  );
+
+  // Safely parse user
+  const [user, setUser] = useState(() => {
+    const rawUser = sessionStorage.getItem("user");
+    if (!rawUser) return null;
+    try {
+      return JSON.parse(rawUser);
+    } catch {
+      console.warn("Failed to parse user from sessionStorage");
+      return null;
+    }
+  });
 
   return (
     <div className="flex flex-col min-h-screen">
