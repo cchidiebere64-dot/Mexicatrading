@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Navbar from "./components/Navbar";
 
 export default function App() {
   const [token, setToken] = useState(sessionStorage.getItem("token") || "");
@@ -10,17 +11,16 @@ export default function App() {
       : null
   );
 
-  // If user is logged in, show Dashboard
-  if (token && user) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-grow">
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-grow">
+        {token && user ? (
           <Dashboard />
-        </main>
-      </div>
-    );
-  }
-
-  // If not logged in, show Login
-  return <Login setToken={setToken} setUser={setUser} />;
+        ) : (
+          <Login setToken={setToken} setUser={setUser} />
+        )}
+      </main>
+    </div>
+  );
 }
