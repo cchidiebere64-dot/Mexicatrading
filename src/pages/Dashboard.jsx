@@ -1,38 +1,38 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { getToken, getUser } from "../utils/storage";
 
 export default function Dashboard() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+
+  const fetchDashboard = async () => {
+    // ✅ Get token as plain string
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found. Please login first.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${API_URL}/api/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setData(res.data);
+      console.log("Dashboard data:", res.data);
+    } catch (err) {
+      console.error("Dashboard fetch error:", err.response?.data || err.message);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      const token = getToken();
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      try {
-        const res = await axios.get(`${API_URL}/api/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setData(res.data);
-      } catch (err) {
-        console.error("Dashboard fetch error:", err.response?.data || err.message);
-        setData(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboard();
-  }, [navigate]);
+  }, []);
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
   if (!data)
@@ -59,14 +59,10 @@ export default function Dashboard() {
 
       {/* Balance Section */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-medium">Current Balance</h3>
-            <p className="text-4xl font-extrabold text-emerald-500 mt-2">
-              ${data.balance ?? 0}
-            </p>
-          </div>
-        </div>
+        <h3 className="text-lg font-medium">Current Balance</h3>
+        <p className="text-4xl font-extrabold text-emerald-500 mt-2">
+          ${data.balance ?? 0}
+        </p>
       </div>
 
       {/* Active Plans */}
@@ -125,3 +121,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
