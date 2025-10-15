@@ -7,4 +7,12 @@ export const getJSON = (key) => {
     console.error(`Failed to parse JSON from ${key}:`, err);
     return null;
   }
+
+  // Optional helper to get user object safely
+export function getJSON(key) {
+  const item = sessionStorage.getItem(key);
+  return item ? JSON.parse(item) : null;
+}
+
 };
+
