@@ -1,12 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import Navbar from "./components/Navbar";
 
 export default function App() {
   const [token, setToken] = useState(sessionStorage.getItem("token") || "");
-
-  // Safely parse user
   const [user, setUser] = useState(() => {
     const rawUser = sessionStorage.getItem("user");
     if (!rawUser) return null;
@@ -17,6 +15,23 @@ export default function App() {
       return null;
     }
   });
+
+  // Sync state if sessionStorage changes (e.g., login/logout)
+  useEffect(() => {
+    const handleStorage = () => {
+      setToken(sessionStorage.getItem("token") || "");
+      const rawUser = sessionStorage.getItem("user");
+      if (!rawUser) return setUser(null);
+      try {
+        setUser(JSON.parse(rawUser));
+      } catch {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
