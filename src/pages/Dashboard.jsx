@@ -28,8 +28,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchDashboard();
-  }, []);
+  const token = sessionStorage.getItem("token");
+  console.log("🔑 Token used for dashboard:", token);
+  fetchDashboard();
+}, []);
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
   if (!data)
@@ -95,3 +97,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
