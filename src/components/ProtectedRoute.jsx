@@ -1,13 +1,15 @@
+// src/components/ProtectedRoute.js
+import React from "react";
 import { Navigate } from "react-router-dom";
+import { getJSON } from "../utils/storage";
 
 export default function ProtectedRoute({ children }) {
-  const user = sessionStorage.getItem("user");
+  const token = getJSON("token");
 
-  // If no user in sessionStorage → redirect to login
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (!token) {
+    // If no token, redirect to login
+    return <Navigate to="/login" />;
   }
 
-  // Else → allow access
   return children;
 }
