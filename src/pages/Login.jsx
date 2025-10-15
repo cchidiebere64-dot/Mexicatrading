@@ -1,3 +1,7 @@
+import React, { useState } from "react"; // ✅ import useState
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 export default function Login({ setToken, setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -5,18 +9,15 @@ export default function Login({ setToken, setUser }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const res = await axios.post(
         "https://mexicatradingbackend.onrender.com/api/auth/login",
         { email, password }
       );
 
-      // Save in sessionStorage
       sessionStorage.setItem("token", res.data.token);
       sessionStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // ✅ Update App state
       setToken(res.data.token);
       setUser(res.data.user);
 
@@ -28,20 +29,19 @@ export default function Login({ setToken, setUser }) {
 
   return (
     <form onSubmit={handleLogin}>
-      {/* ...your input fields and button */}
       <input
         type="email"
-        placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
         required
         autoComplete="username"
       />
       <input
         type="password"
-        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
         required
         autoComplete="current-password"
       />
