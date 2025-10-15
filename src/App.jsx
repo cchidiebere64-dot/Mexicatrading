@@ -1,16 +1,20 @@
 import React, { useState } from "react";
-import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
-  const rawUser = sessionStorage.getItem("user");
-  const [user, setUser] = useState(
-    rawUser && rawUser !== "undefined" ? JSON.parse(rawUser) : null
-  );
   const [token, setToken] = useState(sessionStorage.getItem("token") || "");
+  const [user, setUser] = useState(() => {
+    const userStr = sessionStorage.getItem("user");
+    try {
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  });
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex flex-col min-h-screen">
       <main className="flex-grow">
         {token && user ? (
           <Dashboard />
