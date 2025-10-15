@@ -8,19 +8,24 @@ export default function Dashboard() {
 
   const fetchDashboard = async () => {
     const token = sessionStorage.getItem("token");
+    console.log("🔑 Token used for dashboard:", token);
 
     if (!token) {
+      console.warn("🚫 No token found — redirecting to login...");
       setLoading(false);
       return;
     }
 
     try {
+      console.log("📡 Fetching dashboard data...");
       const res = await axios.get(`${API_URL}/api/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("✅ Dashboard response from backend:", res.data);
       setData(res.data);
     } catch (err) {
-      console.error(err.response?.data || err.message);
+      console.error("❌ Dashboard fetch failed:", err.response?.data || err.message);
       setData(null);
     } finally {
       setLoading(false);
@@ -28,16 +33,15 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-  const token = sessionStorage.getItem("token");
-  console.log("🔑 Token used for dashboard:", token);
-  fetchDashboard();
-}, []);
+    fetchDashboard();
+  }, []);
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (loading) return <p className="text-center mt-10">Loading dashboard...</p>;
+
   if (!data)
     return (
       <p className="text-center mt-10 text-red-500">
-        ❌ Failed to load dashboard
+        ❌ Failed to load dashboard (check console for details)
       </p>
     );
 
@@ -68,7 +72,7 @@ export default function Dashboard() {
             </div>
           ))
         ) : (
-          <p>No active plans</p>
+          <p>No active plans found</p>
         )}
       </div>
 
@@ -91,10 +95,9 @@ export default function Dashboard() {
             </div>
           ))
         ) : (
-          <p>No recent activity</p>
+          <p>No recent activity yet</p>
         )}
       </div>
     </div>
   );
 }
-
