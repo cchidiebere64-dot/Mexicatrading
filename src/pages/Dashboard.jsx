@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -10,9 +9,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const fetchDashboard = async () => {
-    // Safe token retrieval
-    const rawToken = sessionStorage.getItem("token");
-    const token = rawToken ? JSON.parse(rawToken) : null;
+    // ✅ Read token as plain string (no JSON.parse)
+    const token = sessionStorage.getItem("token");
 
     if (!token) {
       console.error("No token found. Redirecting to login.");
@@ -52,7 +50,7 @@ export default function Dashboard() {
   return (
     <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
       {/* Header */}
-  <div className="mb-8 text-center">
+      <div className="mb-8 text-center">
         <h2 className="text-4xl font-bold text-emerald-600">
           👋 Welcome, {data.name || "User"}
         </h2>
@@ -62,7 +60,7 @@ export default function Dashboard() {
       </div>
 
       {/* Balance Section */}
- <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-8">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-8">
         <div className="flex justify-between items-center">
           <div>
             <h3 className="text-lg font-medium">Current Balance</h3>
@@ -119,7 +117,7 @@ export default function Dashboard() {
       </div>
 
       {/* Transaction History */}
-<div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
         <h3 className="text-xl font-semibold mb-4">📜 Recent Activity</h3>
         <ul className="space-y-3">
           {history.length > 0 ? (
@@ -149,6 +147,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-
-
