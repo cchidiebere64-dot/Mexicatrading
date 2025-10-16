@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-export default function Login({ setToken, setUser }) {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+
+  const API_URL = "https://mexicatradingbackend.onrender.com";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -14,10 +19,7 @@ export default function Login({ setToken, setUser }) {
 
     try {
       console.log("🔹 Sending login request...");
-      const res = await axios.post(
-        "https://mexicatradingbackend.onrender.com/api/auth/login",
-        { email, password }
-      );
+      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
 
       console.log("✅ Login response:", res.data);
 
@@ -33,11 +35,8 @@ export default function Login({ setToken, setUser }) {
         sessionStorage.setItem("token", res.data.token);
         sessionStorage.setItem("user", JSON.stringify(userData));
 
-        // Update state
-        setToken(res.data.token);
-        setUser(userData);
-
-        console.log("🎯 Login success, switching to Dashboard...");
+        console.log("🎯 Login success, redirecting to dashboard...");
+        navigate("/dashboard");
       } else {
         setError("Invalid response from server.");
       }
@@ -56,7 +55,7 @@ export default function Login({ setToken, setUser }) {
         className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-96"
       >
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-          Login to Mexicatrading
+          Login to <span className="text-emerald-600">Mexicatrading</span>
         </h2>
 
         {error && (
@@ -68,22 +67,31 @@ export default function Login({ setToken, setUser }) {
         <input
           type="email"
           placeholder="Email"
-          className="w-full p-2 mb-4 border rounded-lg"
+          className="w-full p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="username"
         />
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 mb-4 border rounded-lg"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            className="w-full p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-2 text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
 
         <button
           type="submit"
