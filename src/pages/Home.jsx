@@ -5,16 +5,18 @@ export default function Home() {
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
 
 
-      <header className="w-full py-4 bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-sm fixed top-0 z-50">
-  <div className="max-w-6xl mx-auto flex justify-between items-center px-6">
-    <h1 className="text-2xl font-bold text-emerald-600">Mexicatrading</h1>
-    <nav className="flex gap-6 text-gray-700 dark:text-gray-200 font-medium">
-      <Link to="/" className="hover:text-emerald-600">Home</Link>
-      <Link to="/plans" className="hover:text-emerald-600">Plans</Link>
-      <Link to="/deposit" className="hover:text-emerald-600">Deposit</Link>
-      <Link to="/withdraw" className="hover:text-emerald-600">Withdraw</Link>
-      <Link to="/login" className="hover:text-emerald-600">Login</Link>
-    </nav>
+   
+<header className="w-full py-4 bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-sm fixed top-0 z-50">
+  <div className="max-w-6xl mx-auto flex justify-center items-center px-6">
+    {/* ✅ Logo + Name only */}
+    <div className="flex items-center gap-2">
+      <img
+        src="/logo.png" // 🖼️ replace with your logo file path (e.g., /assets/logo.png)
+        alt="Mexicatrading Logo"
+        className="w-8 h-8"
+      />
+      <h1 className="text-2xl font-bold text-emerald-600">Mexicatrading</h1>
+    </div>
   </div>
 </header>
 
@@ -125,4 +127,5 @@ export default function Home() {
     </div>
   );
 }
+
 
