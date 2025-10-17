@@ -23,30 +23,32 @@ export default function Login() {
 
       console.log("✅ Login response:", res.data);
 
-      if (res.data?.token) {
-        const userData = {
-          _id: res.data._id,
-          name: res.data.name,
-          email: res.data.email,
-          balance: res.data.balance,
-        };
-
-        // Save to sessionStorage
-        sessionStorage.setItem("token", res.data.token);
-        sessionStorage.setItem("user", JSON.stringify(userData));
-
-        console.log("🎯 Login success, redirecting to dashboard...");
-        navigate("/dashboard");
-      } else {
-        setError("Invalid response from server.");
-      }
-    } catch (err) {
-      console.error("❌ Login failed:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Login failed. Try again.");
-    } finally {
-      setLoading(false);
-    }
+if (res.data?.token) {
+  const userData = {
+    _id: res.data._id,
+    name: res.data.name,
+    email: res.data.email,
+    balance: res.data.balance,
+    isAdmin: res.data.isAdmin || false, // track admin role
   };
+
+  // Save to sessionStorage
+  sessionStorage.setItem("token", res.data.token);
+  sessionStorage.setItem("user", JSON.stringify(userData));
+
+  // If admin, also set adminToken for admin routes
+  if (userData.isAdmin) {
+    sessionStorage.setItem("adminToken", res.data.token);
+    console.log("🎯 Admin login success, redirecting to admin dashboard...");
+    navigate("/admin");
+  } else {
+    console.log("🎯 Login success, redirecting to dashboard...");
+    navigate("/dashboard");
+  }
+} else {
+  setError("Invalid response from server.");
+}
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -104,3 +106,4 @@ export default function Login() {
     </div>
   );
 }
+
