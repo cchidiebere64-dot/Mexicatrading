@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -6,76 +7,24 @@ import Dashboard from "./pages/Dashboard";
 import Deposit from "./pages/Deposit";
 import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
-import AdminDashboard from "./pages/AdminDashboard";
-
-
-// 🔒 Simple route protection for logged-in users
-const PrivateRoute = ({ children }) => {
-  const token = sessionStorage.getItem("token");
-  return token ? children : <Navigate to="/login" />;
-};
-
-// 🔒 Simple protection for admin only (assuming role stored in session)
-const AdminRoute = ({ children }) => {
-  const role = sessionStorage.getItem("role"); // "admin" or "user"
-  return role === "admin" ? children : <Navigate to="/login" />;
-};
 
 export default function App() {
   return (
     <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        
-        {/* User Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/deposit"
-          element={
-            <PrivateRoute>
-              <Deposit />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/plans"
-          element={
-            <PrivateRoute>
-              <Plans />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/withdraw"
-          element={
-            <PrivateRoute>
-              <Withdraw />
-            </PrivateRoute>
-          }
-        />
+      {/* Navbar always visible */}
+      <Navbar />
 
-        {/* Admin Route */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-      </Routes>
+      <div className="pt-16"> {/* push content down below fixed navbar */}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/deposit" element={<Deposit />} />
+          <Route path="/plans" element={<Plans />} />
+          <Route path="/withdraw" element={<Withdraw />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
-
-
