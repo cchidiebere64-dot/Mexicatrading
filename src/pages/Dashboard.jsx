@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import {
+  Wallet,
+  TrendingUp,
+  ArrowDownCircle,
+  ArrowUpCircle,
+} from "lucide-react";
 
 export default function Dashboard() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
@@ -37,14 +42,14 @@ export default function Dashboard() {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen text-gray-500">
+      <div className="flex justify-center items-center h-screen text-gray-500 text-sm">
         Loading your dashboard...
       </div>
     );
 
   if (!data)
     return (
-      <div className="flex justify-center items-center h-screen text-red-500">
+      <div className="flex justify-center items-center h-screen text-red-500 text-sm">
         Failed to load dashboard (check console for details)
       </div>
     );
@@ -53,113 +58,113 @@ export default function Dashboard() {
   const history = data.history || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm">
       {/* NAVBAR */}
-      <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 shadow-md">
-        <div className="flex items-center space-x-3">
-          {/* Placeholder logo */}
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-green-400" />
-          <h1 className="text-2xl font-bold text-emerald-600">
-            MESICA Trading
+      <header className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 shadow-sm fixed w-full top-0 z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-green-400" />
+          <h1 className="text-sm font-bold text-emerald-600 tracking-wide">
+            MexicaTrading
           </h1>
         </div>
       </header>
 
       {/* MAIN DASHBOARD CONTENT */}
-      <main className="p-6 max-w-6xl mx-auto">
-        {/* Welcome Section */}
-        <h2 className="text-3xl font-bold mb-6">
-          👋 Welcome back, <span className="text-emerald-500">{data.name}</span>
+      <main className="pt-16 p-4 max-w-5xl mx-auto space-y-6">
+        {/* Welcome */}
+        <h2 className="text-base font-semibold mb-2">
+          👋 Welcome, <span className="text-emerald-500">{data.name}</span>
         </h2>
 
-        {/* Balance Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Current Balance</h3>
-              <Wallet className="text-emerald-500" />
+              <h3 className="text-xs font-medium">Balance</h3>
+              <Wallet size={14} className="text-emerald-500" />
             </div>
-            <p className="text-3xl font-bold mt-4 text-emerald-600">
+            <p className="text-lg font-bold mt-2 text-emerald-600">
               ${data.balance ?? 0}
             </p>
           </div>
 
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition">
+          <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Active Plans</h3>
-              <TrendingUp className="text-emerald-500" />
+              <h3 className="text-xs font-medium">Active Plans</h3>
+              <TrendingUp size={14} className="text-emerald-500" />
             </div>
-            <p className="text-3xl font-bold mt-4">{plans.length}</p>
+            <p className="text-lg font-bold mt-2">{plans.length}</p>
           </div>
 
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition">
+          <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Total Transactions</h3>
-              <ArrowUpCircle className="text-emerald-500" />
+              <h3 className="text-xs font-medium">Transactions</h3>
+              <ArrowUpCircle size={14} className="text-emerald-500" />
             </div>
-            <p className="text-3xl font-bold mt-4">{history.length}</p>
+            <p className="text-lg font-bold mt-2">{history.length}</p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-4 mb-10">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => navigate("/deposit")}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg shadow transition"
+            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs shadow"
           >
-            <ArrowDownCircle size={18} />
-            Deposit
+            <ArrowDownCircle size={14} /> Deposit
           </button>
 
           <button
             onClick={() => navigate("/plans")}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow transition"
+            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs shadow"
           >
-            <TrendingUp size={18} />
-            Plans
+            <TrendingUp size={14} /> Plans
           </button>
 
           <button
             onClick={() => navigate("/withdraw")}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow transition"
+            className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs shadow"
           >
-            <ArrowUpCircle size={18} />
-            Withdraw
+            <ArrowUpCircle size={14} /> Withdraw
           </button>
         </div>
 
-        {/* Plans Section */}
-        <section className="mb-10">
-          <h3 className="text-2xl font-bold mb-4">📊 Active Plans</h3>
+        {/* Active Plans */}
+        <section>
+          <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
           {plans.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {plans.map((plan, idx) => (
                 <div
                   key={idx}
-                  className="p-5 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition"
+                  className="p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm"
                 >
-                  <h4 className="text-xl font-semibold mb-2">
+                  <h4 className="text-sm font-semibold mb-1">
                     {plan.name || "Unnamed Plan"}
                   </h4>
-                  <p>Invested: ${plan.invested ?? 0}</p>
-                  <p>Profit: ${plan.profit ?? 0}</p>
+                  <p className="text-xs text-gray-500">
+                    Invested: ${plan.invested ?? 0}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Profit: ${plan.profit ?? 0}
+                  </p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No active plans found</p>
+            <p className="text-gray-500 text-xs">No active plans found</p>
           )}
         </section>
 
         {/* Recent Activity */}
         <section>
-          <h3 className="text-2xl font-bold mb-4">📜 Recent Activity</h3>
+          <h3 className="text-sm font-bold mb-2">📜 Recent Activity</h3>
           {history.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {history.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+                  className="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm text-xs"
                 >
                   <span>{item.action || "Unknown"}</span>
                   <span>
@@ -180,7 +185,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No recent activity yet</p>
+            <p className="text-gray-500 text-xs">No recent activity yet</p>
           )}
         </section>
       </main>
