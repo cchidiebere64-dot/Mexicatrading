@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -40,26 +40,26 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
-  // ✅ Live chart embed (no npm dependency)
-  const chartRef = useRef();
+  // ✅ TradingView embed — safe, doesn’t break render
   useEffect(() => {
-    if (!chartRef.current.querySelector("script")) {
-      const script = document.createElement("script");
-      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-      script.async = true;
-      script.innerHTML = JSON.stringify({
-        autosize: true,
-        symbol: "BINANCE:BTCUSDT",
-        interval: "15",
-        timezone: "Etc/UTC",
-        theme: "dark",
-        style: "1",
-        locale: "en",
-        hide_top_toolbar: false,
-        allow_symbol_change: true,
-      });
-      chartRef.current.appendChild(script);
-    }
+    const container = document.getElementById("tradingview-chart");
+    if (!container || container.querySelector("script")) return;
+
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      autosize: true,
+      symbol: "BINANCE:BTCUSDT",
+      interval: "15",
+      timezone: "Etc/UTC",
+      theme: "dark",
+      style: "1",
+      locale: "en",
+      hide_top_toolbar: false,
+      allow_symbol_change: true,
+    });
+    container.appendChild(script);
   }, []);
 
   if (loading)
@@ -94,15 +94,15 @@ export default function Dashboard() {
       {/* MAIN DASHBOARD CONTENT */}
       <main className="pt-16 p-4 max-w-5xl mx-auto space-y-6">
 
-        {/* Live Trading Chart */}
+        {/* ✅ Live Trading Chart (Safe Embed) */}
         <section className="mt-6">
           <h3 className="text-sm font-bold mb-2">📈 Live Market Chart</h3>
           <div
+            id="tradingview-chart"
             className="bg-white dark:bg-gray-800 rounded-md shadow-sm p-2"
-            ref={chartRef}
             style={{ height: "400px", overflow: "hidden" }}
           >
-            <div className="tradingview-widget-container__widget"></div>
+            {/* TradingView widget will appear here */}
           </div>
         </section>
 
@@ -227,3 +227,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
