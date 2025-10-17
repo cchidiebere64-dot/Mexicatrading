@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import Deposit from "./pages/Deposit";
 import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
+import Register from "./pages/Register"; // <-- add this
 
 export default function App() {
   const token = sessionStorage.getItem("token"); // check if user is logged in
@@ -39,3 +40,4 @@ export default function App() {
   {/* Catch-all redirects to Home */}
   <Route path="*" element={<Navigate to="/" />} />
 </Routes>
+
