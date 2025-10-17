@@ -11,7 +11,6 @@ import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
 
 // Admin pages
-import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminPlans from "./pages/admin/AdminPlans";
@@ -19,14 +18,14 @@ import AdminDeposits from "./pages/admin/AdminDeposits";
 import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
 
 export default function App() {
-  const token = sessionStorage.getItem("token"); // user token
-  const adminToken = sessionStorage.getItem("adminToken"); // admin token
+  const token = sessionStorage.getItem("token"); // normal user
+  const adminToken = sessionStorage.getItem("adminToken"); // admin
 
   return (
     <Router>
       <Navbar />
 
-      <div className="pt-16"> {/* push content below fixed navbar */}
+      <div className="pt-16">
         <Routes>
           {/* Public user routes */}
           <Route path="/" element={<Home />} />
@@ -35,19 +34,42 @@ export default function App() {
           <Route path="/plans" element={<Plans />} />
 
           {/* Protected user routes */}
-          <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/deposit" element={token ? <Deposit /> : <Navigate to="/login" />} />
-          <Route path="/withdraw" element={token ? <Withdraw /> : <Navigate to="/login" />} />
+          <Route
+            path="/dashboard"
+            element={token ? <Dashboard /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/deposit"
+            element={token ? <Deposit /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/withdraw"
+            element={token ? <Withdraw /> : <Navigate to="/login" />}
+          />
 
-          {/* Admin routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={adminToken ? <AdminDashboard /> : <Navigate to="/admin/login" />} />
-          <Route path="/admin/users" element={adminToken ? <AdminUsers /> : <Navigate to="/admin/login" />} />
-          <Route path="/admin/plans" element={adminToken ? <AdminPlans /> : <Navigate to="/admin/login" />} />
-          <Route path="/admin/deposits" element={adminToken ? <AdminDeposits /> : <Navigate to="/admin/login" />} />
-          <Route path="/admin/withdrawals" element={adminToken ? <AdminWithdrawals /> : <Navigate to="/admin/login" />} />
+          {/* Protected admin routes */}
+          <Route
+            path="/admin"
+            element={adminToken ? <AdminDashboard /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/users"
+            element={adminToken ? <AdminUsers /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/plans"
+            element={adminToken ? <AdminPlans /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/deposits"
+            element={adminToken ? <AdminDeposits /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin/withdrawals"
+            element={adminToken ? <AdminWithdrawals /> : <Navigate to="/login" />}
+          />
 
-          {/* Catch-all redirects to Home */}
+          {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
