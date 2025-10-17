@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { AdvancedChart } from "react-tradingview-embed";
 import {
   Wallet,
   TrendingUp,
@@ -41,6 +40,28 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
+  // ✅ Live chart embed (no npm dependency)
+  const chartRef = useRef();
+  useEffect(() => {
+    if (!chartRef.current.querySelector("script")) {
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        autosize: true,
+        symbol: "BINANCE:BTCUSDT",
+        interval: "15",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "1",
+        locale: "en",
+        hide_top_toolbar: false,
+        allow_symbol_change: true,
+      });
+      chartRef.current.appendChild(script);
+    }
+  }, []);
+
   if (loading)
     return (
       <div className="flex justify-center items-center h-screen text-gray-500 text-sm">
@@ -74,22 +95,17 @@ export default function Dashboard() {
       <main className="pt-16 p-4 max-w-5xl mx-auto space-y-6">
 
         {/* Live Trading Chart */}
-<section className="mt-6">
-  <h3 className="text-sm font-bold mb-2">📈 Live Market Chart</h3>
-  <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm p-2">
-    <AdvancedChart
-      widgetProps={{
-        theme: "dark",
-        symbol: "BTCUSDT", // you can change this to ETHUSD, AAPL, etc.
-        interval: "15", // timeframe: 1, 5, 15, 60, D, W
-        autosize: true,
-        hide_top_toolbar: false,
-      }}
-    />
-  </div>
-</section>
+        <section className="mt-6">
+          <h3 className="text-sm font-bold mb-2">📈 Live Market Chart</h3>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-md shadow-sm p-2"
+            ref={chartRef}
+            style={{ height: "400px", overflow: "hidden" }}
+          >
+            <div className="tradingview-widget-container__widget"></div>
+          </div>
+        </section>
 
-        
         {/* Welcome */}
         <h2 className="text-base font-semibold mb-2">
           👋 Welcome, <span className="text-emerald-500">{data.name}</span>
@@ -211,4 +227,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
