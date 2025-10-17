@@ -44,14 +44,18 @@ export default function Dashboard() {
  useEffect(() => {
   const container = document.getElementById("tradingview_advanced_chart");
 
-  // Clean previous chart if any (important when React re-renders)
-  if (container) container.innerHTML = "";
+  if (!container) return;
+
+  // Clean previous chart
+  container.innerHTML = "";
 
   const script = document.createElement("script");
-  script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
   script.type = "text/javascript";
+  script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
   script.async = true;
-  script.innerHTML = JSON.stringify({
+
+  // ✅ Use text instead of innerHTML
+  script.text = JSON.stringify({
     autosize: true,
     symbol: "BINANCE:BTCUSDT",
     interval: "15",
@@ -64,8 +68,8 @@ export default function Dashboard() {
     hide_legend: false,
   });
 
-  if (container) container.appendChild(script);
-}, []); // ✅ Only run once
+  container.appendChild(script);
+}, []);
 
 
   if (loading)
@@ -233,4 +237,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
