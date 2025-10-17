@@ -15,7 +15,7 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.23.0",
     "recharts": "^2.12.7",
-    "react-tradingview-embed": "^1.0.15"  // ✅ Added for live trading chart
+    "react-tradingview-embed": "^1.0.15" 
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.2",
