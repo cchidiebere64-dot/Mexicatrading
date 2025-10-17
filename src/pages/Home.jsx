@@ -5,31 +5,32 @@ export default function Home() {
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
 
 
-      
       {/* HERO SECTION */}
-      <section className="min-h-screen flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6">
-          Invest Smart with <span className="text-emerald-500">Mexicatrading 🚀</span>
-        </h1>
-        <p className="text-lg md:text-xl max-w-2xl mb-8">
-          Your trusted platform for secure and profitable investments. 
-          Grow your wealth with tailored plans that suit your lifestyle.
-        </p>
-        <div className="flex gap-4">
-          <Link
-            to="/register"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            Get Started
-          </Link>
-          <Link
-            to="/plans"
-            className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            View Plans
-          </Link>
-        </div>
-      </section>
+<section className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16">
+  <h1 className="text-4xl md:text-6xl font-bold mb-6">
+    Invest Smart with <span className="text-emerald-500">Mexicatrading 🚀</span>
+  </h1>
+  <p className="text-lg md:text-xl max-w-2xl mb-8">
+    Your trusted platform for secure and profitable investments. 
+    Grow your wealth with tailored plans that suit your lifestyle.
+  </p>
+  <div className="flex gap-4">
+    <Link
+      to="/register"
+      className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+    >
+      Get Started
+    </Link>
+    <Link
+      to="/plans"
+      className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
+    >
+      View Plans
+    </Link>
+  </div>
+</section>
+
+      
 
       {/* FEATURES SECTION */}
       <section className="py-20 px-6 bg-white dark:bg-gray-800 text-center">
@@ -110,6 +111,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 
