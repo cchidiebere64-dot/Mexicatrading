@@ -16,29 +16,26 @@ export default function App() {
 
       <div className="pt-16"> {/* push content below fixed navbar */}
         <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/plans" element={<Plans />} />
+  {/* Public routes */}
+  <Route path="/" element={<Home />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/register" element={<Register />} />  {/* Added */}
+  <Route path="/plans" element={<Plans />} />
 
-          {/* Protected routes */}
-          <Route
-            path="/dashboard"
-            element={token ? <Dashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/deposit"
-            element={token ? <Deposit /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/withdraw"
-            element={token ? <Withdraw /> : <Navigate to="/login" />}
-          />
+  {/* Protected routes */}
+  <Route
+    path="/dashboard"
+    element={token ? <Dashboard /> : <Navigate to="/login" />}
+  />
+  <Route
+    path="/deposit"
+    element={token ? <Deposit /> : <Navigate to="/login" />}
+  />
+  <Route
+    path="/withdraw"
+    element={token ? <Withdraw /> : <Navigate to="/login" />}
+  />
 
-          {/* Catch-all redirects to Home */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </div>
-    </Router>
-  );
-}
+  {/* Catch-all redirects to Home */}
+  <Route path="*" element={<Navigate to="/" />} />
+</Routes>
