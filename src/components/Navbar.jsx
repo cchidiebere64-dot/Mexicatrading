@@ -1,13 +1,11 @@
-// src/components/Navbar.jsx
 import { Link } from "react-router-dom";
-import mexicanLogo from "../assets/mexican.png"; // ensure path is correct
+import mexicanLogo from "../assets/mexican.png";
 
 export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gray-900/90 backdrop-blur-md shadow-md">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-3">
-        
-        {/* LOGO + NAME */}
+        {/* LOGO */}
         <div className="flex items-center gap-2">
           <img
             src={mexicanLogo}
@@ -19,7 +17,7 @@ export default function Navbar() {
           </span>
         </div>
 
-        {/* NAVIGATION LINKS */}
+        {/* LINKS */}
         <nav className="hidden md:flex gap-8 text-gray-300 font-medium">
           <Link to="/" className="hover:text-emerald-400 transition">Home</Link>
           <Link to="/plans" className="hover:text-emerald-400 transition">Plans</Link>
@@ -28,7 +26,7 @@ export default function Navbar() {
           <Link to="/login" className="hover:text-emerald-400 transition">Login</Link>
         </nav>
 
-        {/* MOBILE MENU BUTTON */}
+        {/* Mobile menu */}
         <button className="md:hidden text-emerald-400 text-2xl">☰</button>
       </div>
     </header>
