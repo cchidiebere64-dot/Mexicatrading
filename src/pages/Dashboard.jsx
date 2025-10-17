@@ -103,7 +103,14 @@ export default function Dashboard() {
       {/* MAIN DASHBOARD CONTENT */}
       <main className="pt-16 p-4 max-w-5xl mx-auto space-y-6">
 
-        {/* ✅ Live Trading Chart */}
+    
+
+        {/* Welcome */}
+        <h2 className="text-base font-semibold mb-2">
+          👋 Welcome, <span className="text-emerald-500">{data.name}</span>
+        </h2>
+
+            {/* ✅ Live Trading Chart */}
         <section className="mt-6">
           <h3 className="text-sm font-bold mb-2">📈 Live Market Chart</h3>
           <div
@@ -114,12 +121,7 @@ export default function Dashboard() {
             {/* The chart will be embedded here */}
           </div>
         </section>
-
-        {/* Welcome */}
-        <h2 className="text-base font-semibold mb-2">
-          👋 Welcome, <span className="text-emerald-500">{data.name}</span>
-        </h2>
-
+        
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
@@ -236,6 +238,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
