@@ -7,6 +7,7 @@ import Deposit from "./pages/Deposit";
 import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
 import AdminDashboard from "./pages/AdminDashboard";
+import Navbar from "./components/Navbar";
 
 // 🔒 Simple route protection for logged-in users
 const PrivateRoute = ({ children }) => {
@@ -28,7 +29,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
+         <Navbar />
         {/* User Protected Routes */}
         <Route
           path="/dashboard"
@@ -76,3 +77,4 @@ export default function App() {
     </Router>
   );
 }
+
