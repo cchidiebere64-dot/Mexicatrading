@@ -41,32 +41,32 @@ export default function Dashboard() {
   }, []);
 
   // ✅ Proper TradingView Chart Embed (reliable method)
-  useEffect(() => {
-    const containerId = "tradingview_advanced_chart";
-    const existingScript = document.getElementById("tradingview-script");
+ useEffect(() => {
+  const container = document.getElementById("tradingview_advanced_chart");
 
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.id = "tradingview-script";
-      script.src =
-        "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-      script.type = "text/javascript";
-      script.async = true;
-      script.innerHTML = JSON.stringify({
-        autosize: true,
-        symbol: "BINANCE:BTCUSDT",
-        interval: "15",
-        timezone: "Etc/UTC",
-        theme: "dark",
-        style: "1",
-        locale: "en",
-        hide_top_toolbar: false,
-        allow_symbol_change: true,
-      });
-      const container = document.getElementById(containerId);
-      if (container) container.appendChild(script);
-    }
-  }, []);
+  // Clean previous chart if any (important when React re-renders)
+  if (container) container.innerHTML = "";
+
+  const script = document.createElement("script");
+  script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+  script.type = "text/javascript";
+  script.async = true;
+  script.innerHTML = JSON.stringify({
+    autosize: true,
+    symbol: "BINANCE:BTCUSDT",
+    interval: "15",
+    timezone: "Etc/UTC",
+    theme: "dark",
+    style: "1",
+    locale: "en",
+    hide_top_toolbar: false,
+    allow_symbol_change: true,
+    hide_legend: false,
+  });
+
+  if (container) container.appendChild(script);
+}, []); // ✅ Only run once
+
 
   if (loading)
     return (
@@ -233,3 +233,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
