@@ -40,13 +40,12 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
-  // ✅ Proper TradingView Chart Embed (reliable method)
- useEffect(() => {
+  useEffect(() => {
   const container = document.getElementById("tradingview_advanced_chart");
 
   if (!container) return;
 
-  // Clean previous chart
+  // Clear any previous chart
   container.innerHTML = "";
 
   const script = document.createElement("script");
@@ -54,7 +53,7 @@ export default function Dashboard() {
   script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
   script.async = true;
 
-  // ✅ Use text instead of innerHTML
+  // ✅ Use .text instead of innerHTML
   script.text = JSON.stringify({
     autosize: true,
     symbol: "BINANCE:BTCUSDT",
@@ -237,5 +236,6 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
