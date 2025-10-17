@@ -12,42 +12,49 @@ export default function Login() {
 
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+ const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      console.log("🔹 Sending login request...");
-      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+  try {
+    console.log("🔹 Sending login request...");
+    const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
 
-      console.log("✅ Login response:", res.data);
+    console.log("✅ Login response:", res.data);
 
-if (res.data?.token) {
-  const userData = {
-    _id: res.data._id,
-    name: res.data.name,
-    email: res.data.email,
-    balance: res.data.balance,
-    isAdmin: res.data.isAdmin || false, // track admin role
-  };
+    if (res.data?.token) {
+      const userData = {
+        _id: res.data._id,
+        name: res.data.name,
+        email: res.data.email,
+        balance: res.data.balance,
+        isAdmin: res.data.isAdmin || false,
+      };
 
-  // Save to sessionStorage
-  sessionStorage.setItem("token", res.data.token);
-  sessionStorage.setItem("user", JSON.stringify(userData));
+      // Save to sessionStorage
+      sessionStorage.setItem("token", res.data.token);
+      sessionStorage.setItem("user", JSON.stringify(userData));
 
-  // If admin, also set adminToken for admin routes
-  if (userData.isAdmin) {
-    sessionStorage.setItem("adminToken", res.data.token);
-    console.log("🎯 Admin login success, redirecting to admin dashboard...");
-    navigate("/admin");
-  } else {
-    console.log("🎯 Login success, redirecting to dashboard...");
-    navigate("/dashboard");
+      // If admin, also set adminToken for admin routes
+      if (userData.isAdmin) {
+        sessionStorage.setItem("adminToken", res.data.token);
+        console.log("🎯 Admin login success, redirecting to admin dashboard...");
+        navigate("/admin");
+      } else {
+        console.log("🎯 Login success, redirecting to dashboard...");
+        navigate("/dashboard");
+      }
+    } else {
+      setError("Invalid response from server.");
+    }
+  } catch (err) {
+    console.error("❌ Login failed:", err.response?.data || err.message);
+    setError(err.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false); // ✅ ensures spinner/loading always stops
   }
-} else {
-  setError("Invalid response from server.");
-}
+};
 
 
   return (
