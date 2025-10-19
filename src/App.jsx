@@ -11,11 +11,11 @@ import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
 
 // Admin pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminPlans from "./pages/admin/AdminPlans";
-import AdminDeposits from "./pages/admin/AdminDeposits";
-import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminPlans from "./pages/AdminPlans";
+import AdminDeposits from "./pages/AdminDeposits";
+import AdminWithdrawals from "./pages/AdminWithdrawals";
 
 export default function App() {
   const token = sessionStorage.getItem("token"); // normal user
@@ -76,3 +76,4 @@ export default function App() {
     </Router>
   );
 }
+
