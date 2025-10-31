@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export default function Plans() {
-  const API_URL = "https://mexicatradingbackend.onrender.com"; // ✅ Backend URL
+  const API_URL = "https://mexicatradingbackend.onrender.com";
 
   const plans = [
     {
@@ -28,17 +28,16 @@ export default function Plans() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Call backend when user selects a plan
   const handleChoosePlan = async (plan) => {
     setLoading(true);
     setMessage("");
 
     try {
-      const res = await fetch(`${API_URL}/api/transactions/deposit`, {
+      const res = await fetch(`${API_URL}/api/investments/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("token")}`, // 🔑 use sessionStorage for consistency with Dashboard
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
         body: JSON.stringify({ plan: plan.name, amount: plan.price }),
       });
@@ -49,13 +48,13 @@ export default function Plans() {
         setMessage(`✅ Successfully invested in ${plan.name} plan!`);
         setSelectedPlan(plan.name);
       } else {
-        setMessage(data.message || "Transaction failed");
+        setMessage(`❌ ${data.message || "Transaction failed"}`);
 
-if (data.message?.includes("Insufficient balance")) {
-  alert("⚠️ Your balance is too low. Please deposit first.");
-
-
+        if (data.message?.includes("Insufficient balance")) {
+          alert("⚠️ Your balance is too low. Please deposit first.");
+        }
       }
+
     } catch (error) {
       console.error("Investment error:", error);
       setMessage("❌ Network error. Please try again.");
@@ -66,15 +65,13 @@ if (data.message?.includes("Insufficient balance")) {
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      {/* Header */}
       <div className="text-center mb-10">
         <h2 className="text-4xl font-bold mb-2">💼 Investment Plans</h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Choose a plan that fits your goals and start growing 🚀
+          Choose a plan that suits your goals 🚀
         </p>
       </div>
 
-      {/* Message */}
       {message && (
         <div
           className={`mb-6 p-4 rounded-xl text-center font-semibold ${
@@ -87,7 +84,6 @@ if (data.message?.includes("Insufficient balance")) {
         </div>
       )}
 
-      {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan, idx) => (
           <div
@@ -102,7 +98,6 @@ if (data.message?.includes("Insufficient balance")) {
             <p className="text-gray-500 dark:text-gray-400 mb-4">{plan.profit}</p>
             <p className="text-3xl font-bold text-emerald-500 mb-6">
               ${plan.price}
-              <span className="text-sm text-gray-500 dark:text-gray-400"> / min</span>
             </p>
 
             <ul className="space-y-2 mb-6">
@@ -114,13 +109,13 @@ if (data.message?.includes("Insufficient balance")) {
             </ul>
 
             <button
+              onClick={() => handleChoosePlan(plan)}
+              disabled={loading}
               className={`w-full py-2 rounded-xl font-semibold transition-colors ${
                 selectedPlan === plan.name
                   ? "bg-emerald-500 text-white"
                   : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-emerald-500 hover:text-white"
               }`}
-              onClick={() => handleChoosePlan(plan)}
-              disabled={loading}
             >
               {loading
                 ? "Processing..."
@@ -134,4 +129,3 @@ if (data.message?.includes("Insufficient balance")) {
     </div>
   );
 }
-
