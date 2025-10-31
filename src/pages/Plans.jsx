@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Plans() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
@@ -27,8 +27,39 @@ export default function Plans() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [balance, setBalance] = useState(0);
+
+  // ✅ Fetch User Balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/users/profile`, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setBalance(data.balance || 0);
+        }
+      } catch (error) {
+        console.log("Error fetching balance:", error);
+      }
+    };
+
+    fetchBalance();
+  }, []);
 
   const handleChoosePlan = async (plan) => {
+    // ✅ Check balance before investing
+    if (balance < plan.price) {
+      setMessage("❌ Insufficient balance. Please deposit first.");
+      alert("⚠️ Your balance is too low to invest in this plan.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
@@ -49,12 +80,7 @@ export default function Plans() {
         setSelectedPlan(plan.name);
       } else {
         setMessage(`❌ ${data.message || "Transaction failed"}`);
-
-        if (data.message?.includes("Insufficient balance")) {
-          alert("⚠️ Your balance is too low. Please deposit first.");
-        }
       }
-
     } catch (error) {
       console.error("Investment error:", error);
       setMessage("❌ Network error. Please try again.");
@@ -69,6 +95,11 @@ export default function Plans() {
         <h2 className="text-4xl font-bold mb-2">💼 Investment Plans</h2>
         <p className="text-gray-600 dark:text-gray-400">
           Choose a plan that suits your goals 🚀
+        </p>
+
+        {/* ✅ User Balance Display */}
+        <p className="mt-3 text-lg font-semibold bg-white dark:bg-gray-800 inline-block py-2 px-4 rounded-xl shadow">
+          Available Balance: <span className="text-emerald-500">${balance}</span>
         </p>
       </div>
 
@@ -96,9 +127,7 @@ export default function Plans() {
           >
             <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
             <p className="text-gray-500 dark:text-gray-400 mb-4">{plan.profit}</p>
-            <p className="text-3xl font-bold text-emerald-500 mb-6">
-              ${plan.price}
-            </p>
+            <p className="text-3xl font-bold text-emerald-500 mb-6">${plan.price}</p>
 
             <ul className="space-y-2 mb-6">
               {plan.features.map((feature, i) => (
@@ -129,4 +158,3 @@ export default function Plans() {
     </div>
   );
 }
-
