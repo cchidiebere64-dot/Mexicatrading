@@ -33,7 +33,7 @@ export default function Plans() {
     setMessage("");
 
     try {
-      const res = await fetch(`${API_URL}/api/investments/create`, {
+      const res = await fetch(`${API_URL}/api/investments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,3 +129,4 @@ export default function Plans() {
     </div>
   );
 }
+
