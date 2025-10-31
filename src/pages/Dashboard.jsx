@@ -175,32 +175,40 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Active Plans */}
-        <section>
-          <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
-          {plans.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {plans.map((plan, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm"
-                >
-                  <h4 className="text-sm font-semibold mb-1">
-                    {plan.name || "Unnamed Plan"}
-                  </h4>
-                  <p className="text-xs text-gray-500">
-                    Invested: ${plan.invested ?? 0}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Profit: ${plan.profit ?? 0}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-xs">No active plans found</p>
-          )}
-        </section>
+       <section>
+  <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
+
+  {plans.length > 0 ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {plans.map((plan, idx) => {
+        const endDate = new Date(plan.endDate);
+        const today = new Date();
+        const daysLeft = Math.max(0, Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)));
+
+        return (
+          <div key={idx} className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+            <h4 className="text-base font-semibold mb-2">{plan.plan}</h4>
+
+            <p className="text-xs text-gray-500 mb-1">Invested: <span className="text-emerald-500 font-bold">${plan.amount}</span></p>
+            <p className="text-xs text-gray-500 mb-1">Profit: <span className="text-emerald-400 font-bold">${plan.profit}</span></p>
+
+            <p className="text-xs text-gray-400 mb-1">⏳ Duration: {plan.duration} days</p>
+            <p className="text-xs text-gray-400 mb-1">📅 Ends: {endDate.toDateString()}</p>
+
+            <p className="text-sm font-semibold mt-2">
+              {daysLeft > 0
+                ? `🔥 ${daysLeft} day(s) remaining`
+                : "✅ Completed"}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <p className="text-gray-500 text-xs">No active plans</p>
+  )}
+</section>
+
 
         {/* Recent Activity */}
         <section>
@@ -238,6 +246,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
