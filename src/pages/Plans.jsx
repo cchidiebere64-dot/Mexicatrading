@@ -49,7 +49,12 @@ export default function Plans() {
         setMessage(`✅ Successfully invested in ${plan.name} plan!`);
         setSelectedPlan(plan.name);
       } else {
-        setMessage(`❌ ${data.message || "Failed to process transaction"}`);
+        setMessage(data.message || "Transaction failed");
+
+if (data.message?.includes("Insufficient balance")) {
+  alert("⚠️ Your balance is too low. Please deposit first.");
+
+
       }
     } catch (error) {
       console.error("Investment error:", error);
@@ -129,3 +134,4 @@ export default function Plans() {
     </div>
   );
 }
+
