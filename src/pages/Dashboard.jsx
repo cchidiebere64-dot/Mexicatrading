@@ -16,250 +16,152 @@ export default function Dashboard() {
 
   const fetchDashboard = async () => {
     const token = sessionStorage.getItem("token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    if (!token) return navigate("/login");
 
     try {
       const res = await axios.get(`${API_URL}/api/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data);
-    } catch (err) {
-      console.error("Dashboard Error:", err.response?.data || err.message);
+    } catch {
       setData(null);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
+  useEffect(() => { fetchDashboard(); }, []);
 
-  // Load TradingView Chart
   useEffect(() => {
-    const container = document.getElementById("tradingview_advanced_chart");
-    if (!container) return;
+    const widget = document.getElementById("tradingview");
+    if (!widget) return;
+    widget.innerHTML = "";
 
-    container.innerHTML = "";
     const script = document.createElement("script");
-    script.type = "text/javascript";
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
-    script.text = JSON.stringify({
+    script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: "BINANCE:BTCUSDT",
       interval: "15",
-      timezone: "Etc/UTC",
       theme: "dark",
       style: "1",
       locale: "en",
-      allow_symbol_change: true
     });
 
-    container.appendChild(script);
+    widget.appendChild(script);
   }, []);
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen text-gray-500 text-sm">
-        Loading your dashboard...
+      <div className="flex justify-center items-center h-screen text-white">
+        <div className="animate-pulse text-lg">Loading Dashboard...</div>
       </div>
     );
 
   if (!data)
     return (
-      <div className="flex justify-center items-center h-screen text-red-500 text-sm">
-        Failed to load dashboard
+      <div className="flex justify-center items-center h-screen text-red-500">
+        Error loading dashboard
       </div>
     );
 
-  // ✅ Only active plans are shown
-  const plans = (data.plans || []).filter((plan) => plan.status === "active");
+  const plans = data.plans.filter((p) => p.status === "active");
+  const completed = data.plans.filter((p) => p.status === "completed");
   const history = data.history || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm">
+    <div className="min-h-screen bg-[#0b0f19] text-white font-medium pb-10">
 
-      {/* NAVBAR */}
-      <header className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 shadow-sm fixed w-full top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-green-400" />
-          <h1 className="text-sm font-bold text-emerald-600">MexicaTrading</h1>
-        </div>
+      {/* TOP NAV */}
+      <header className="fixed w-full top-0 z-20 backdrop-blur-lg bg-white/5 border-b border-white/10 px-5 py-3">
+        <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent">
+          MexicaTrading Dashboard
+        </h1>
       </header>
 
-      <main className="pt-16 p-4 max-w-5xl mx-auto space-y-6">
+      <main className="pt-20 px-4 max-w-5xl mx-auto animate-fade-in space-y-8">
 
-        <h2 className="text-base font-semibold">
-          👋 Welcome, <span className="text-emerald-500">{data.name}</span>
+        <h2 className="text-xl font-semibold">
+          Welcome back,
+          <span className="text-emerald-400"> {data.name}</span>
         </h2>
 
-        {/* TradingView */}
+        {/* LIVE CHART */}
         <section>
-          <h3 className="text-sm font-bold mb-2">📈 Live Market Chart</h3>
-          <div
-            id="tradingview_advanced_chart"
-            className="bg-white dark:bg-gray-800 rounded-md shadow-sm p-2"
-            style={{ height: "400px" }}
-          />
+          <div id="tradingview" className="rounded-xl border border-white/10 h-[380px] shadow-glow" />
         </section>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-medium">Balance</h3>
-              <Wallet size={14} className="text-emerald-500" />
+        {/* BALANCE CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[{
+            label: "Balance",
+            value: `$${data.balance}`,
+            icon: <Wallet />
+          },
+          {
+            label: "Active Plans",
+            value: plans.length,
+            icon: <TrendingUp />
+          },
+          {
+            label: "Transactions",
+            value: history.length,
+            icon: <ArrowUpCircle />
+          }].map((stat, i) => (
+            <div key={i} className="crypto-card p-5 rounded-xl border border-white/10 backdrop-blur-lg bg-white/5">
+              <div className="flex justify-between">{stat.label} <span className="text-emerald-400">{stat.icon}</span></div>
+              <p className="text-2xl font-bold mt-2">{stat.value}</p>
             </div>
-            <p className="text-lg font-bold mt-2 text-emerald-600">
-              ${data.balance ?? 0}
-            </p>
-          </div>
-
-          <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-medium">Active Plans</h3>
-              <TrendingUp size={14} className="text-emerald-500" />
-            </div>
-            <p className="text-lg font-bold mt-2">{plans.length}</p>
-          </div>
-
-          <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-medium">Transactions</h3>
-              <ArrowUpCircle size={14} className="text-emerald-500" />
-            </div>
-            <p className="text-lg font-bold mt-2">{history.length}</p>
-          </div>
+          ))}
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => navigate("/deposit")} className="btn-emerald">
-            <ArrowDownCircle size={14} /> Deposit
-          </button>
-
-          <button onClick={() => navigate("/plans")} className="btn-blue">
-            <TrendingUp size={14} /> Plans
-          </button>
-
-          <button
-            onClick={() => document.getElementById("active-plans")?.scrollIntoView({ behavior: "smooth" })}
-            className="btn-purple"
-          >
-            <TrendingUp size={14} /> Active Plans
-          </button>
-
-          <button onClick={() => navigate("/withdraw")} className="btn-red">
-            <ArrowUpCircle size={14} /> Withdraw
-          </button>
+        {/* ACTION BUTTONS */}
+        <div className="flex flex-wrap gap-3">
+          <button onClick={() => navigate("/deposit")} className="btn-primary"><ArrowDownCircle size={16}/> Deposit</button>
+          <button onClick={() => navigate("/plans")} className="btn-primary"><TrendingUp size={16}/> Plans</button>
+          <button onClick={() => navigate("/withdraw")} className="btn-primary"><ArrowUpCircle size={16}/> Withdraw</button>
         </div>
 
         {/* ACTIVE PLANS */}
-        <section id="active-plans" className="mt-6">
-          <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
-
-          {plans.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {plans.map((plan, idx) => {
-                const endDate = new Date(plan.endDate);
-                const today = new Date();
-                const daysLeft = Math.max(
-                  0,
-                  Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
-                );
-
+        <section>
+          <h3 className="section-title">Active Plans</h3>
+          {plans.length ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {plans.map((p, i) => {
+                const end = new Date(p.endDate);
+                const daysLeft = Math.max(0, Math.ceil((end - Date.now()) / 86400000));
                 return (
-                  <div key={idx} className="plan-card">
-                    <h4 className="text-base font-semibold mb-2">{plan.plan}</h4>
-
-                    <p className="text-xs">Invested: <span className="text-emerald-500 font-bold">${plan.amount}</span></p>
-                    <p className="text-xs">Profit: <span className="text-emerald-400 font-bold">${plan.profit}</span></p>
-
-                    <p className="text-xs text-gray-400">⏳ {plan.duration} days</p>
-                    <p className="text-xs text-gray-400">📅 Ends: {endDate.toDateString()}</p>
-
-                    <p className="text-sm font-semibold mt-2">
-                      {daysLeft > 0 ? `🔥 ${daysLeft} day(s) remaining` : "✅ Completed"}
-                    </p>
+                  <div key={i} className="crypto-card">
+                    <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
+                    <p>Invested: ${p.amount}</p>
+                    <p>Profit: <span className="text-emerald-300">${p.profit}</span></p>
+                    <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
+                    <p className="mt-2">{daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Complete"}</p>
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <p className="text-gray-500 text-xs">No active plans</p>
-          )}
+          ) : <p className="opacity-60">No active plans</p>}
         </section>
 
-        {/* ✅ COMPLETED PLANS SECTION */}
-<section id="completed-plans" className="mt-6">
-  <h3 className="text-sm font-bold mb-2">✅ Completed Plans</h3>
-
-  {data.plans.filter(plan => plan.status === "completed").length > 0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {data.plans
-        .filter(plan => plan.status === "completed")
-        .map((plan, idx) => {
-          const endDate = new Date(plan.endDate);
-          return (
-            <div
-              key={idx}
-              className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 opacity-80"
-            >
-              <h4 className="text-base font-semibold mb-2 text-emerald-500">
-                {plan.plan}
-              </h4>
-
-              <p className="text-xs text-gray-400 mb-1">
-                Invested: <span className="font-bold">${plan.amount}</span>
-              </p>
-
-              <p className="text-xs text-gray-400 mb-1">
-                Profit Earned: <span className="font-bold text-emerald-400">${plan.profit}</span>
-              </p>
-
-              <p className="text-xs text-gray-400 mb-1">📅 Ended: {endDate.toDateString()}</p>
-
-              <p className="text-sm font-semibold mt-2 text-emerald-600">
-                ✅ Completed & Paid
-              </p>
-            </div>
-          );
-        })}
-    </div>
-  ) : (
-    <p className="text-gray-500 text-xs">No completed plans yet</p>
-  )}
-</section>
-
-
-        
-        {/* Recent Activity */}
+        {/* COMPLETED PLANS */}
         <section>
-          <h3 className="text-sm font-bold mb-2">📜 Recent Activity</h3>
-          {history.length > 0 ? (
-            <div className="space-y-1">
-              {history.map((item, idx) => (
-                <div key={idx} className="history-card">
-                  <span>{item.action || "Unknown"}</span>
-                  <span>{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</span>
-                  <span className={item.action === "Deposit" ? "text-emerald-500" : "text-red-500"}>
-                    ${item.amount ?? 0}
-                  </span>
+          <h3 className="section-title">Completed Plans</h3>
+          {completed.length ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {completed.map((p, i) => (
+                <div key={i} className="crypto-card opacity-75 border-green-500/20">
+                  <h4 className="font-bold text-emerald-400">{p.plan}</h4>
+                  <p>Invested: ${p.amount}</p>
+                  <p>Profit Earned: <span className="text-emerald-300">${p.profit}</span></p>
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-gray-500 text-xs">No recent activity</p>
-          )}
+          ) : <p className="opacity-60">No completed plans</p>}
         </section>
 
       </main>
     </div>
   );
 }
-
