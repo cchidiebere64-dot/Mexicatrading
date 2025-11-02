@@ -186,7 +186,7 @@ export default function Dashboard() {
 </div>
 
 
-     \{/* ✅ ACTIVE PLANS SECTION */}
+     {/* ✅ ACTIVE PLANS SECTION */}
 <section id="active-plans" className="mt-6">
   <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
 
@@ -267,6 +267,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
