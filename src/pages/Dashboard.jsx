@@ -186,7 +186,8 @@ export default function Dashboard() {
 </div>
 
 
-       <section>
+      {/* ✅ ACTIVE PLANS SECTION */}
+<section id="active-plans" className="mt-6">
   <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
 
   {plans.length > 0 ? (
@@ -194,22 +195,31 @@ export default function Dashboard() {
       {plans.map((plan, idx) => {
         const endDate = new Date(plan.endDate);
         const today = new Date();
-        const daysLeft = Math.max(0, Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)));
+        const daysLeft = Math.max(
+          0,
+          Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
+        );
 
         return (
-          <div key={idx} className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-            <h4 className="text-base font-semibold mb-2">{plan.plan}</h4>
+          <div
+            key={idx}
+            className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+          >
+            <h4 className="text-base font-semibold mb-2">{plan.name}</h4>
 
-            <p className="text-xs text-gray-500 mb-1">Invested: <span className="text-emerald-500 font-bold">${plan.amount}</span></p>
-            <p className="text-xs text-gray-500 mb-1">Profit: <span className="text-emerald-400 font-bold">${plan.profit}</span></p>
+            <p className="text-xs text-gray-500 mb-1">
+              Invested: <span className="text-emerald-500 font-bold">${plan.invested}</span>
+            </p>
+
+            <p className="text-xs text-gray-500 mb-1">
+              Profit: <span className="text-emerald-400 font-bold">${plan.profit}</span>
+            </p>
 
             <p className="text-xs text-gray-400 mb-1">⏳ Duration: {plan.duration} days</p>
-            <p className="text-xs text-gray-400 mb-1">📅 Ends: {endDate.toDateString()}</p>
+            <p className="text-xs text-gray-400 mb-1">📅 Ends: {new Date(plan.endDate).toDateString()}</p>
 
             <p className="text-sm font-semibold mt-2">
-              {daysLeft > 0
-                ? `🔥 ${daysLeft} day(s) remaining`
-                : "✅ Completed"}
+              {daysLeft > 0 ? `🔥 ${daysLeft} day(s) remaining` : "✅ Completed"}
             </p>
           </div>
         );
@@ -219,7 +229,6 @@ export default function Dashboard() {
     <p className="text-gray-500 text-xs">No active plans</p>
   )}
 </section>
-
 
         {/* Recent Activity */}
         <section>
@@ -257,6 +266,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
