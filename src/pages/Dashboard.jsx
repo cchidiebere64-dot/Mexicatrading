@@ -186,7 +186,7 @@ export default function Dashboard() {
 </div>
 
 
-      {/* ✅ ACTIVE PLANS SECTION */}
+     \{/* ✅ ACTIVE PLANS SECTION */}
 <section id="active-plans" className="mt-6">
   <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
 
@@ -205,10 +205,10 @@ export default function Dashboard() {
             key={idx}
             className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
           >
-            <h4 className="text-base font-semibold mb-2">{plan.name}</h4>
+            <h4 className="text-base font-semibold mb-2">{plan.plan}</h4>
 
             <p className="text-xs text-gray-500 mb-1">
-              Invested: <span className="text-emerald-500 font-bold">${plan.invested}</span>
+              Invested: <span className="text-emerald-500 font-bold">${plan.amount}</span>
             </p>
 
             <p className="text-xs text-gray-500 mb-1">
@@ -216,7 +216,7 @@ export default function Dashboard() {
             </p>
 
             <p className="text-xs text-gray-400 mb-1">⏳ Duration: {plan.duration} days</p>
-            <p className="text-xs text-gray-400 mb-1">📅 Ends: {new Date(plan.endDate).toDateString()}</p>
+            <p className="text-xs text-gray-400 mb-1">📅 Ends: {endDate.toDateString()}</p>
 
             <p className="text-sm font-semibold mt-2">
               {daysLeft > 0 ? `🔥 ${daysLeft} day(s) remaining` : "✅ Completed"}
@@ -229,6 +229,7 @@ export default function Dashboard() {
     <p className="text-gray-500 text-xs">No active plans</p>
   )}
 </section>
+
 
         {/* Recent Activity */}
         <section>
@@ -266,6 +267,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
