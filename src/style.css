@@ -2,29 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Custom Dashboard Buttons ===== */
-.btn-emerald {
-  @apply flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs shadow transition;
+
+/* ===============  STYLE PACK 4 (CRYPTO GLASS + NEON)  =============== */
+
+/* Smooth fade entrance */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.6s ease forwards;
 }
 
-.btn-blue {
-  @apply flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs shadow transition;
+/* Glass UI cards */
+.crypto-card {
+  @apply p-5 rounded-xl border border-white/10 bg-white/5 
+         backdrop-blur-xl shadow-lg transition duration-300;
+}
+.crypto-card:hover {
+  @apply shadow-[0_0_28px_rgba(255,215,0,0.45)] scale-[1.02];
 }
 
-.btn-purple {
-  @apply flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs shadow transition;
+/* Section Title */
+.section-title {
+  @apply text-lg font-semibold text-yellow-400 tracking-wide mb-2;
 }
 
-.btn-red {
-  @apply flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs shadow transition;
+/* Neon Buttons */
+.btn-primary {
+  @apply flex items-center gap-2 px-4 py-2 rounded-lg font-semibold
+         bg-gradient-to-r from-yellow-400 to-amber-500 text-black
+         shadow-lg shadow-yellow-500/30 transition duration-300;
+}
+.btn-primary:hover {
+  @apply scale-[1.04] shadow-yellow-500/60;
 }
 
-/* ===== Plan Cards ===== */
-.plan-card {
-  @apply p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 transition hover:scale-[1.02] hover:shadow-lg;
+/* Neon Border Glow */
+.shadow-glow {
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
 }
 
-/* ===== Recent Activity Cards ===== */
+/* History rows */
 .history-card {
-  @apply flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm text-xs;
+  @apply flex justify-between items-center p-3 rounded-lg 
+         bg-white/5 border border-white/10 text-sm;
+}
+
+/* Scrollbar (Elite UI) */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #ffd447, #9d6b00);
+  border-radius: 50px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f19;
 }
