@@ -33,24 +33,24 @@ export default function Plans() {
     setMessage("");
 
     try {
-     // ✅ First, check user balance
-const profileRes = await fetch(`${API_URL}/api/users/me`, {
+    // ✅ First, check user balance
+const profileRes = await fetch(`${API_URL}/api/dashboard`, {
   headers: {
     Authorization: `Bearer ${sessionStorage.getItem("token")}`,
   },
 });
 
+const profileData = await profileRes.json();
+const balance = profileData.balance || 0;
 
-      const profileData = await profileRes.json();
-      const balance = profileData.balance || 0;
+// ✅ Block if balance is too low
+if (balance < plan.price) {
+  setLoading(false);
+  setMessage("❌ Insufficient balance. Please deposit first.");
+  alert("⚠️ You do not have enough balance to invest in this plan.");
+  return;
+}
 
-      // ✅ Block if balance is too low
-      if (balance < plan.price) {
-        setLoading(false);
-        setMessage("❌ Insufficient balance. Please deposit first.");
-        alert("⚠️ You do not have enough balance to invest in this plan.");
-        return;
-      }
 
       // ✅ Proceed to invest since balance is enough
       const res = await fetch(`${API_URL}/api/investments`, {
@@ -143,4 +143,5 @@ const profileRes = await fetch(`${API_URL}/api/users/me`, {
     </div>
   );
 }
+
 
