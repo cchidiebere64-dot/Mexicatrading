@@ -32,6 +32,7 @@ export default function Dashboard() {
 
   useEffect(() => { fetchDashboard(); }, []);
 
+  // TradingView Chart
   useEffect(() => {
     const widget = document.getElementById("tradingview");
     if (!widget) return;
@@ -110,7 +111,10 @@ export default function Dashboard() {
             icon: <ArrowUpCircle />
           }].map((stat, i) => (
             <div key={i} className="crypto-card p-5 rounded-xl border border-white/10 backdrop-blur-lg bg-white/5">
-              <div className="flex justify-between">{stat.label} <span className="text-emerald-400">{stat.icon}</span></div>
+              <div className="flex justify-between">
+                {stat.label}
+                <span className="text-emerald-400">{stat.icon}</span>
+              </div>
               <p className="text-2xl font-bold mt-2">{stat.value}</p>
             </div>
           ))}
@@ -137,7 +141,7 @@ export default function Dashboard() {
                     <p>Invested: ${p.amount}</p>
                     <p>Profit: <span className="text-emerald-300">${p.profit}</span></p>
                     <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
-                    <p className="mt-2">{daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Complete"}</p>
+                    <p className="mt-2">{daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Completed"}</p>
                   </div>
                 );
               })}
@@ -151,14 +155,15 @@ export default function Dashboard() {
           {completed.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {completed.map((p, i) => (
-                <div key={i} className="crypto-card opacity-75 border-green-500/20">
+                <div key={i} className="crypto-card opacity-80 border-green-500/20">
                   <h4 className="font-bold text-emerald-400">{p.plan}</h4>
                   <p>Invested: ${p.amount}</p>
                   <p>Profit Earned: <span className="text-emerald-300">${p.profit}</span></p>
+                  <p className="text-xs opacity-60">Completed & Paid</p>
                 </div>
               ))}
             </div>
-          ) : <p className="opacity-60">No completed plans</p>}
+          ) : <p className="opacity-60">No completed plans yet</p>}
         </section>
 
       </main>
