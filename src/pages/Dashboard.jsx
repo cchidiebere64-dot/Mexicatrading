@@ -153,27 +153,38 @@ export default function Dashboard() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => navigate("/deposit")}
-            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs shadow"
-          >
-            <ArrowDownCircle size={14} /> Deposit
-          </button>
+  <button
+    onClick={() => navigate("/deposit")}
+    className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs shadow"
+  >
+    <ArrowDownCircle size={14} /> Deposit
+  </button>
 
-          <button
-            onClick={() => navigate("/plans")}
-            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs shadow"
-          >
-            <TrendingUp size={14} /> Plans
-          </button>
+  <button
+    onClick={() => navigate("/plans")}
+    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs shadow"
+  >
+    <TrendingUp size={14} /> Plans
+  </button>
 
-          <button
-            onClick={() => navigate("/withdraw")}
-            className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs shadow"
-          >
-            <ArrowUpCircle size={14} /> Withdraw
-          </button>
-        </div>
+  {/* ✅ New Active Plans Button */}
+  <button
+    onClick={() => {
+      document.getElementById("active-plans")?.scrollIntoView({ behavior: "smooth" });
+    }}
+    className="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs shadow"
+  >
+    <TrendingUp size={14} /> Active Plans
+  </button>
+
+  <button
+    onClick={() => navigate("/withdraw")}
+    className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs shadow"
+  >
+    <ArrowUpCircle size={14} /> Withdraw
+  </button>
+</div>
+
 
        <section>
   <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
@@ -246,6 +257,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
