@@ -195,6 +195,49 @@ export default function Dashboard() {
           )}
         </section>
 
+        {/* ✅ COMPLETED PLANS SECTION */}
+<section id="completed-plans" className="mt-6">
+  <h3 className="text-sm font-bold mb-2">✅ Completed Plans</h3>
+
+  {data.plans.filter(plan => plan.status === "completed").length > 0 ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {data.plans
+        .filter(plan => plan.status === "completed")
+        .map((plan, idx) => {
+          const endDate = new Date(plan.endDate);
+          return (
+            <div
+              key={idx}
+              className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 opacity-80"
+            >
+              <h4 className="text-base font-semibold mb-2 text-emerald-500">
+                {plan.plan}
+              </h4>
+
+              <p className="text-xs text-gray-400 mb-1">
+                Invested: <span className="font-bold">${plan.amount}</span>
+              </p>
+
+              <p className="text-xs text-gray-400 mb-1">
+                Profit Earned: <span className="font-bold text-emerald-400">${plan.profit}</span>
+              </p>
+
+              <p className="text-xs text-gray-400 mb-1">📅 Ended: {endDate.toDateString()}</p>
+
+              <p className="text-sm font-semibold mt-2 text-emerald-600">
+                ✅ Completed & Paid
+              </p>
+            </div>
+          );
+        })}
+    </div>
+  ) : (
+    <p className="text-gray-500 text-xs">No completed plans yet</p>
+  )}
+</section>
+
+
+        
         {/* Recent Activity */}
         <section>
           <h3 className="text-sm font-bold mb-2">📜 Recent Activity</h3>
@@ -219,3 +262,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
