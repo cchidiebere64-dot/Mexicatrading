@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   Wallet,
   TrendingUp,
   ArrowDownCircle,
   ArrowUpCircle,
 } from "lucide-react";
-import TradingViewWidget from "react-tradingview-widget";
 
 export default function Dashboard() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
@@ -25,8 +24,7 @@ export default function Dashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data);
-    } catch (err) {
-      console.error("Dashboard fetch error:", err.response?.data || err.message);
+    } catch {
       setData(null);
     } finally {
       setLoading(false);
@@ -35,6 +33,31 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboard();
+  }, []);
+
+  // TradingView live chart embed
+  useEffect(() => {
+    const widgetContainer = document.getElementById("tradingview-widget");
+    if (!widgetContainer) return;
+    widgetContainer.innerHTML = "";
+
+    const script = document.createElement("script");
+    script.src =
+      "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      autosize: true,
+      symbol: "BINANCE:BTCUSDT",
+      interval: "15",
+      theme: "dark",
+      style: "1",
+      locale: "en",
+      hide_top_toolbar: false,
+      allow_symbol_change: true,
+      hide_legend: false,
+    });
+
+    widgetContainer.appendChild(script);
   }, []);
 
   if (loading)
@@ -51,47 +74,45 @@ export default function Dashboard() {
       </div>
     );
 
-  const activePlans = (data.plans || []).filter((p) => p.status === "active");
-  const completedPlans = (data.plans || []).filter((p) => p.status === "completed");
+  const plans = (data.plans || []).filter((p) => p.status === "active");
+  const completed = (data.plans || []).filter((p) => p.status === "completed");
   const history = data.history || [];
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-white font-medium pb-10">
-
-      {/* NAVBAR */}
+      {/* TOP NAV */}
       <header className="fixed w-full top-0 z-20 backdrop-blur-lg bg-white/5 border-b border-white/10 px-5 py-3">
         <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent">
           MexicaTrading Dashboard
         </h1>
       </header>
 
-      <main className="pt-20 px-4 max-w-6xl mx-auto space-y-8">
-
+      <main className="pt-20 px-4 max-w-5xl mx-auto animate-fade-in space-y-8">
         {/* Welcome */}
         <h2 className="text-xl font-semibold">
           Welcome back, <span className="text-emerald-400">{data.name}</span>
         </h2>
 
-        {/* LIVE TRADINGVIEW CHART */}
-        <section className="rounded-xl border border-white/10 h-[400px] shadow-glow overflow-hidden">
-          <TradingViewWidget
-            symbol="BINANCE:BTCUSDT"
-            theme="dark"
-            locale="en"
-            autosize
-            interval="15"
+        {/* LIVE CHART */}
+        <section>
+          <div
+            id="tradingview-widget"
+            className="rounded-xl border border-white/10 h-[400px] shadow-glow"
           />
         </section>
 
-        {/* Summary Cards */}
+        {/* SUMMARY CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "Balance", value: `$${data.balance}`, icon: <Wallet /> },
-            { label: "Active Plans", value: activePlans.length, icon: <TrendingUp /> },
+            { label: "Active Plans", value: plans.length, icon: <TrendingUp /> },
             { label: "Transactions", value: history.length, icon: <ArrowUpCircle /> },
           ].map((stat, i) => (
-            <div key={i} className="crypto-card p-5 rounded-xl border border-white/10 backdrop-blur-lg bg-white/5">
-              <div className="flex justify-between items-center text-xs font-medium">
+            <div
+              key={i}
+              className="crypto-card p-5 rounded-xl border border-white/10 backdrop-blur-lg bg-white/5"
+            >
+              <div className="flex justify-between">
                 {stat.label} <span className="text-emerald-400">{stat.icon}</span>
               </div>
               <p className="text-2xl font-bold mt-2">{stat.value}</p>
@@ -99,77 +120,108 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Action Buttons */}
+        {/* ACTION BUTTONS */}
         <div className="flex flex-wrap gap-3">
-          <button onClick={() => navigate("/deposit")} className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => navigate("/deposit")}
+            className="btn-primary"
+          >
             <ArrowDownCircle size={16} /> Deposit
           </button>
-          <button onClick={() => navigate("/plans")} className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => navigate("/plans")}
+            className="btn-primary"
+          >
             <TrendingUp size={16} /> Plans
           </button>
-          <button onClick={() => navigate("/withdraw")} className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => navigate("/withdraw")}
+            className="btn-primary"
+          >
             <ArrowUpCircle size={16} /> Withdraw
           </button>
         </div>
 
-        {/* Active Plans */}
+        {/* ACTIVE PLANS */}
         <section>
           <h3 className="section-title">Active Plans</h3>
-          {activePlans.length ? (
+          {plans.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {activePlans.map((plan, i) => {
-                const end = new Date(plan.endDate);
-                const daysLeft = Math.max(0, Math.ceil((end - Date.now()) / 86400000));
+              {plans.map((p, i) => {
+                const end = new Date(p.endDate);
+                const daysLeft = Math.max(
+                  0,
+                  Math.ceil((end - Date.now()) / 86400000)
+                );
                 return (
-                  <div key={i} className="crypto-card p-4 rounded-xl border border-white/10 backdrop-blur-lg bg-white/5">
-                    <h4 className="font-bold text-lg text-emerald-400">{plan.plan}</h4>
-                    <p>Invested: ${plan.amount}</p>
-                    <p>Profit: <span className="text-emerald-300">${plan.profit}</span></p>
+                  <div key={i} className="crypto-card p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
+                    <p>Invested: ${p.amount}</p>
+                    <p>
+                      Profit: <span className="text-emerald-300">${p.profit}</span>
+                    </p>
                     <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
-                    <p className="mt-2 font-semibold">{daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Complete"}</p>
+                    <p className="mt-2">
+                      {daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Complete"}
+                    </p>
                   </div>
                 );
               })}
             </div>
-          ) : <p className="opacity-60">No active plans</p>}
+          ) : (
+            <p className="opacity-60">No active plans</p>
+          )}
         </section>
 
-        {/* Completed Plans */}
+        {/* COMPLETED PLANS */}
         <section>
           <h3 className="section-title">Completed Plans</h3>
-          {completedPlans.length ? (
+          {completed.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {completedPlans.map((plan, i) => (
-                <div key={i} className="crypto-card p-4 rounded-xl border border-green-500/20 opacity-75 backdrop-blur-lg bg-white/5">
-                  <h4 className="font-bold text-emerald-400">{plan.plan}</h4>
-                  <p>Invested: ${plan.amount}</p>
-                  <p>Profit Earned: <span className="text-emerald-300">${plan.profit}</span></p>
-                  <p className="text-xs opacity-70">Ended: {new Date(plan.endDate).toDateString()}</p>
-                  <p className="mt-1 font-semibold text-emerald-500">✅ Completed & Paid</p>
+              {completed.map((p, i) => (
+                <div
+                  key={i}
+                  className="crypto-card opacity-75 border-green-500/20 p-4 bg-white/5 rounded-xl"
+                >
+                  <h4 className="font-bold text-emerald-400">{p.plan}</h4>
+                  <p>Invested: ${p.amount}</p>
+                  <p>
+                    Profit Earned: <span className="text-emerald-300">${p.profit}</span>
+                  </p>
                 </div>
               ))}
             </div>
-          ) : <p className="opacity-60">No completed plans</p>}
+          ) : (
+            <p className="opacity-60">No completed plans</p>
+          )}
         </section>
 
-        {/* Recent Activities */}
+        {/* RECENT ACTIVITIES */}
         <section>
-          <h3 className="section-title">Recent Activity</h3>
+          <h3 className="section-title">Recent Activities</h3>
           {history.length ? (
             <div className="space-y-2">
-              {history.map((item, i) => (
-                <div key={i} className="crypto-card flex justify-between p-3 rounded-xl border border-white/10 backdrop-blur-lg bg-white/5 text-xs">
-                  <span>{item.action || "Unknown"}</span>
-                  <span>{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</span>
-                  <span className={item.action === "Deposit" ? "text-emerald-400" : "text-red-400"}>
-                    ${item.amount ?? 0}
+              {history.map((h, i) => (
+                <div
+                  key={i}
+                  className="crypto-card p-3 flex justify-between items-center bg-white/5 border border-white/10 rounded-xl"
+                >
+                  <span>{h.action}</span>
+                  <span>{new Date(h.date).toLocaleDateString()}</span>
+                  <span
+                    className={
+                      h.action === "Deposit" ? "text-emerald-400" : "text-red-500"
+                    }
+                  >
+                    ${h.amount ?? 0}
                   </span>
                 </div>
               ))}
             </div>
-          ) : <p className="opacity-60">No recent activity</p>}
+          ) : (
+            <p className="opacity-60">No recent activity</p>
+          )}
         </section>
-
       </main>
     </div>
   );
