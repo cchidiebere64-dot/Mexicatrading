@@ -34,30 +34,31 @@ export default function Dashboard() {
 
   // TradingView chart setup
   useEffect(() => {
-    const container = document.getElementById("tradingview");
-    if (!container) return;
+  const container = document.getElementById("tradingview");
+  if (!container) return;
 
-    container.innerHTML = "";
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-    script.async = true;
+  container.innerHTML = ""; // clear previous
 
-    script.text = JSON.stringify({
-      autosize: true,
-      symbol: "BINANCE:BTCUSDT",
-      interval: "15",
-      timezone: "Etc/UTC",
-      theme: "dark",
-      style: "1",
-      locale: "en",
-      toolbar_bg: "#0b0f19",
-      enable_publishing: false,
-      allow_symbol_change: true,
-    });
+  const script = document.createElement("script");
+  script.type = "text/javascript";
+  script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+  script.async = true;
+  
+  script.text = JSON.stringify({
+    autosize: true,
+    symbol: "BINANCE:BTCUSDT",
+    interval: "15",
+    timezone: "Etc/UTC",
+    theme: "dark",
+    style: "1",
+    locale: "en",
+    toolbar_bg: "#0b0f19",
+    enable_publishing: false,
+    allow_symbol_change: true
+  });
 
-    container.appendChild(script);
-  }, []);
+  container.appendChild(script);
+}, []);
 
   if (loading)
     return (
@@ -201,3 +202,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
