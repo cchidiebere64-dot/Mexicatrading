@@ -85,7 +85,8 @@ export default function Dashboard() {
       </div>
     );
 
-  const plans = data.plans || [];
+  const plans = (data.plans || []).filter(plan => plan.status === "active");
+
   const history = data.history || [];
 
   return (
@@ -267,6 +268,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
