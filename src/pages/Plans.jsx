@@ -4,24 +4,9 @@ export default function Plans() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
   const plans = [
-    {
-      name: "Starter",
-      price: 50,
-      profit: "5% weekly",
-      features: ["Minimum Investment: $50", "Basic Support", "Instant Withdrawals"],
-    },
-    {
-      name: "Pro",
-      price: 200,
-      profit: "8% weekly",
-      features: ["Minimum Investment: $200", "Priority Support", "Advanced Analytics"],
-    },
-    {
-      name: "Elite",
-      price: 1000,
-      profit: "12% weekly",
-      features: ["Minimum Investment: $1000", "24/7 Dedicated Support", "VIP Dashboard"],
-    },
+    { name: "Starter", price: 50, profit: "5% weekly", features: ["Minimum Investment: $50", "Basic Support", "Instant Withdrawals"] },
+    { name: "Pro", price: 200, profit: "8% weekly", features: ["Minimum Investment: $200", "Priority Support", "Advanced Analytics"] },
+    { name: "Elite", price: 1000, profit: "12% weekly", features: ["Minimum Investment: $1000", "24/7 Dedicated Support", "VIP Dashboard"] },
   ];
 
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -33,26 +18,25 @@ export default function Plans() {
     setMessage("");
 
     try {
-    // ✅ First, check user balance
-const profileRes = await fetch(`${API_URL}/api/dashboard`, {
-  headers: {
-    Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-  },
-});
+      // ✅ Get user balance from dashboard
+      const profileRes = await fetch(`${API_URL}/api/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+      });
 
-const profileData = await profileRes.json();
-const balance = profileData.balance || 0;
+      const profileData = await profileRes.json();
+      const balance = profileData.balance || 0;
 
-// ✅ Block if balance is too low
-if (balance < plan.price) {
-  setLoading(false);
-  setMessage("❌ Insufficient balance. Please deposit first.");
-  alert("⚠️ You do not have enough balance to invest in this plan.");
-  return;
-}
+      // ✅ Block if balance is too low
+      if (balance < plan.price) {
+        setLoading(false);
+        setMessage("❌ Insufficient balance. Please deposit first.");
+        alert("⚠️ You do not have enough balance to invest in this plan.");
+        return;
+      }
 
-
-      // ✅ Proceed to invest since balance is enough
+      // ✅ Proceed to invest
       const res = await fetch(`${API_URL}/api/investments`, {
         method: "POST",
         headers: {
@@ -83,9 +67,7 @@ if (balance < plan.price) {
     <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
       <div className="text-center mb-10">
         <h2 className="text-4xl font-bold mb-2">💼 Investment Plans</h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Choose a plan that suits your goals 🚀
-        </p>
+        <p className="text-gray-600 dark:text-gray-400">Choose a plan that suits your goals 🚀</p>
       </div>
 
       {message && (
@@ -94,8 +76,7 @@ if (balance < plan.price) {
             message.startsWith("✅")
               ? "bg-emerald-100 text-emerald-700"
               : "bg-red-100 text-red-700"
-          }`}
-        >
+          }`}>
           {message}
         </div>
       )}
@@ -129,13 +110,8 @@ if (balance < plan.price) {
                 selectedPlan === plan.name
                   ? "bg-emerald-500 text-white"
                   : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-emerald-500 hover:text-white"
-              }`}
-            >
-              {loading
-                ? "Processing..."
-                : selectedPlan === plan.name
-                ? "Selected ✅"
-                : "Choose Plan"}
+              }`}>
+              {loading ? "Processing..." : selectedPlan === plan.name ? "Selected ✅" : "Choose Plan"}
             </button>
           </div>
         ))}
@@ -143,5 +119,3 @@ if (balance < plan.price) {
     </div>
   );
 }
-
-
