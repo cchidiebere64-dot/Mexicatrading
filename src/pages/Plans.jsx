@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function Plans() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
@@ -27,43 +27,31 @@ export default function Plans() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [balance, setBalance] = useState(0);
-
-  // ✅ Fetch User Balance
-  useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/users/profile`, {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          setBalance(data.balance || 0);
-        }
-      } catch (error) {
-        console.log("Error fetching balance:", error);
-      }
-    };
-
-    fetchBalance();
-  }, []);
 
   const handleChoosePlan = async (plan) => {
-    // ✅ Check balance before investing
-    if (balance < plan.price) {
-      setMessage("❌ Insufficient balance. Please deposit first.");
-      alert("⚠️ Your balance is too low to invest in this plan.");
-      return;
-    }
-
     setLoading(true);
     setMessage("");
 
     try {
+      // ✅ First, check user balance quietly (no display)
+      const profileRes = await fetch(`${API_URL}/api/users/profile`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+      });
+
+      const profileData = await profileRes.json();
+      const balance = profileData.balance || 0;
+
+      // ✅ Block if balance is too low
+      if (balance < plan.price) {
+        setLoading(false);
+        setMessage("❌ Insufficient balance. Please deposit first.");
+        alert("⚠️ You do not have enough balance to invest in this plan.");
+        return;
+      }
+
+      // ✅ Proceed to invest since balance is enough
       const res = await fetch(`${API_URL}/api/investments`, {
         method: "POST",
         headers: {
@@ -81,6 +69,7 @@ export default function Plans() {
       } else {
         setMessage(`❌ ${data.message || "Transaction failed"}`);
       }
+
     } catch (error) {
       console.error("Investment error:", error);
       setMessage("❌ Network error. Please try again.");
@@ -95,11 +84,6 @@ export default function Plans() {
         <h2 className="text-4xl font-bold mb-2">💼 Investment Plans</h2>
         <p className="text-gray-600 dark:text-gray-400">
           Choose a plan that suits your goals 🚀
-        </p>
-
-        {/* ✅ User Balance Display */}
-        <p className="mt-3 text-lg font-semibold bg-white dark:bg-gray-800 inline-block py-2 px-4 rounded-xl shadow">
-          Available Balance: <span className="text-emerald-500">${balance}</span>
         </p>
       </div>
 
