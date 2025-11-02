@@ -18,7 +18,6 @@ export default function Dashboard() {
     const token = sessionStorage.getItem("token");
 
     if (!token) {
-      console.warn("🚫 No token found — redirecting to login...");
       navigate("/login");
       return;
     }
@@ -29,7 +28,7 @@ export default function Dashboard() {
       });
       setData(res.data);
     } catch (err) {
-      console.error("❌ Dashboard fetch failed:", err.response?.data || err.message);
+      console.error("Dashboard Error:", err.response?.data || err.message);
       setData(null);
     } finally {
       setLoading(false);
@@ -40,36 +39,29 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
+  // Load TradingView Chart
   useEffect(() => {
-  const container = document.getElementById("tradingview_advanced_chart");
+    const container = document.getElementById("tradingview_advanced_chart");
+    if (!container) return;
 
-  if (!container) return;
+    container.innerHTML = "";
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.async = true;
+    script.text = JSON.stringify({
+      autosize: true,
+      symbol: "BINANCE:BTCUSDT",
+      interval: "15",
+      timezone: "Etc/UTC",
+      theme: "dark",
+      style: "1",
+      locale: "en",
+      allow_symbol_change: true
+    });
 
-  // Clear any previous chart
-  container.innerHTML = "";
-
-  const script = document.createElement("script");
-  script.type = "text/javascript";
-  script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-  script.async = true;
-
-  // ✅ Use .text instead of innerHTML
-  script.text = JSON.stringify({
-    autosize: true,
-    symbol: "BINANCE:BTCUSDT",
-    interval: "15",
-    timezone: "Etc/UTC",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    hide_top_toolbar: false,
-    allow_symbol_change: true,
-    hide_legend: false,
-  });
-
-  container.appendChild(script);
-}, []);
-
+    container.appendChild(script);
+  }, []);
 
   if (loading)
     return (
@@ -81,49 +73,42 @@ export default function Dashboard() {
   if (!data)
     return (
       <div className="flex justify-center items-center h-screen text-red-500 text-sm">
-        Failed to load dashboard (check console for details)
+        Failed to load dashboard
       </div>
     );
 
-  const plans = (data.plans || []).filter(plan => plan.status === "active");
-
+  // ✅ Only active plans are shown
+  const plans = (data.plans || []).filter((plan) => plan.status === "active");
   const history = data.history || [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm">
+
       {/* NAVBAR */}
       <header className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 shadow-sm fixed w-full top-0 z-10">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-green-400" />
-          <h1 className="text-sm font-bold text-emerald-600 tracking-wide">
-            MexicaTrading
-          </h1>
+          <h1 className="text-sm font-bold text-emerald-600">MexicaTrading</h1>
         </div>
       </header>
 
-      {/* MAIN DASHBOARD CONTENT */}
       <main className="pt-16 p-4 max-w-5xl mx-auto space-y-6">
 
-    
-
-        {/* Welcome */}
-        <h2 className="text-base font-semibold mb-2">
+        <h2 className="text-base font-semibold">
           👋 Welcome, <span className="text-emerald-500">{data.name}</span>
         </h2>
 
-            {/* ✅ Live Trading Chart */}
-        <section className="mt-6">
+        {/* TradingView */}
+        <section>
           <h3 className="text-sm font-bold mb-2">📈 Live Market Chart</h3>
           <div
             id="tradingview_advanced_chart"
             className="bg-white dark:bg-gray-800 rounded-md shadow-sm p-2"
             style={{ height: "400px" }}
-          >
-            {/* The chart will be embedded here */}
-          </div>
+          />
         </section>
-        
-        {/* Summary Cards */}
+
+        {/* Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow">
             <div className="flex items-center justify-between">
@@ -152,85 +137,63 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Buttons */}
         <div className="flex flex-wrap gap-2">
-  <button
-    onClick={() => navigate("/deposit")}
-    className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs shadow"
-  >
-    <ArrowDownCircle size={14} /> Deposit
-  </button>
+          <button onClick={() => navigate("/deposit")} className="btn-emerald">
+            <ArrowDownCircle size={14} /> Deposit
+          </button>
 
-  <button
-    onClick={() => navigate("/plans")}
-    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs shadow"
-  >
-    <TrendingUp size={14} /> Plans
-  </button>
+          <button onClick={() => navigate("/plans")} className="btn-blue">
+            <TrendingUp size={14} /> Plans
+          </button>
 
-  {/* ✅ New Active Plans Button */}
-  <button
-    onClick={() => {
-      document.getElementById("active-plans")?.scrollIntoView({ behavior: "smooth" });
-    }}
-    className="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs shadow"
-  >
-    <TrendingUp size={14} /> Active Plans
-  </button>
-
-  <button
-    onClick={() => navigate("/withdraw")}
-    className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs shadow"
-  >
-    <ArrowUpCircle size={14} /> Withdraw
-  </button>
-</div>
-
-
-     {/* ✅ ACTIVE PLANS SECTION */}
-<section id="active-plans" className="mt-6">
-  <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
-
-  {plans.length > 0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {plans.map((plan, idx) => {
-        const endDate = new Date(plan.endDate);
-        const today = new Date();
-        const daysLeft = Math.max(
-          0,
-          Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
-        );
-
-        return (
-          <div
-            key={idx}
-            className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+          <button
+            onClick={() => document.getElementById("active-plans")?.scrollIntoView({ behavior: "smooth" })}
+            className="btn-purple"
           >
-            <h4 className="text-base font-semibold mb-2">{plan.plan}</h4>
+            <TrendingUp size={14} /> Active Plans
+          </button>
 
-            <p className="text-xs text-gray-500 mb-1">
-              Invested: <span className="text-emerald-500 font-bold">${plan.amount}</span>
-            </p>
+          <button onClick={() => navigate("/withdraw")} className="btn-red">
+            <ArrowUpCircle size={14} /> Withdraw
+          </button>
+        </div>
 
-            <p className="text-xs text-gray-500 mb-1">
-              Profit: <span className="text-emerald-400 font-bold">${plan.profit}</span>
-            </p>
+        {/* ACTIVE PLANS */}
+        <section id="active-plans" className="mt-6">
+          <h3 className="text-sm font-bold mb-2">📊 Active Plans</h3>
 
-            <p className="text-xs text-gray-400 mb-1">⏳ Duration: {plan.duration} days</p>
-            <p className="text-xs text-gray-400 mb-1">📅 Ends: {endDate.toDateString()}</p>
+          {plans.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {plans.map((plan, idx) => {
+                const endDate = new Date(plan.endDate);
+                const today = new Date();
+                const daysLeft = Math.max(
+                  0,
+                  Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
+                );
 
-            <p className="text-sm font-semibold mt-2">
-              {daysLeft > 0 ? `🔥 ${daysLeft} day(s) remaining` : "✅ Completed"}
-            </p>
-          </div>
-        );
-      })}
-    </div>
-  ) : (
-    <p className="text-gray-500 text-xs">No active plans</p>
-  )}
-</section>
+                return (
+                  <div key={idx} className="plan-card">
+                    <h4 className="text-base font-semibold mb-2">{plan.plan}</h4>
 
+                    <p className="text-xs">Invested: <span className="text-emerald-500 font-bold">${plan.amount}</span></p>
+                    <p className="text-xs">Profit: <span className="text-emerald-400 font-bold">${plan.profit}</span></p>
+
+                    <p className="text-xs text-gray-400">⏳ {plan.duration} days</p>
+                    <p className="text-xs text-gray-400">📅 Ends: {endDate.toDateString()}</p>
+
+                    <p className="text-sm font-semibold mt-2">
+                      {daysLeft > 0 ? `🔥 ${daysLeft} day(s) remaining` : "✅ Completed"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-xs">No active plans</p>
+          )}
+        </section>
 
         {/* Recent Activity */}
         <section>
@@ -238,43 +201,21 @@ export default function Dashboard() {
           {history.length > 0 ? (
             <div className="space-y-1">
               {history.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm text-xs"
-                >
+                <div key={idx} className="history-card">
                   <span>{item.action || "Unknown"}</span>
-                  <span>
-                    {item.date
-                      ? new Date(item.date).toLocaleDateString()
-                      : "N/A"}
-                  </span>
-                  <span
-                    className={
-                      item.action === "Deposit"
-                        ? "text-emerald-500"
-                        : "text-red-500"
-                    }
-                  >
+                  <span>{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</span>
+                  <span className={item.action === "Deposit" ? "text-emerald-500" : "text-red-500"}>
                     ${item.amount ?? 0}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-xs">No recent activity yet</p>
+            <p className="text-gray-500 text-xs">No recent activity</p>
           )}
         </section>
+
       </main>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
