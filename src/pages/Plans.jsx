@@ -33,12 +33,13 @@ export default function Plans() {
     setMessage("");
 
     try {
-      // ✅ First, check user balance quietly (no display)
-      const profileRes = await fetch(`${API_URL}/api/users/profile`, {
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-        },
-      });
+     // ✅ First, check user balance
+const profileRes = await fetch(`${API_URL}/api/users/me`, {
+  headers: {
+    Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+  },
+});
+
 
       const profileData = await profileRes.json();
       const balance = profileData.balance || 0;
@@ -142,3 +143,4 @@ export default function Plans() {
     </div>
   );
 }
+
