@@ -101,15 +101,25 @@
 }
 
 
-.ticker-wrap {
-  position: sticky;
-  top: 48px; /* same height as your header */
-  z-index: 30;
+.ticker-fixed {
+  position: fixed;
+  top: 56px; /* Adjust this if your header is taller */
+  left: 0;
   width: 100%;
-  overflow: hidden;
-  background: #0b0f19; /* << BLACK BACKGROUND TO MATCH THE SITE */
+  background: #0b0f19;
   border-bottom: 1px solid rgba(0, 255, 135, 0.25);
-  white-space: nowrap;
   padding: 6px 0;
-  backdrop-filter: blur(6px);
+  z-index: 25;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ticker-text {
+  display: inline-block;
+  animation: tickerMove 20s linear infinite;
+}
+
+@keyframes tickerMove {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
 }
