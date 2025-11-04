@@ -155,48 +155,70 @@ export default function Dashboard() {
           </button>
         </div>
 
-       {/* ACTIVE PLANS */}
+      {/* ACTIVE PLANS */}
 <section>
   <h3 className="section-title">Active Plans</h3>
   {plans.length ? (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {plans.map((p, i) => {
+        const start = new Date(p.createdAt);
         const end = new Date(p.endDate);
-        const now = Date.now();
-        const totalDays = Math.ceil((end - new Date(p.startDate)) / 86400000);
-        const daysLeft = Math.max(0, Math.ceil((end - now) / 86400000));
-        const progress = totalDays > 0 ? ((totalDays - daysLeft) / totalDays) * 100 : 100;
+        const totalDays = p.duration;
+        const daysPassed = Math.min(
+          totalDays,
+          Math.floor((Date.now() - start) / 86400000)
+        );
+        const progress = Math.round((daysPassed / totalDays) * 100);
 
         return (
           <div
             key={i}
             className="crypto-card p-4 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4"
           >
-            {/* Progress Circle */}
-            <div className="w-20 h-20">
-              <CircularProgressbar
-                value={progress}
-                text={`${Math.round(progress)}%`}
-                styles={buildStyles({
-                  textSize: "26px",
-                  pathColor: `rgb(16 185 129)`,
-                  textColor: "#fff",
-                  trailColor: "#0f172a",
-                })}
-              />
+            {/* CIRCULAR PROGRESS */}
+            <div className="relative w-16 h-16">
+              <svg className="w-16 h-16 transform -rotate-90">
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke="black"
+                  strokeWidth="6"
+                  fill="transparent"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke="#10b981" // emerald-500
+                  strokeWidth="6"
+                  fill="transparent"
+                  strokeDasharray={2 * Math.PI * 28}
+                  strokeDashoffset={
+                    2 * Math.PI * 28 - (2 * Math.PI * 28 * progress) / 100
+                  }
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
+                {progress}%
+              </div>
             </div>
 
-            {/* Plan Info */}
-            <div className="flex-1">
+            {/* PLAN DETAILS */}
+            <div>
               <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
               <p>Invested: ${p.amount}</p>
               <p>
                 Profit: <span className="text-emerald-300">${p.profit}</span>
               </p>
               <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
-              <p className="mt-1">
-                {daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Complete"}
-              </p>
+
+              {progress < 100 ? (
+                <p className="mt-1 text-emerald-400">🔥 {totalDays - daysPassed} days left</p>
+              ) : (
+                <p className="mt-1 text-green-400 font-bold">✅ Completed</p>
+              )}
             </div>
           </div>
         );
@@ -206,6 +228,7 @@ export default function Dashboard() {
     <p className="opacity-60">No active plans</p>
   )}
 </section>
+
 
 
         {/* COMPLETED PLANS */}
@@ -261,6 +284,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
