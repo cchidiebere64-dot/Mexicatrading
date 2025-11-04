@@ -175,35 +175,42 @@ export default function Dashboard() {
             key={i}
             className="crypto-card p-4 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4"
           >
-            {/* CIRCULAR PROGRESS */}
-            <div className="relative w-16 h-16">
-              <svg className="w-16 h-16 transform -rotate-90">
-                <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
-                  stroke="black"
-                  strokeWidth="6"
-                  fill="transparent"
-                />
-                <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
-                  stroke="#10b981" // emerald-500
-                  strokeWidth="6"
-                  fill="transparent"
-                  strokeDasharray={2 * Math.PI * 28}
-                  strokeDashoffset={
-                    2 * Math.PI * 28 - (2 * Math.PI * 28 * progress) / 100
-                  }
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
-                {progress}%
-              </div>
-            </div>
+
+            {/* CIRCULAR PROGRESS (Animated) */}
+<div className="relative w-16 h-16">
+  <svg className="w-16 h-16 transform -rotate-90">
+    <circle
+      cx="32"
+      cy="32"
+      r="28"
+      stroke="black"
+      strokeWidth="6"
+      fill="transparent"
+    />
+    <circle
+      cx="32"
+      cy="32"
+      r="28"
+      stroke="#10b981"
+      strokeWidth="6"
+      fill="transparent"
+      strokeDasharray={2 * Math.PI * 28}
+      strokeDashoffset={
+        2 * Math.PI * 28 - (2 * Math.PI * 28 * progress) / 100
+      }
+      strokeLinecap="round"
+      style={{
+        transition: "stroke-dashoffset 1.5s ease-out",
+      }}
+    />
+  </svg>
+
+  {/* PERCENT NUMBER */}
+  <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
+    {progress}%
+  </div>
+</div>
+
 
             {/* PLAN DETAILS */}
             <div>
@@ -284,6 +291,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
