@@ -87,6 +87,17 @@ export default function Dashboard() {
         </h1>
       </header>
 
+
+      {/* TOP SCROLLING MESSAGE */}
+<div className="ticker-wrap mt-14">
+  <div className="ticker">
+    Welcome {data.name}! — Invest and grow your wealth today. — Start by choosing a plan. —
+    Withdraw profits anytime — MexicaTrading is here for your financial success.
+  </div>
+</div>
+
+
+      
       <main className="pt-20 px-4 max-w-5xl mx-auto animate-fade-in space-y-8">
         {/* Welcome */}
         <h2 className="text-xl font-semibold">
@@ -226,3 +237,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
