@@ -155,36 +155,58 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* ACTIVE PLANS */}
-        <section>
-          <h3 className="section-title">Active Plans</h3>
-          {plans.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {plans.map((p, i) => {
-                const end = new Date(p.endDate);
-                const daysLeft = Math.max(
-                  0,
-                  Math.ceil((end - Date.now()) / 86400000)
-                );
-                return (
-                  <div key={i} className="crypto-card p-4 bg-white/5 border border-white/10 rounded-xl">
-                    <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
-                    <p>Invested: ${p.amount}</p>
-                    <p>
-                      Profit: <span className="text-emerald-300">${p.profit}</span>
-                    </p>
-                    <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
-                    <p className="mt-2">
-                      {daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Complete"}
-                    </p>
-                  </div>
-                );
-              })}
+       {/* ACTIVE PLANS */}
+<section>
+  <h3 className="section-title">Active Plans</h3>
+  {plans.length ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {plans.map((p, i) => {
+        const end = new Date(p.endDate);
+        const now = Date.now();
+        const totalDays = Math.ceil((end - new Date(p.startDate)) / 86400000);
+        const daysLeft = Math.max(0, Math.ceil((end - now) / 86400000));
+        const progress = totalDays > 0 ? ((totalDays - daysLeft) / totalDays) * 100 : 100;
+
+        return (
+          <div
+            key={i}
+            className="crypto-card p-4 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4"
+          >
+            {/* Progress Circle */}
+            <div className="w-20 h-20">
+              <CircularProgressbar
+                value={progress}
+                text={`${Math.round(progress)}%`}
+                styles={buildStyles({
+                  textSize: "26px",
+                  pathColor: `rgb(16 185 129)`,
+                  textColor: "#fff",
+                  trailColor: "#0f172a",
+                })}
+              />
             </div>
-          ) : (
-            <p className="opacity-60">No active plans</p>
-          )}
-        </section>
+
+            {/* Plan Info */}
+            <div className="flex-1">
+              <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
+              <p>Invested: ${p.amount}</p>
+              <p>
+                Profit: <span className="text-emerald-300">${p.profit}</span>
+              </p>
+              <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
+              <p className="mt-1">
+                {daysLeft > 0 ? `🔥 ${daysLeft} days left` : "✅ Complete"}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <p className="opacity-60">No active plans</p>
+  )}
+</section>
+
 
         {/* COMPLETED PLANS */}
         <section>
@@ -239,6 +261,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
