@@ -89,7 +89,7 @@ export default function Dashboard() {
 
 
       {/* TOP SCROLLING MESSAGE */}
-<div className="ticker-wrap mt-14">
+<div className="ticker-wrap">
   <div className="ticker">
     Welcome {data.name}! — Invest and grow your wealth today. — Start by choosing a plan. —
     Withdraw profits anytime — MexicaTrading is here for your financial success.
@@ -237,4 +237,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
