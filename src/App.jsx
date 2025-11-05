@@ -14,15 +14,7 @@ import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
 
 // Admin pages
-import AdminUsers from "./pages/AdminUsers";
-import AdminPlans from "./pages/AdminPlans";
-import AdminDeposits from "./pages/AdminDeposits";
-import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminDashboardHome from "./pages/AdminDashboardHome";
-
-
-
-
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -42,8 +34,6 @@ function PageWrapper({ children }) {
   );
 }
 
-
-
 export default function App() {
   const token = sessionStorage.getItem("token"); // normal user
   const adminToken = sessionStorage.getItem("adminToken"); // admin
@@ -53,50 +43,39 @@ export default function App() {
       <Navbar />
 
       <PageWrapper>
-  <div className="pt-16">
-    <Routes>
+        <div className="pt-16">
+          <Routes>
+            {/* Public user routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/plans" element={<Plans />} />
 
-          {/* Public user routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/plans" element={<Plans />} />
+            {/* Protected user routes */}
+            <Route
+              path="/dashboard"
+              element={token ? <Dashboard /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/deposit"
+              element={token ? <Deposit /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/withdraw"
+              element={token ? <Withdraw /> : <Navigate to="/login" />}
+            />
 
-          {/* Protected user routes */}
-          <Route
-            path="/dashboard"
-            element={token ? <Dashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/deposit"
-            element={token ? <Deposit /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/withdraw"
-            element={token ? <Withdraw /> : <Navigate to="/login" />}
-          />
+            {/* Single-page Admin Dashboard */}
+            <Route
+              path="/admin"
+              element={adminToken ? <AdminDashboardHome /> : <Navigate to="/login" />}
+            />
 
-         {/* Protected admin routes */}
-
-<Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/login" />}>
-  <Route index element={<AdminDashboardHome />} />
-  <Route path="users" element={<AdminUsers />} />
-  <Route path="plans" element={<AdminPlans />} />
-  <Route path="deposits" element={<AdminDeposits />} />
-  <Route path="withdrawals" element={<AdminWithdrawals />} />
-</Route>
-
-          {/* Catch-all redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-           </Routes>
-  </div>
-</PageWrapper>
-
+            {/* Catch-all redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </PageWrapper>
     </Router>
   );
 }
-
-
-
-
-
