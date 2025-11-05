@@ -1,38 +1,52 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const [openMenu, setOpenMenu] = useState(false);
 
   const logout = () => {
-    sessionStorage.clear();
-    navigate("/");
+    sessionStorage.removeItem("adminToken");
+    navigate("/login");
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0b0f19] text-white">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-200">
 
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-black/40 border-r border-white/10 px-5 py-6 space-y-6">
-        <h2 className="text-2xl font-bold text-emerald-400">Admin Panel</h2>
+      {/* Sidebar */}
+      <div className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-gray-800 border-r border-gray-700 p-5 
+        transform ${openMenu ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 transition-transform duration-300`}>
+        
+        <h2 className="text-2xl font-bold mb-6 text-emerald-400">Admin Panel</h2>
 
-        <nav className="flex flex-col gap-3 text-sm">
-          <Link className="hover:text-emerald-400" to="/admin">Dashboard</Link>
-          <Link className="hover:text-emerald-400" to="/admin/users">Users</Link>
-          <Link className="hover:text-emerald-400" to="/admin/deposits">Deposits</Link>
-          <Link className="hover:text-emerald-400" to="/admin/credit">Credit User</Link>
+        <nav className="flex flex-col gap-3">
+          <Link to="/admin" className="hover:text-emerald-400">Dashboard</Link>
+          <Link to="/admin/users" className="hover:text-emerald-400">Manage Users</Link>
+          <Link to="/admin/deposits" className="hover:text-emerald-400">Deposits</Link>
+          <Link to="/admin/withdrawals" className="hover:text-emerald-400">Withdrawals</Link>
+          <Link to="/admin/plans" className="hover:text-emerald-400">Manage Plans</Link>
         </nav>
 
         <button
           onClick={logout}
-          className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-white w-full">
+          className="mt-6 bg-red-600 hover:bg-red-700 py-2 w-full rounded-lg text-white"
+        >
           Logout
         </button>
-      </aside>
+      </div>
 
-      {/* CONTENT AREA */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setOpenMenu(!openMenu)}
+        className="md:hidden fixed top-4 left-4 bg-emerald-600 text-white p-2 rounded-lg z-50"
+      >
+        ☰
+      </button>
+
+      {/* Content Area */}
+      <div className="flex-1 ml-0 md:ml-64 p-6 md:p-10 transition-all">
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 }
