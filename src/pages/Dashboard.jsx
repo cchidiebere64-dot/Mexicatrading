@@ -176,11 +176,12 @@ export default function Dashboard() {
             className="crypto-card p-4 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4"
           >
 
-            {/* CIRCULAR PROGRESS (Animated) */}
+            
 
-            <div className="relative w-16 h-16">
+
+  {/* CIRCULAR PROGRESS (Animated) */}
+<div className="relative w-16 h-16">
   <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
-    {/* Background Circle */}
     <circle
       cx="18"
       cy="18"
@@ -190,7 +191,6 @@ export default function Dashboard() {
       fill="none"
     />
 
-    {/* Progress Circle */}
     <circle
       cx="18"
       cy="18"
@@ -207,18 +207,12 @@ export default function Dashboard() {
     />
   </svg>
 
-  {/* Text */}
-  <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
-    {progress}%
-  </div>
-</div>
-
-
-  {/* PERCENT NUMBER */}
+  {/* ✅ Center Percentage Correctly */}
   <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
     {progress}%
   </div>
 </div>
+
 
 
             {/* PLAN DETAILS */}
@@ -300,6 +294,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
