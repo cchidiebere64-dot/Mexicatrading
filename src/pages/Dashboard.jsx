@@ -188,21 +188,23 @@ export default function Dashboard() {
       fill="transparent"
     />
     <circle
-      cx="32"
-      cy="32"
-      r="28"
-      stroke="#10b981"
-      strokeWidth="6"
-      fill="transparent"
-      strokeDasharray={2 * Math.PI * 28}
-      strokeDashoffset={
-        2 * Math.PI * 28 - (2 * Math.PI * 28 * progress) / 100
-      }
-      strokeLinecap="round"
-      style={{
-        transition: "stroke-dashoffset 1.5s ease-out",
-      }}
-    />
+  cx="32"
+  cy="32"
+  r="28"
+  stroke="#10b981"
+  strokeWidth="6"
+  fill="transparent"
+  className="spin-slow"  // ✅ spinning
+  strokeDasharray={2 * Math.PI * 28}
+  strokeDashoffset={
+    2 * Math.PI * 28 - (2 * Math.PI * 28 * progress) / 100
+  }
+  strokeLinecap="round"
+  style={{
+    transition: "stroke-dashoffset 1.5s ease-out",
+  }}
+/>
+
   </svg>
 
   {/* PERCENT NUMBER */}
@@ -291,6 +293,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
