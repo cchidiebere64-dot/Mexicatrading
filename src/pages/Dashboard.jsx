@@ -180,7 +180,7 @@ export default function Dashboard() {
 
 
   {/* CIRCULAR PROGRESS (Animated) */}
-<div className="relative w-16 h-16">
+<div className="relative w-16 h-16 animate-spin-slow">
   <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
     <circle
       cx="18"
@@ -190,7 +190,6 @@ export default function Dashboard() {
       strokeWidth="4"
       fill="none"
     />
-
     <circle
       cx="18"
       cy="18"
@@ -207,11 +206,11 @@ export default function Dashboard() {
     />
   </svg>
 
-  {/* ✅ Center Percentage Correctly */}
   <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
     {progress}%
   </div>
 </div>
+
 
 
 
@@ -294,6 +293,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
