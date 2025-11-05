@@ -145,3 +145,9 @@
   opacity: 1;
   transition: opacity 0.5s ease;
 }
+
+/* small rotating arc that does NOT rotate the whole svg or text */
+.spinner-arc {
+  transform-origin: 50% 50%;
+  animation: spin-slow 2.2s linear infinite;
+}
