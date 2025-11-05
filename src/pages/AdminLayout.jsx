@@ -1,16 +1,27 @@
 import React, { useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { FiMenu, FiX } from "react-icons/fi";
 
 export default function AdminLayout() {
   const admin = JSON.parse(localStorage.getItem("adminUser"));
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  const navItems = [
+    { path: "/admin", label: "🏠 Dashboard" },
+    { path: "/admin/users", label: "👥 Manage Users" },
+    { path: "/admin/plans", label: "📦 Manage Plans" },
+    { path: "/admin/deposits", label: "💰 Deposits" },
+    { path: "/admin/withdrawals", label: "💸 Withdrawals" },
+  ];
+
+  const isActive = (path) => location.pathname === path;
 
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Mobile Sidebar */}
       <div className={`fixed inset-0 z-40 md:hidden ${sidebarOpen ? "block" : "hidden"}`}>
-        <div 
+        <div
           className="fixed inset-0 bg-black opacity-50"
           onClick={() => setSidebarOpen(false)}
         ></div>
@@ -22,11 +33,18 @@ export default function AdminLayout() {
             </button>
           </div>
           <nav className="flex-1 p-4 space-y-2">
-            <Link to="/admin" className="block px-3 py-2 rounded hover:bg-gray-800">🏠 Dashboard</Link>
-            <Link to="/admin/users" className="block px-3 py-2 rounded hover:bg-gray-800">👥 Manage Users</Link>
-            <Link to="/admin/plans" className="block px-3 py-2 rounded hover:bg-gray-800">📦 Manage Plans</Link>
-            <Link to="/admin/deposits" className="block px-3 py-2 rounded hover:bg-gray-800">💰 Deposits</Link>
-            <Link to="/admin/withdrawals" className="block px-3 py-2 rounded hover:bg-gray-800">💸 Withdrawals</Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={`block px-3 py-2 rounded transition ${
+                  isActive(item.path) ? "bg-gray-800 font-semibold" : "hover:bg-gray-800"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
           <div className="p-4 border-t border-gray-700">
             <button
@@ -46,11 +64,17 @@ export default function AdminLayout() {
       <aside className="hidden md:flex md:flex-col w-64 bg-gray-900 text-white">
         <div className="p-6 text-2xl font-bold border-b border-gray-700">⚡ Admin Panel</div>
         <nav className="flex-1 p-4 space-y-2">
-          <Link to="/admin" className="block px-3 py-2 rounded hover:bg-gray-800">🏠 Dashboard</Link>
-          <Link to="/admin/users" className="block px-3 py-2 rounded hover:bg-gray-800">👥 Manage Users</Link>
-          <Link to="/admin/plans" className="block px-3 py-2 rounded hover:bg-gray-800">📦 Manage Plans</Link>
-          <Link to="/admin/deposits" className="block px-3 py-2 rounded hover:bg-gray-800">💰 Deposits</Link>
-          <Link to="/admin/withdrawals" className="block px-3 py-2 rounded hover:bg-gray-800">💸 Withdrawals</Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`block px-3 py-2 rounded transition ${
+                isActive(item.path) ? "bg-gray-800 font-semibold" : "hover:bg-gray-800"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
         <div className="p-4 border-t border-gray-700">
           <button
