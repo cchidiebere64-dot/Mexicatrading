@@ -23,7 +23,17 @@ export default function AdminDashboardHome() {
           headers: { Authorization: `Bearer ${adminToken}` },
         });
 
-        setStats(response.data);
+        // Ensure default structure in case backend omits fields
+        setStats({
+          users: response.data.users || 0,
+          plans: response.data.plans || 0,
+          deposits: response.data.deposits || 0,
+          withdrawals: response.data.withdrawals || 0,
+          recentActivity: Array.isArray(response.data.recentActivity)
+            ? response.data.recentActivity
+            : [],
+        });
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
@@ -42,6 +52,7 @@ export default function AdminDashboardHome() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
+      {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-blue-100 p-4 rounded shadow">
           <h2 className="text-lg font-semibold">Total Users</h2>
@@ -61,9 +72,10 @@ export default function AdminDashboardHome() {
         </div>
       </div>
 
+      {/* Recent Activity */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-        {stats.recentActivity.length === 0 ? (
+        {(!stats.recentActivity || stats.recentActivity.length === 0) ? (
           <p>No recent activity</p>
         ) : (
           <table className="w-full border">
@@ -77,12 +89,16 @@ export default function AdminDashboardHome() {
             </thead>
             <tbody>
               {stats.recentActivity.map((activity) => (
-                <tr key={activity._id} className="text-center">
-                  <td className="p-2 border">{activity.user?.name || "Unknown"}</td>
-                  <td className="p-2 border">{activity.action}</td>
-                  <td className="p-2 border">{activity.details}</td>
+                <tr key={activity._id || Math.random()} className="text-center">
                   <td className="p-2 border">
-                    {new Date(activity.createdAt).toLocaleString()}
+                    {activity?.user?.name || "Unknown"}
+                  </td>
+                  <td className="p-2 border">{activity?.action || "N/A"}</td>
+                  <td className="p-2 border">{activity?.details || "N/A"}</td>
+                  <td className="p-2 border">
+                    {activity?.createdAt
+                      ? new Date(activity.createdAt).toLocaleString()
+                      : "—"}
                   </td>
                 </tr>
               ))}
