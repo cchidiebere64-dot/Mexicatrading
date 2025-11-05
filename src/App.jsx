@@ -14,11 +14,15 @@ import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
 
 // Admin pages
-import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPlans from "./pages/AdminPlans";
 import AdminDeposits from "./pages/AdminDeposits";
 import AdminWithdrawals from "./pages/AdminWithdrawals";
+import AdminLayout from "./pages/AdminLayout";
+import AdminDashboardHome from "./pages/AdminDashboardHome";
+
+
+
 
 
 function PageWrapper({ children }) {
@@ -73,27 +77,18 @@ export default function App() {
             element={token ? <Withdraw /> : <Navigate to="/login" />}
           />
 
-          {/* Protected admin routes */}
-          <Route
-            path="/admin"
-            element={adminToken ? <AdminDashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/admin/users"
-            element={adminToken ? <AdminUsers /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/admin/plans"
-            element={adminToken ? <AdminPlans /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/admin/deposits"
-            element={adminToken ? <AdminDeposits /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/admin/withdrawals"
-            element={adminToken ? <AdminWithdrawals /> : <Navigate to="/login" />}
-          />
+         {/* Protected admin routes */}
+<Route
+  path="/admin"
+  element={adminToken ? <AdminLayout /> : <Navigate to="/login" />}
+/>
+<Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/login" />}>
+  <Route index element={<AdminDashboardHome />} />
+  <Route path="users" element={<AdminUsers />} />
+  <Route path="plans" element={<AdminPlans />} />
+  <Route path="deposits" element={<AdminDeposits />} />
+  <Route path="withdrawals" element={<AdminWithdrawals />} />
+</Route>
 
           {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -104,6 +99,7 @@ export default function App() {
     </Router>
   );
 }
+
 
 
 
