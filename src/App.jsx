@@ -18,7 +18,6 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminPlans from "./pages/AdminPlans";
 import AdminDeposits from "./pages/AdminDeposits";
 import AdminWithdrawals from "./pages/AdminWithdrawals";
-import AdminLayout from "./pages/AdminLayout";
 import AdminDashboardHome from "./pages/AdminDashboardHome";
 
 
@@ -78,10 +77,7 @@ export default function App() {
           />
 
          {/* Protected admin routes */}
-<Route
-  path="/admin"
-  element={adminToken ? <AdminLayout /> : <Navigate to="/login" />}
-/>
+
 <Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/login" />}>
   <Route index element={<AdminDashboardHome />} />
   <Route path="users" element={<AdminUsers />} />
@@ -99,6 +95,7 @@ export default function App() {
     </Router>
   );
 }
+
 
 
 
