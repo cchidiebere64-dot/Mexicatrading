@@ -11,29 +11,31 @@ export default function AdminDashboardHome() {
     withdrawals: 0,
   });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [usersRes, plansRes, depositsRes, withdrawalsRes] = await Promise.all([
-          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/users/count"),
-          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/plans/count"),
-          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/deposits/total"),
-          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/withdrawals/total"),
-        ]);
+useEffect(() => {
+  const fetchStats = async () => {
+    try {
+      const [usersRes, plansRes, depositsRes, withdrawalsRes] = await Promise.all([
+        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/users/count"),
+        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/plans/count"),
+        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/deposits/total"),
+        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/withdrawals/total"),
+      ]);
 
-        setStats({
-          users: usersRes.data.count || 0,
-          plans: plansRes.data.count || 0,
-          deposits: depositsRes.data.total || 0,
-          withdrawals: withdrawalsRes.data.total || 0,
-        });
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-      }
-    };
+      setStats({
+        users: usersRes.data.count,
+        plans: plansRes.data.count,
+        deposits: depositsRes.data.total,
+        withdrawals: withdrawalsRes.data.total,
+      });
+    } catch (err) {
+      console.error("Error fetching dashboard stats:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStats();
-  }, []);
+  fetchStats();
+}, []);
 
   return (
     <div className="space-y-6">
@@ -119,3 +121,4 @@ export default function AdminDashboardHome() {
     </div>
   );
 }
+
