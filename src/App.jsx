@@ -14,7 +14,15 @@ import Plans from "./pages/Plans";
 import Withdraw from "./pages/Withdraw";
 
 // Admin pages
+import AdminLayout from "./pages/AdminLayout";
+import AdminLogin from "./pages/AdminLogin";
 import AdminDashboardHome from "./pages/AdminDashboardHome";
+import AdminUsers from "./pages/AdminUsers";
+import AdminPlans from "./pages/AdminPlans";
+import ActivePlans from "./pages/ActivePlans";
+import AdminDeposits from "./pages/AdminDeposits";
+import AdminWithdrawals from "./pages/AdminWithdrawals";
+import AdminCreditUser from "./pages/AdminCreditUser";
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -40,11 +48,13 @@ export default function App() {
 
   return (
     <Router>
-      <Navbar />
+      {/* Only show Navbar for normal users */}
+      {!window.location.pathname.startsWith("/admin") && <Navbar />}
+
       <PageWrapper>
         <div className="pt-16">
           <Routes>
-            {/* Public user routes */}
+            {/* -------------------- USER ROUTES -------------------- */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -64,13 +74,27 @@ export default function App() {
               element={token ? <Withdraw /> : <Navigate to="/login" />}
             />
 
-            {/* Admin dashboard */}
+            {/* -------------------- ADMIN ROUTES -------------------- */}
+            {/* Public admin login */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+
+            {/* Protected admin routes with layout and nested pages */}
             <Route
               path="/admin"
-              element={adminToken ? <AdminDashboardHome /> : <Navigate to="/login" />}
-            />
+              element={
+                adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />
+              }
+            >
+              <Route index element={<AdminDashboardHome />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="plans" element={<AdminPlans />} />
+              <Route path="active-plans" element={<ActivePlans />} />
+              <Route path="deposits" element={<AdminDeposits />} />
+              <Route path="withdrawals" element={<AdminWithdrawals />} />
+              <Route path="credit-user" element={<AdminCreditUser />} />
+            </Route>
 
-            {/* Catch-all redirect */}
+            {/* -------------------- DEFAULT -------------------- */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
