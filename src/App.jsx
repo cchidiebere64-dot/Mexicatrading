@@ -65,6 +65,11 @@ export default function App() {
               element={token ? <Withdraw /> : <Navigate to="/login" />}
             />
 
+            <Route
+  path="/admin"
+  element={adminToken ? <AdminDashboardHome /> : <Navigate to="/login" />}
+/>
+
             {/* Single-page Admin Dashboard */}
             <Route
               path="/admin"
@@ -79,3 +84,4 @@ export default function App() {
     </Router>
   );
 }
+
