@@ -1,124 +1,92 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { FiUsers, FiPackage, FiDollarSign, FiArrowUpCircle } from "react-icons/fi";
 import axios from "axios";
 
-export default function AdminDashboardHome() {
+const AdminDashboardHome = () => {
   const [stats, setStats] = useState({
     users: 0,
     plans: 0,
     deposits: 0,
     withdrawals: 0,
+    recentActivity: [],
   });
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const fetchStats = async () => {
-    try {
-      const [usersRes, plansRes, depositsRes, withdrawalsRes] = await Promise.all([
-        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/users/count"),
-        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/plans/count"),
-        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/deposits/total"),
-        axios.get("https://fashionstorebackend-91gq.onrender.com/api/admin/withdrawals/total"),
-      ]);
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const { data } = await axios.get("/api/admin/dashboard", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          },
+        });
+        setStats(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        setLoading(false);
+      }
+    };
 
-      setStats({
-        users: usersRes.data.count,
-        plans: plansRes.data.count,
-        deposits: depositsRes.data.total,
-        withdrawals: withdrawalsRes.data.total,
-      });
-    } catch (err) {
-      console.error("Error fetching dashboard stats:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchDashboardStats();
+  }, []);
 
-  fetchStats();
-}, []);
+  if (loading) return <div>Loading admin dashboard...</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-emerald-500 mb-2">Admin Dashboard Overview</h1>
-        <p className="text-gray-400">Quick overview of platform stats and management options.</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white shadow-md rounded-lg p-6 flex items-center space-x-4 hover:shadow-xl transition">
-          <div className="bg-emerald-500 text-white p-3 rounded-full">
-            <FiUsers size={24} />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">Total Users</p>
-            <p className="text-xl font-semibold">{stats.users}</p>
-          </div>
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h1>Admin Dashboard</h1>
+      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
+          <h3>Total Users</h3>
+          <p>{stats.users}</p>
         </div>
-
-        <div className="bg-white shadow-md rounded-lg p-6 flex items-center space-x-4 hover:shadow-xl transition">
-          <div className="bg-blue-500 text-white p-3 rounded-full">
-            <FiPackage size={24} />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">Total Plans</p>
-            <p className="text-xl font-semibold">{stats.plans}</p>
-          </div>
+        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
+          <h3>Total Plans</h3>
+          <p>{stats.plans}</p>
         </div>
-
-        <div className="bg-white shadow-md rounded-lg p-6 flex items-center space-x-4 hover:shadow-xl transition">
-          <div className="bg-yellow-500 text-white p-3 rounded-full">
-            <FiDollarSign size={24} />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">Deposits</p>
-            <p className="text-xl font-semibold">${stats.deposits}</p>
-          </div>
+        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
+          <h3>Total Deposits</h3>
+          <p>${stats.deposits}</p>
         </div>
-
-        <div className="bg-white shadow-md rounded-lg p-6 flex items-center space-x-4 hover:shadow-xl transition">
-          <div className="bg-red-500 text-white p-3 rounded-full">
-            <FiArrowUpCircle size={24} />
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">Withdrawals</p>
-            <p className="text-xl font-semibold">${stats.withdrawals}</p>
-          </div>
+        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
+          <h3>Total Withdrawals</h3>
+          <p>${stats.withdrawals}</p>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link
-            to="/admin/users"
-            className="bg-emerald-500 text-white p-4 rounded-lg text-center hover:bg-emerald-600 transition"
-          >
-            Manage Users
-          </Link>
-          <Link
-            to="/admin/plans"
-            className="bg-blue-500 text-white p-4 rounded-lg text-center hover:bg-blue-600 transition"
-          >
-            Manage Plans
-          </Link>
-          <Link
-            to="/admin/deposits"
-            className="bg-yellow-500 text-white p-4 rounded-lg text-center hover:bg-yellow-600 transition"
-          >
-            View Deposits
-          </Link>
-          <Link
-            to="/admin/withdrawals"
-            className="bg-red-500 text-white p-4 rounded-lg text-center hover:bg-red-600 transition"
-          >
-            View Withdrawals
-          </Link>
-        </div>
+      <div style={{ marginTop: "40px" }}>
+        <h2>Recent Activities</h2>
+        {stats.recentActivity.length === 0 ? (
+          <p>No recent activity</p>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>User</th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>Action</th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>Details</th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.recentActivity.map((act) => (
+                <tr key={act._id}>
+                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    {act.user ? act.user.name : "System"}
+                  </td>
+                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>{act.action}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>{act.details}</td>
+                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    {new Date(act.createdAt).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
-}
+};
 
+export default AdminDashboardHome;
