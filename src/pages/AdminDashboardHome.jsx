@@ -1,255 +1,117 @@
-import React, { useEffect, useState } from "react";
+// src/pages/AdminDashboardHome.jsx
+import { useState, useEffect } from "react";
 import axios from "axios";
 
-const AdminDashboardHome = () => {
+export default function AdminDashboardHome() {
   const [stats, setStats] = useState({
-    users: 0,
-    plans: 0,
-    deposits: 0,
-    withdrawals: 0,
-    recentActivity: [],
-    allUsers: [],
-    allDeposits: [],
-    allWithdrawals: [],
+    users: [],
+    plans: [],
+    deposits: [],
+    withdrawals: [],
+    logs: [],
   });
   const [loading, setLoading] = useState(true);
-
-  const token = localStorage.getItem("adminToken");
-
-  const fetchDashboardData = async () => {
-    try {
-      const { data } = await axios.get("/api/admin/dashboard", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const depositsData = await axios.get("/api/admin/deposits", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const usersData = await axios.get("/api/admin/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const withdrawalsData = await axios.get("/api/admin/withdrawals", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setStats({
-        ...stats,
-        users: data.totalUsers,
-        plans: data.totalPlans,
-        deposits: data.totalDeposits,
-        withdrawals: data.totalWithdrawals,
-        recentActivity: data.recentActivity,
-        allUsers: usersData.data,
-        allDeposits: depositsData.data,
-        allWithdrawals: withdrawalsData.data,
-      });
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setLoading(false);
-    }
-  };
+  const adminToken = sessionStorage.getItem("adminToken");
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    const fetchStats = async () => {
+      try {
+        const headers = {
+          Authorization: `Bearer ${adminToken}`,
+        };
 
-  if (loading) return <div>Loading Admin Dashboard...</div>;
+        // Fetch all users
+        const usersRes = await axios.get("/api/admin/users", { headers });
 
-  // Handler examples
-  const handleApproveDeposit = async (id) => {
-    await axios.put(
-      `/api/admin/deposits/${id}`,
-      { action: "approve" },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchDashboardData();
-  };
+        // Fetch all plans
+        const plansRes = await axios.get("/api/plans", { headers });
 
-  const handleRejectDeposit = async (id) => {
-    await axios.put(
-      `/api/admin/deposits/${id}`,
-      { action: "reject" },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchDashboardData();
-  };
+        // Fetch all deposits
+        const depositsRes = await axios.get("/api/admin/deposits", { headers });
 
-  const handleFreezeUser = async (id) => {
-    await axios.put(
-      `/api/admin/users/${id}/freeze`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchDashboardData();
-  };
+        // Fetch all withdrawals
+        const withdrawalsRes = await axios.get("/api/admin/withdrawals", { headers });
 
-  const handleDeleteUser = async (id) => {
-    await axios.delete(`/api/admin/users/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    fetchDashboardData();
-  };
+        // Fetch all activity logs
+        const logsRes = await axios.get("/api/admin/logs", { headers });
 
-  const handleUpdateBalance = async (id, type, amount) => {
-    await axios.put(
-      `/api/admin/users/${id}/balance`,
-      { type, amount },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchDashboardData();
-  };
+        setStats({
+          users: usersRes.data ?? [],
+          plans: plansRes.data ?? [],
+          deposits: depositsRes.data ?? [],
+          withdrawals: withdrawalsRes.data ?? [],
+          logs: logsRes.data ?? [],
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch admin data:", error);
+        setLoading(false);
+      }
+    };
 
-  const handleResetPassword = async (id, newPassword) => {
-    await axios.put(
-      `/api/admin/users/${id}/reset-password`,
-      { newPassword },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchDashboardData();
-  };
+    fetchStats();
+  }, [adminToken]);
+
+  if (loading) {
+    return <div>Loading admin dashboard...</div>;
+  }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Admin Dashboard</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
 
-      {/* Stats */}
-      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
-        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
-          <h3>Total Users</h3>
-          <p>{stats.users}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div className="p-4 bg-gray-100 rounded">
+          <h2 className="font-bold">Total Users</h2>
+          <p>{stats.users?.length ?? 0}</p>
         </div>
-        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
-          <h3>Total Plans</h3>
-          <p>{stats.plans}</p>
+        <div className="p-4 bg-gray-100 rounded">
+          <h2 className="font-bold">Total Plans</h2>
+          <p>{stats.plans?.length ?? 0}</p>
         </div>
-        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
-          <h3>Total Deposits</h3>
-          <p>${stats.deposits}</p>
+        <div className="p-4 bg-gray-100 rounded">
+          <h2 className="font-bold">Total Deposits</h2>
+          <p>{stats.deposits?.length ?? 0}</p>
         </div>
-        <div style={{ padding: "20px", border: "1px solid #ccc" }}>
-          <h3>Total Withdrawals</h3>
-          <p>${stats.withdrawals}</p>
+        <div className="p-4 bg-gray-100 rounded">
+          <h2 className="font-bold">Total Withdrawals</h2>
+          <p>{stats.withdrawals?.length ?? 0}</p>
+        </div>
+        <div className="p-4 bg-gray-100 rounded col-span-full">
+          <h2 className="font-bold">Recent Activity Logs</h2>
+          <ul className="max-h-64 overflow-y-auto">
+            {stats.logs?.map((log, idx) => (
+              <li key={idx} className="border-b py-1">
+                <strong>{log.action}</strong>: {log.details}
+              </li>
+            )) ?? <li>No logs yet</li>}
+          </ul>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div style={{ marginTop: "40px" }}>
-        <h2>Recent Activities</h2>
-        {stats.recentActivity.length === 0 ? (
-          <p>No recent activity</p>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Action</th>
-                <th>Details</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.recentActivity.map((act) => (
-                <tr key={act._id}>
-                  <td>{act.user ? act.user.name : "System"}</td>
-                  <td>{act.action}</td>
-                  <td>{act.details}</td>
-                  <td>{new Date(act.createdAt).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-white rounded shadow">
+          <h2 className="font-bold mb-2">Users</h2>
+          <ul className="max-h-64 overflow-y-auto">
+            {stats.users?.map(user => (
+              <li key={user._id} className="border-b py-1">
+                {user.name} ({user.email}) - Balance: ${user.balance ?? 0}
+              </li>
+            )) ?? <li>No users found</li>}
+          </ul>
+        </div>
 
-      {/* Users Table */}
-      <div style={{ marginTop: "40px" }}>
-        <h2>All Users</h2>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Balance</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.allUsers.map((user) => (
-              <tr key={user._id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>${user.balance}</td>
-                <td>
-                  <button onClick={() => handleFreezeUser(user._id)}>
-                    {user.freezeWithdrawals ? "Unfreeze" : "Freeze"}
-                  </button>{" "}
-                  <button onClick={() => handleDeleteUser(user._id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Deposits Table */}
-      <div style={{ marginTop: "40px" }}>
-        <h2>All Deposits</h2>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.allDeposits.map((d) => (
-              <tr key={d._id}>
-                <td>{d.user.name}</td>
-                <td>${d.amount}</td>
-                <td>{d.status}</td>
-                <td>
-                  {d.status === "pending" && (
-                    <>
-                      <button onClick={() => handleApproveDeposit(d._id)}>Approve</button>{" "}
-                      <button onClick={() => handleRejectDeposit(d._id)}>Reject</button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Withdrawals Table */}
-      <div style={{ marginTop: "40px" }}>
-        <h2>All Withdrawals</h2>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Amount</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.allWithdrawals.map((w) => (
-              <tr key={w._id}>
-                <td>{w.user.name}</td>
-                <td>${w.amount}</td>
-                <td>{w.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="p-4 bg-white rounded shadow">
+          <h2 className="font-bold mb-2">Plans</h2>
+          <ul className="max-h-64 overflow-y-auto">
+            {stats.plans?.map(plan => (
+              <li key={plan._id} className="border-b py-1">
+                {plan.name} - Min: ${plan.minAmount}, Max: ${plan.maxAmount}, Profit: {plan.profitRate}%
+              </li>
+            )) ?? <li>No plans found</li>}
+          </ul>
+        </div>
       </div>
     </div>
   );
-};
-
-export default AdminDashboardHome;
+}
