@@ -41,7 +41,6 @@ export default function App() {
   return (
     <Router>
       <Navbar />
-
       <PageWrapper>
         <div className="pt-16">
           <Routes>
@@ -65,12 +64,7 @@ export default function App() {
               element={token ? <Withdraw /> : <Navigate to="/login" />}
             />
 
-            <Route
-  path="/admin"
-  element={adminToken ? <AdminDashboardHome /> : <Navigate to="/login" />}
-/>
-
-            {/* Single-page Admin Dashboard */}
+            {/* Admin dashboard */}
             <Route
               path="/admin"
               element={adminToken ? <AdminDashboardHome /> : <Navigate to="/login" />}
@@ -84,4 +78,3 @@ export default function App() {
     </Router>
   );
 }
-
