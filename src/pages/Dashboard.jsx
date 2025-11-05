@@ -177,24 +177,21 @@ export default function Dashboard() {
           >
 
             
-
-
-  {/* CIRCULAR PROGRESS (Animated) */}
+{/* PROGRESS + SUBTLE ROTATING ARC (static progress, spinning arc) */}
 <div className="relative w-16 h-16">
-  <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
-    {/* Background Circle */}
+  <svg className="w-16 h-16" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+    {/* Background track */}
     <circle
       cx="18"
       cy="18"
       r="15"
-      stroke="#1a1a1a"
+      stroke="#0f1720"
       strokeWidth="4"
       fill="none"
     />
 
-    {/* Progress Circle (Only this spins) */}
+    {/* Main progress (static - shows the real % fill) */}
     <circle
-      className="spin-slow"
       cx="18"
       cy="18"
       r="15"
@@ -208,13 +205,29 @@ export default function Dashboard() {
       strokeLinecap="round"
       style={{ transition: "stroke-dashoffset 1s ease-out" }}
     />
+
+    {/* Rotating thin arc on top (purely decorative) */}
+    <circle
+      className="spinner-arc"
+      cx="18"
+      cy="18"
+      r="15"
+      stroke="#a7f3d0"              /* lighter green for contrast */
+      strokeWidth="2"
+      fill="none"
+      strokeDasharray="12 90"       /* small arc + gap */
+      strokeDashoffset="0"
+      strokeLinecap="round"
+      transform="rotate(-90 18 18)" /* start at top */
+    />
   </svg>
 
-  {/* Percentage Text (Stays Still) */}
+  {/* Percentage text (stays still) */}
   <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
     {progress}%
   </div>
 </div>
+
 
 
 
@@ -299,6 +312,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
