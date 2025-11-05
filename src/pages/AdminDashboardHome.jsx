@@ -1,116 +1,104 @@
-// src/pages/AdminDashboardHome.jsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function AdminDashboardHome() {
-  const [stats, setStats] = useState({
-    users: [],
-    plans: [],
-    deposits: [],
-    withdrawals: [],
-    logs: [],
-  });
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPlans, setTotalPlans] = useState(0);
+  const [totalDeposits, setTotalDeposits] = useState(0);
+  const [totalWithdrawals, setTotalWithdrawals] = useState(0);
+  const [userLogs, setUserLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const adminToken = sessionStorage.getItem("adminToken");
 
+  const fetchDashboardData = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${adminToken}` };
+
+      // Fetch total users
+      const usersRes = await axios.get("/api/admin/users", { headers });
+      setTotalUsers(Array.isArray(usersRes.data) ? usersRes.data.length : 0);
+
+      // Fetch total plans
+      const plansRes = await axios.get("/api/plans", { headers });
+      setTotalPlans(Array.isArray(plansRes.data) ? plansRes.data.length : 0);
+
+      // Fetch deposits
+      const depositsRes = await axios.get("/api/admin/deposits", { headers });
+      setTotalDeposits(Array.isArray(depositsRes.data) ? depositsRes.data.length : 0);
+
+      // Fetch withdrawals
+      const withdrawalsRes = await axios.get("/api/admin/withdrawals", { headers });
+      setTotalWithdrawals(Array.isArray(withdrawalsRes.data) ? withdrawalsRes.data.length : 0);
+
+      // Fetch activity logs (user actions)
+      const logsRes = await axios.get("/api/activity", { headers });
+      setUserLogs(Array.isArray(logsRes.data) ? logsRes.data.reverse() : []);
+
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const headers = {
-          Authorization: `Bearer ${adminToken}`,
-        };
+    fetchDashboardData();
+  }, []);
 
-        // Fetch all users
-        const usersRes = await axios.get("/api/admin/users", { headers });
-
-        // Fetch all plans
-        const plansRes = await axios.get("/api/plans", { headers });
-
-        // Fetch all deposits
-        const depositsRes = await axios.get("/api/admin/deposits", { headers });
-
-        // Fetch all withdrawals
-        const withdrawalsRes = await axios.get("/api/admin/withdrawals", { headers });
-
-        // Fetch all activity logs
-        const logsRes = await axios.get("/api/admin/logs", { headers });
-
-        setStats({
-          users: usersRes.data ?? [],
-          plans: plansRes.data ?? [],
-          deposits: depositsRes.data ?? [],
-          withdrawals: withdrawalsRes.data ?? [],
-          logs: logsRes.data ?? [],
-        });
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch admin data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [adminToken]);
-
-  if (loading) {
-    return <div>Loading admin dashboard...</div>;
-  }
+  if (loading) return <div className="p-4 text-center">Loading dashboard...</div>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+    <div className="p-4 space-y-6">
+      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <div className="p-4 bg-gray-100 rounded">
-          <h2 className="font-bold">Total Users</h2>
-          <p>{stats.users?.length ?? 0}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 bg-blue-100 rounded shadow">
+          <h2 className="font-semibold">Total Users</h2>
+          <p className="text-xl">{totalUsers}</p>
         </div>
-        <div className="p-4 bg-gray-100 rounded">
-          <h2 className="font-bold">Total Plans</h2>
-          <p>{stats.plans?.length ?? 0}</p>
+        <div className="p-4 bg-green-100 rounded shadow">
+          <h2 className="font-semibold">Total Plans</h2>
+          <p className="text-xl">{totalPlans}</p>
         </div>
-        <div className="p-4 bg-gray-100 rounded">
-          <h2 className="font-bold">Total Deposits</h2>
-          <p>{stats.deposits?.length ?? 0}</p>
+        <div className="p-4 bg-yellow-100 rounded shadow">
+          <h2 className="font-semibold">Total Deposits</h2>
+          <p className="text-xl">{totalDeposits}</p>
         </div>
-        <div className="p-4 bg-gray-100 rounded">
-          <h2 className="font-bold">Total Withdrawals</h2>
-          <p>{stats.withdrawals?.length ?? 0}</p>
-        </div>
-        <div className="p-4 bg-gray-100 rounded col-span-full">
-          <h2 className="font-bold">Recent Activity Logs</h2>
-          <ul className="max-h-64 overflow-y-auto">
-            {stats.logs?.map((log, idx) => (
-              <li key={idx} className="border-b py-1">
-                <strong>{log.action}</strong>: {log.details}
-              </li>
-            )) ?? <li>No logs yet</li>}
-          </ul>
+        <div className="p-4 bg-red-100 rounded shadow">
+          <h2 className="font-semibold">Total Withdrawals</h2>
+          <p className="text-xl">{totalWithdrawals}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="font-bold mb-2">Users</h2>
-          <ul className="max-h-64 overflow-y-auto">
-            {stats.users?.map(user => (
-              <li key={user._id} className="border-b py-1">
-                {user.name} ({user.email}) - Balance: ${user.balance ?? 0}
-              </li>
-            )) ?? <li>No users found</li>}
-          </ul>
-        </div>
-
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="font-bold mb-2">Plans</h2>
-          <ul className="max-h-64 overflow-y-auto">
-            {stats.plans?.map(plan => (
-              <li key={plan._id} className="border-b py-1">
-                {plan.name} - Min: ${plan.minAmount}, Max: ${plan.maxAmount}, Profit: {plan.profitRate}%
-              </li>
-            )) ?? <li>No plans found</li>}
-          </ul>
-        </div>
+      <div className="mt-6">
+        <h2 className="text-xl font-bold mb-2">User Activity Logs</h2>
+        {userLogs.length === 0 ? (
+          <p>No activity logs available.</p>
+        ) : (
+          <div className="overflow-auto max-h-96 border rounded p-2">
+            <table className="w-full text-left table-auto">
+              <thead>
+                <tr>
+                  <th className="px-2 py-1 border">User</th>
+                  <th className="px-2 py-1 border">Action</th>
+                  <th className="px-2 py-1 border">Details</th>
+                  <th className="px-2 py-1 border">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userLogs.map((log, idx) => (
+                  <tr key={idx} className="hover:bg-gray-100">
+                    <td className="px-2 py-1 border">{log.userId || "System"}</td>
+                    <td className="px-2 py-1 border">{log.action}</td>
+                    <td className="px-2 py-1 border">{log.details}</td>
+                    <td className="px-2 py-1 border">{new Date(log.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
