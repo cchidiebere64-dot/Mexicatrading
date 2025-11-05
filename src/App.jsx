@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import PageLoader from "./components/PageLoader";
 
 // User pages
 import Home from "./pages/Home";
@@ -16,6 +19,27 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminPlans from "./pages/AdminPlans";
 import AdminDeposits from "./pages/AdminDeposits";
 import AdminWithdrawals from "./pages/AdminWithdrawals";
+
+
+function PageWrapper({ children }) {
+  const location = useLocation();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 450);
+    return () => clearTimeout(t);
+  }, [location.pathname]);
+
+  return (
+    <>
+      {loading && <PageLoader />}
+      {children}
+    </>
+  );
+}
+
+
 
 export default function App() {
   const token = sessionStorage.getItem("token"); // normal user
@@ -76,4 +100,5 @@ export default function App() {
     </Router>
   );
 }
+
 
