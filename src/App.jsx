@@ -49,8 +49,10 @@ export default function App() {
     <Router>
       <Navbar />
 
-      <div className="pt-16">
-        <Routes>
+      <PageWrapper>
+  <div className="pt-16">
+    <Routes>
+
           {/* Public user routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -95,10 +97,13 @@ export default function App() {
 
           {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+           </Routes>
+  </div>
+</PageWrapper>
+
     </Router>
   );
 }
+
 
 
