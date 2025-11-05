@@ -180,7 +180,7 @@ export default function Dashboard() {
 
 
   {/* CIRCULAR PROGRESS (Animated) */}
-<div className="relative w-16 h-16 animate-spin-slow">
+<div className="relative w-16 h-16 spin-slow">
   <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
     <circle
       cx="18"
@@ -293,6 +293,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
