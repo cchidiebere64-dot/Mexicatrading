@@ -1,8 +1,40 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiUsers, FiPackage, FiDollarSign, FiArrowUpCircle } from "react-icons/fi";
+import axios from "axios";
 
 export default function AdminDashboardHome() {
+  const [stats, setStats] = useState({
+    users: 0,
+    plans: 0,
+    deposits: 0,
+    withdrawals: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [usersRes, plansRes, depositsRes, withdrawalsRes] = await Promise.all([
+          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/users/count"),
+          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/plans/count"),
+          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/deposits/total"),
+          axios.get("https://fashionstorebackend-91gq.onrender.com/admin/withdrawals/total"),
+        ]);
+
+        setStats({
+          users: usersRes.data.count || 0,
+          plans: plansRes.data.count || 0,
+          deposits: depositsRes.data.total || 0,
+          withdrawals: withdrawalsRes.data.total || 0,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -19,7 +51,7 @@ export default function AdminDashboardHome() {
           </div>
           <div>
             <p className="text-gray-500 text-sm">Total Users</p>
-            <p className="text-xl font-semibold">1,245</p>
+            <p className="text-xl font-semibold">{stats.users}</p>
           </div>
         </div>
 
@@ -29,7 +61,7 @@ export default function AdminDashboardHome() {
           </div>
           <div>
             <p className="text-gray-500 text-sm">Total Plans</p>
-            <p className="text-xl font-semibold">37</p>
+            <p className="text-xl font-semibold">{stats.plans}</p>
           </div>
         </div>
 
@@ -39,7 +71,7 @@ export default function AdminDashboardHome() {
           </div>
           <div>
             <p className="text-gray-500 text-sm">Deposits</p>
-            <p className="text-xl font-semibold">$42,000</p>
+            <p className="text-xl font-semibold">${stats.deposits}</p>
           </div>
         </div>
 
@@ -49,7 +81,7 @@ export default function AdminDashboardHome() {
           </div>
           <div>
             <p className="text-gray-500 text-sm">Withdrawals</p>
-            <p className="text-xl font-semibold">$12,500</p>
+            <p className="text-xl font-semibold">${stats.withdrawals}</p>
           </div>
         </div>
       </div>
