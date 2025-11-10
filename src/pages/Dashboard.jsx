@@ -76,9 +76,16 @@ export default function Dashboard() {
       </div>
     );
 
-  const plans = (data.plans || []).filter((p) => p.status === "active");
-  const completed = (data.plans || []).filter((p) => p.status === "completed");
-  const history = data.history || [];
+ const plans = (data.plans || []).filter(
+  (p) => p.status?.toLowerCase().trim() === "active"
+);
+
+const completed = (data.plans || []).filter(
+  (p) => p.status?.toLowerCase().trim() === "completed"
+);
+
+const history = data.history || [];
+
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-white font-medium pb-10">
@@ -302,3 +309,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
