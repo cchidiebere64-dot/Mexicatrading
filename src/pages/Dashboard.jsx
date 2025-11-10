@@ -151,110 +151,87 @@ const history = data.history || [];
           </button>
         </div>
 
-        {/* ACTIVE PLANS */}
-        <section>
-          <h3 className="section-title">Active Plans</h3>
-          {plans.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {plans.map((p, i) => {
-                const start = new Date(p.createdAt);
-                const end = new Date(p.endDate);
-                const totalDays = p.duration;
-                const daysPassed = Math.min(
-                  totalDays,
-                  Math.floor((Date.now() - start) / 86400000)
-                );
-                const progress = Math.round((daysPassed / totalDays) * 100);
+{/* ACTIVE PLANS */}
+<section>
+  <h3 className="section-title">Active Plans</h3>
+  {plans.length ? (
+    <div className="flex gap-4 overflow-x-auto py-2 scroll-smooth snap-x snap-mandatory scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-white/10">
+      {plans.map((p, i) => {
+        const start = new Date(p.createdAt);
+        const end = new Date(p.endDate);
+        const totalDays = p.duration;
+        const daysPassed = Math.min(
+          totalDays,
+          Math.floor((Date.now() - start) / 86400000)
+        );
+        const progress = Math.round((daysPassed / totalDays) * 100);
 
-                return (
-                  <div
-                    key={i}
-                    className="crypto-card p-4 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4"
-                  >
-                    {/* PROGRESS + ROTATING ARC */}
-                    <div className="relative w-16 h-16">
-                      <svg
-                        className="w-16 h-16"
-                        viewBox="0 0 36 36"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        {/* Background track */}
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="15"
-                          stroke="#0f1720"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        {/* Main progress */}
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="15"
-                          stroke="#10b981"
-                          strokeWidth="4"
-                          fill="none"
-                          strokeDasharray={2 * Math.PI * 15}
-                          strokeDashoffset={
-                            2 * Math.PI * 15 - (2 * Math.PI * 15 * progress) / 100
-                          }
-                          strokeLinecap="round"
-                          style={{ transition: "stroke-dashoffset 1s ease-out" }}
-                        />
-                        {/* Rotating thin arc */}
-                        <circle
-                          className="spinner-arc"
-                          cx="18"
-                          cy="18"
-                          r="15"
-                          stroke="#a7f3d0"
-                          strokeWidth="2"
-                          fill="none"
-                          strokeDasharray="12 90"
-                          strokeDashoffset="0"
-                          strokeLinecap="round"
-                          transform="rotate(-90 18 18)"
-                        />
-                      </svg>
-
-                      {/* Percentage text */}
-                      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
-                        {progress}%
-                      </div>
-                    </div>
-
-                    {/* PLAN DETAILS */}
-                    <div className="flex flex-col">
-                      <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
-                      <p>Invested: ${p.amount}</p>
-                      <p>
-                        Profit: <span className="text-emerald-300">${p.profit}</span>
-                      </p>
-                      <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
-                      {progress < 100 ? (
-                        <p className="mt-1 text-emerald-400">
-                          🔥{" "}
-                          {Math.max(
-                            0,
-                            Math.ceil(
-                              (new Date(p.endDate) - new Date()) / (1000 * 60 * 60 * 24)
-                            )
-                          )}{" "}
-                          days left
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-green-400 font-bold">✅ Completed</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+        return (
+          <div
+            key={i}
+            className="crypto-card min-w-[250px] p-4 bg-white/5 border border-white/10 rounded-xl flex-shrink-0 flex flex-col gap-3 snap-start"
+          >
+            {/* PROGRESS + ROTATING ARC */}
+            <div className="relative w-16 h-16">
+              <svg className="w-16 h-16" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="18" cy="18" r="15" stroke="#0f1720" strokeWidth="4" fill="none" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15"
+                  stroke="#10b981"
+                  strokeWidth="4"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 15}
+                  strokeDashoffset={2 * Math.PI * 15 - (2 * Math.PI * 15 * progress) / 100}
+                  strokeLinecap="round"
+                  style={{ transition: "stroke-dashoffset 1s ease-out" }}
+                />
+                <circle
+                  className="spinner-arc"
+                  cx="18"
+                  cy="18"
+                  r="15"
+                  stroke="#a7f3d0"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeDasharray="12 90"
+                  strokeDashoffset="0"
+                  strokeLinecap="round"
+                  transform="rotate(-90 18 18)"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                {progress}%
+              </div>
             </div>
-          ) : (
-            <p className="opacity-60">No active plans</p>
-          )}
-        </section>
+
+            {/* PLAN DETAILS */}
+            <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
+            <p>Invested: ${p.amount}</p>
+            <p>Profit: <span className="text-emerald-300">${p.profit}</span></p>
+            <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
+
+            {progress < 100 ? (
+              <p className="mt-1 text-emerald-400">
+                🔥 {Math.max(
+                  0,
+                  Math.ceil((new Date(p.endDate) - new Date()) / (1000 * 60 * 60 * 24))
+                )}{" "}
+                days left
+              </p>
+            ) : (
+              <p className="mt-1 text-green-400 font-bold">✅ Completed</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <p className="opacity-60">No active plans</p>
+  )}
+</section>
+
 
         {/* COMPLETED PLANS */}
         <section>
@@ -309,4 +286,5 @@ const history = data.history || [];
     </div>
   );
 }
+
 
