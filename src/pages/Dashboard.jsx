@@ -237,7 +237,7 @@ const history = data.history || [];
 <section>
   <h3 className="section-title">Completed Plans</h3>
   {completed.length ? (
-    <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-white/10 scroll-smooth">
+    <div className="max-h-[280px] overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-white/10 scroll-smooth">
       {completed.map((p, i) => (
         <div
           key={i}
@@ -245,7 +245,9 @@ const history = data.history || [];
         >
           <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
           <p>Invested: ${p.amount}</p>
-          <p>Profit Earned: <span className="text-emerald-300">${p.profit}</span></p>
+          <p>
+            Profit Earned: <span className="text-emerald-300">${p.profit}</span>
+          </p>
         </div>
       ))}
     </div>
@@ -253,6 +255,7 @@ const history = data.history || [];
     <p className="opacity-60">No completed plans</p>
   )}
 </section>
+
 
         {/* RECENT ACTIVITIES */}
         <section>
@@ -284,6 +287,7 @@ const history = data.history || [];
     </div>
   );
 }
+
 
 
 
