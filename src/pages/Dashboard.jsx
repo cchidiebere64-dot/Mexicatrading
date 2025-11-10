@@ -234,27 +234,25 @@ const history = data.history || [];
 
 
         {/* COMPLETED PLANS */}
-        <section>
-          <h3 className="section-title">Completed Plans</h3>
-          {completed.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {completed.map((p, i) => (
-                <div
-                  key={i}
-                  className="crypto-card opacity-75 border-green-500/20 p-4 bg-white/5 rounded-xl"
-                >
-                  <h4 className="font-bold text-emerald-400">{p.plan}</h4>
-                  <p>Invested: ${p.amount}</p>
-                  <p>
-                    Profit Earned: <span className="text-emerald-300">${p.profit}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="opacity-60">No completed plans</p>
-          )}
-        </section>
+<section>
+  <h3 className="section-title">Completed Plans</h3>
+  {completed.length ? (
+    <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-emerald-400 scrollbar-track-white/10 scroll-smooth">
+      {completed.map((p, i) => (
+        <div
+          key={i}
+          className="crypto-card opacity-75 border-green-500/20 p-4 bg-white/5 rounded-xl flex flex-col gap-1"
+        >
+          <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
+          <p>Invested: ${p.amount}</p>
+          <p>Profit Earned: <span className="text-emerald-300">${p.profit}</span></p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="opacity-60">No completed plans</p>
+  )}
+</section>
 
         {/* RECENT ACTIVITIES */}
         <section>
@@ -286,5 +284,6 @@ const history = data.history || [];
     </div>
   );
 }
+
 
 
