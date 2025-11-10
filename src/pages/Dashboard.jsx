@@ -229,12 +229,8 @@ export default function Dashboard() {
 </div>
 
 
-
-
-
-
-{/* PLAN DETAILS */}
-<div>
+  {/* PLAN DETAILS */}
+<section>
   <h4 className="font-bold text-lg text-emerald-400">{p.plan}</h4>
   <p>Invested: ${p.amount}</p>
   <p>
@@ -242,10 +238,23 @@ export default function Dashboard() {
   </p>
   <p className="text-xs opacity-70">Ends {end.toDateString()}</p>
 
-  <p className="mt-1 text-emerald-400">
-    🔥 {Math.max(0, Math.ceil((new Date(p.endDate) - new Date()) / (1000*60*60*24)))} days left
-  </p>
-</div>
+  {progress < 100 ? (
+    <p className="mt-1 text-emerald-400">
+      🔥 {Math.max(
+        0,
+        Math.ceil((new Date(p.endDate) - new Date()) / (1000 * 60 * 60 * 24))
+      )}{" "}
+      days left
+    </p>
+  ) : (
+    <p className="mt-1 text-green-400 font-bold">✅ Completed</p>
+  )}
+</section>
+
+           
+
+
+
 
 
 
@@ -303,6 +312,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
