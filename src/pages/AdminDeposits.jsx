@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 const AdminDeposits = () => {
   const [deposits, setDeposits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null); // Track which deposit is being updated
 
   // Fetch all deposits
   const fetchDeposits = async () => {
@@ -13,17 +14,21 @@ const AdminDeposits = () => {
         credentials: "include",
       });
 
+      if (!res.ok) throw new Error("Failed to fetch deposits");
+
       const data = await res.json();
       setDeposits(data);
-      setLoading(false);
     } catch (err) {
-      console.error("Error fetching deposits:", err);
+      console.error("❌ Error:", err);
+    } finally {
       setLoading(false);
     }
   };
 
   // Approve or Reject deposit
   const handleAction = async (id, action) => {
+    setActionLoading(id);
+
     try {
       const res = await fetch(`/api/deposits/${id}`, {
         method: "PUT",
@@ -34,19 +39,23 @@ const AdminDeposits = () => {
 
       const data = await res.json();
 
-      if (res.ok) {
-        // Update UI instantly
-        setDeposits((prev) =>
-          prev.map((d) =>
-            d._id === id ? { ...d, status: action === "approve" ? "approved" : "rejected" } : d
-          )
-        );
-      }
+      if (!res.ok) throw new Error(data.message || "Action failed");
+
+      // Update UI locally
+      setDeposits((prev) =>
+        prev.map((d) =>
+          d._id === id
+            ? { ...d, status: action === "approve" ? "approved" : "rejected" }
+            : d
+        )
+      );
 
       alert(data.message);
     } catch (err) {
-      console.error("Error updating deposit:", err);
-      alert("Failed to update deposit");
+      console.error("❌ Error:", err);
+      alert(err.message || "Failed to update deposit");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -55,7 +64,11 @@ const AdminDeposits = () => {
   }, []);
 
   if (loading)
-    return <div className="text-center text-gray-600 p-5">Loading deposits...</div>;
+    return (
+      <div className="text-center text-gray-600 p-5">
+        Loading deposits...
+      </div>
+    );
 
   return (
     <div className="p-5">
@@ -76,63 +89,68 @@ const AdminDeposits = () => {
           </thead>
 
           <tbody>
-            {deposits.map((d) => (
-              <tr key={d._id} className="border-b hover:bg-gray-50">
-                <td className="p-3 border">{d.user?.name}</td>
-                <td className="p-3 border">{d.user?.email}</td>
-                <td className="p-3 border">₦{d.amount.toLocaleString()}</td>
-                <td className="p-3 border">{d.method}</td>
-
-                <td className="p-3 border">
-                  <span
-                    className={`px-3 py-1 rounded text-white ${
-                      d.status === "pending"
-                        ? "bg-yellow-500"
-                        : d.status === "approved"
-                        ? "bg-green-600"
-                        : "bg-red-600"
-                    }`}
-                  >
-                    {d.status}
-                  </span>
-                </td>
-
-                <td className="p-3 border">
-                  {new Date(d.createdAt).toLocaleString()}
-                </td>
-
-                <td className="p-3 border space-x-2">
-                  {d.status === "pending" && (
-                    <>
-                      <button
-                        onClick={() => handleAction(d._id, "approve")}
-                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                      >
-                        Approve
-                      </button>
-
-                      <button
-                        onClick={() => handleAction(d._id, "reject")}
-                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-
-                  {d.status !== "pending" && (
-                    <span className="text-gray-500 italic">Processed</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-
-            {deposits.length === 0 && (
+            {deposits.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-5 text-center text-gray-500">
                   No deposits found
                 </td>
               </tr>
+            ) : (
+              deposits.map((d) => (
+                <tr key={d._id} className="border-b hover:bg-gray-50">
+                  <td className="p-3 border">{d.user?.name}</td>
+                  <td className="p-3 border">{d.user?.email}</td>
+                  <td className="p-3 border">
+                    ₦{Number(d.amount).toLocaleString()}
+                  </td>
+                  <td className="p-3 border">{d.method}</td>
+
+                  {/* Status Badge */}
+                  <td className="p-3 border">
+                    <span
+                      className={`px-3 py-1 rounded text-white ${
+                        d.status === "pending"
+                          ? "bg-yellow-500"
+                          : d.status === "approved"
+                          ? "bg-green-600"
+                          : "bg-red-600"
+                      }`}
+                    >
+                      {d.status}
+                    </span>
+                  </td>
+
+                  {/* Date */}
+                  <td className="p-3 border">
+                    {new Date(d.createdAt).toLocaleString()}
+                  </td>
+
+                  {/* Action Buttons */}
+                  <td className="p-3 border space-x-2">
+                    {d.status === "pending" ? (
+                      <>
+                        <button
+                          disabled={actionLoading === d._id}
+                          onClick={() => handleAction(d._id, "approve")}
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {actionLoading === d._id ? "Processing..." : "Approve"}
+                        </button>
+
+                        <button
+                          disabled={actionLoading === d._id}
+                          onClick={() => handleAction(d._id, "reject")}
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:opacity-50"
+                        >
+                          {actionLoading === d._id ? "Processing..." : "Reject"}
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-gray-500 italic">Processed</span>
+                    )}
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -142,3 +160,4 @@ const AdminDeposits = () => {
 };
 
 export default AdminDeposits;
+
