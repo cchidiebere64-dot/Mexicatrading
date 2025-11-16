@@ -1,37 +1,144 @@
 import AdminLayout from "../components/AdminLayout";
 
-export default function AdminDeposits() {
-  const deposits = [
-    { id: 1, user: "John Doe", amount: 300, status: "Pending" },
-    { id: 2, user: "Jane Smith", amount: 500, status: "Approved" },
-  ];
+import React, { useEffect, useState } from "react";
+
+const AdminDeposits = () => {
+  const [deposits, setDeposits] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch all deposits
+  const fetchDeposits = async () => {
+    try {
+      const res = await fetch("/api/deposits", {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      setDeposits(data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching deposits:", err);
+      setLoading(false);
+    }
+  };
+
+  // Approve or Reject deposit
+  const handleAction = async (id, action) => {
+    try {
+      const res = await fetch(`/api/deposits/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Update UI instantly
+        setDeposits((prev) =>
+          prev.map((d) =>
+            d._id === id ? { ...d, status: action === "approve" ? "approved" : "rejected" } : d
+          )
+        );
+      }
+
+      alert(data.message);
+    } catch (err) {
+      console.error("Error updating deposit:", err);
+      alert("Failed to update deposit");
+    }
+  };
+
+  useEffect(() => {
+    fetchDeposits();
+  }, []);
+
+  if (loading)
+    return <div className="text-center text-gray-600 p-5">Loading deposits...</div>;
 
   return (
-    <AdminLayout>
-      <h1 className="text-3xl font-bold text-indigo-600 mb-6">💰 Deposits</h1>
-      <table className="w-full bg-white dark:bg-gray-800 rounded-lg shadow">
-        <thead>
-          <tr className="bg-gray-200 dark:bg-gray-700">
-            <th className="p-3 text-left">User</th>
-            <th className="p-3 text-left">Amount</th>
-            <th className="p-3 text-left">Status</th>
-            <th className="p-3 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {deposits.map((d) => (
-            <tr key={d.id} className="border-b dark:border-gray-700">
-              <td className="p-3">{d.user}</td>
-              <td className="p-3">${d.amount}</td>
-              <td className="p-3">{d.status}</td>
-              <td className="p-3 space-x-2">
-                <button className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">Approve</button>
-                <button className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Reject</button>
-              </td>
+    <div className="p-5">
+      <h1 className="text-2xl font-bold mb-5">Admin Deposits</h1>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-gray-200 bg-white shadow-md">
+          <thead className="bg-gray-100 border-b">
+            <tr>
+              <th className="p-3 border">User</th>
+              <th className="p-3 border">Email</th>
+              <th className="p-3 border">Amount</th>
+              <th className="p-3 border">Method</th>
+              <th className="p-3 border">Status</th>
+              <th className="p-3 border">Date</th>
+              <th className="p-3 border">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </AdminLayout>
+          </thead>
+
+          <tbody>
+            {deposits.map((d) => (
+              <tr key={d._id} className="border-b hover:bg-gray-50">
+                <td className="p-3 border">{d.user?.name}</td>
+                <td className="p-3 border">{d.user?.email}</td>
+                <td className="p-3 border">₦{d.amount.toLocaleString()}</td>
+                <td className="p-3 border">{d.method}</td>
+
+                <td className="p-3 border">
+                  <span
+                    className={`px-3 py-1 rounded text-white ${
+                      d.status === "pending"
+                        ? "bg-yellow-500"
+                        : d.status === "approved"
+                        ? "bg-green-600"
+                        : "bg-red-600"
+                    }`}
+                  >
+                    {d.status}
+                  </span>
+                </td>
+
+                <td className="p-3 border">
+                  {new Date(d.createdAt).toLocaleString()}
+                </td>
+
+                <td className="p-3 border space-x-2">
+                  {d.status === "pending" && (
+                    <>
+                      <button
+                        onClick={() => handleAction(d._id, "approve")}
+                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                      >
+                        Approve
+                      </button>
+
+                      <button
+                        onClick={() => handleAction(d._id, "reject")}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+
+                  {d.status !== "pending" && (
+                    <span className="text-gray-500 italic">Processed</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+
+            {deposits.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-5 text-center text-gray-500">
+                  No deposits found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
-}
+};
+
+export default AdminDeposits;
