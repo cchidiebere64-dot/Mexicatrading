@@ -7,12 +7,15 @@ const AdminDeposits = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null); // Track which deposit is being updated
 
-  // Fetch all deposits
-  const fetchDeposits = async () => {
-    try {
-      const res = await fetch("/api/deposits", {
-        credentials: "include",
-      });
+ const token = sessionStorage.getItem("adminToken");
+
+const res = await fetch("/api/deposits", {
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+});
+
 
       if (!res.ok) throw new Error("Failed to fetch deposits");
 
@@ -160,4 +163,5 @@ const AdminDeposits = () => {
 };
 
 export default AdminDeposits;
+
 
