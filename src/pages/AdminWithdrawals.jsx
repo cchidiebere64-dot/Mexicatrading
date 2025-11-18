@@ -8,17 +8,15 @@ const AdminWithdrawals = () => {
 
   const token = sessionStorage.getItem("adminToken");
 
+  // Fetch withdrawals
   const fetchWithdrawals = async () => {
     try {
-      const res = await fetch(
-        "https://mexicatradingbackend.onrender.com/api/withdrawals",
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch("/api/withdrawals", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!res.ok) throw new Error("Failed to fetch withdrawals");
 
@@ -26,26 +24,23 @@ const AdminWithdrawals = () => {
       setWithdrawals(data);
     } catch (err) {
       console.error("❌ Error fetching withdrawals:", err);
-      alert(err.message || "Failed to fetch withdrawals");
     } finally {
       setLoading(false);
     }
   };
 
+  // Approve/Reject withdrawal
   const handleAction = async (id, action) => {
     setActionLoading(id);
     try {
-      const res = await fetch(
-        `https://mexicatradingbackend.onrender.com/api/withdrawals/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ action }),
-        }
-      );
+      const res = await fetch(`/api/withdrawals/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action }),
+      });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Action failed");
@@ -71,7 +66,7 @@ const AdminWithdrawals = () => {
     fetchWithdrawals();
   }, []);
 
-  if (loading) return <div className="p-5 text-center">Loading withdrawals...</div>;
+  if (loading) return <div className="text-center p-5">Loading withdrawals...</div>;
 
   return (
     <AdminLayout>
@@ -86,6 +81,7 @@ const AdminWithdrawals = () => {
                 <th className="p-3 border">Email</th>
                 <th className="p-3 border">Amount</th>
                 <th className="p-3 border">Method</th>
+                <th className="p-3 border">Details</th> {/* ✅ Added details column */}
                 <th className="p-3 border">Status</th>
                 <th className="p-3 border">Date</th>
                 <th className="p-3 border">Action</th>
@@ -95,7 +91,7 @@ const AdminWithdrawals = () => {
             <tbody>
               {withdrawals.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-5 text-center text-gray-500">
+                  <td colSpan={8} className="p-5 text-center text-gray-500">
                     No withdrawals found
                   </td>
                 </tr>
@@ -106,6 +102,7 @@ const AdminWithdrawals = () => {
                     <td className="p-3 border">{w.user?.email}</td>
                     <td className="p-3 border">₦{Number(w.amount).toLocaleString()}</td>
                     <td className="p-3 border">{w.method}</td>
+                    <td className="p-3 border">{w.details}</td> {/* ✅ Display withdrawal details */}
                     <td className="p-3 border">
                       <span
                         className={`px-3 py-1 rounded text-white ${
