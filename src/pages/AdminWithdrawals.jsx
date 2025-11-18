@@ -8,41 +8,48 @@ const AdminWithdrawals = () => {
 
   const token = sessionStorage.getItem("adminToken");
 
-  // Fetch withdrawals
   const fetchWithdrawals = async () => {
     try {
-      const res = await fetch("https://mexicatradingbackend.onrender.com/api/admin/withdrawals", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        "https://mexicatradingbackend.onrender.com/api/withdrawals",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       if (!res.ok) throw new Error("Failed to fetch withdrawals");
+
       const data = await res.json();
       setWithdrawals(data);
     } catch (err) {
       console.error("❌ Error fetching withdrawals:", err);
+      alert(err.message || "Failed to fetch withdrawals");
     } finally {
       setLoading(false);
     }
   };
 
-  // Approve or reject withdrawal
   const handleAction = async (id, action) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`https://mexicatradingbackend.onrender.com/api/admin/withdrawals/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action }),
-      });
+      const res = await fetch(
+        `https://mexicatradingbackend.onrender.com/api/withdrawals/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action }),
+        }
+      );
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Action failed");
 
-      // Update UI locally
       setWithdrawals((prev) =>
         prev.map((w) =>
           w._id === id
@@ -53,7 +60,7 @@ const AdminWithdrawals = () => {
 
       alert(data.message);
     } catch (err) {
-      console.error("❌ Error updating withdrawal:", err);
+      console.error("❌ Error:", err);
       alert(err.message || "Failed to update withdrawal");
     } finally {
       setActionLoading(null);
@@ -64,13 +71,13 @@ const AdminWithdrawals = () => {
     fetchWithdrawals();
   }, []);
 
-  if (loading)
-    return <div className="text-center text-gray-600 p-5">Loading withdrawals...</div>;
+  if (loading) return <div className="p-5 text-center">Loading withdrawals...</div>;
 
   return (
     <AdminLayout>
       <div className="p-5">
         <h1 className="text-2xl font-bold mb-5">Admin Withdrawals</h1>
+
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200 bg-white shadow-md">
             <thead className="bg-gray-100 border-b">
@@ -84,6 +91,7 @@ const AdminWithdrawals = () => {
                 <th className="p-3 border">Action</th>
               </tr>
             </thead>
+
             <tbody>
               {withdrawals.length === 0 ? (
                 <tr>
