@@ -23,6 +23,7 @@ import ActivePlans from "./pages/ActivePlans";
 import AdminDeposits from "./pages/AdminDeposits";
 import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminCreditUser from "./pages/AdminCreditUser";
+import AdminWallets from "./pages/AdminWallets";
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -92,6 +93,7 @@ export default function App() {
               <Route path="deposits" element={<AdminDeposits />} />
               <Route path="withdrawals" element={<AdminWithdrawals />} />
               <Route path="credit-user" element={<AdminCreditUser />} />
+              <Route path="/admin/wallets" element={<AdminWallets />} />
             </Route>
 
             {/* -------------------- DEFAULT -------------------- */}
@@ -102,3 +104,4 @@ export default function App() {
     </Router>
   );
 }
+
