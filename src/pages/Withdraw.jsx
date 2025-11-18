@@ -18,11 +18,12 @@ export default function Withdraw() {
 
     try {
       const token = sessionStorage.getItem("token");
-      await axios.post(
-        `${API_URL}/api/withdraw`,
-        { amount, method, details },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+     await axios.post(
+  `${API_URL}/api/withdrawals`, // ✅ correct
+  { amount, method, details },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+
       alert("✅ Withdrawal request submitted! Wait for admin approval.");
       setAmount("");
       setDetails("");
@@ -95,3 +96,4 @@ export default function Withdraw() {
     </div>
   );
 }
+
