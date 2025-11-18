@@ -7,11 +7,12 @@ const AdminWithdrawals = () => {
   const [actionLoading, setActionLoading] = useState(null);
 
   const token = sessionStorage.getItem("adminToken");
+  const API_URL = "https://mexicatradingbackend.onrender.com"; // ✅ full backend URL
 
   // Fetch withdrawals
   const fetchWithdrawals = async () => {
     try {
-      const res = await fetch("/api/withdrawals", {
+      const res = await fetch(`${API_URL}/api/withdrawals`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -33,7 +34,7 @@ const AdminWithdrawals = () => {
   const handleAction = async (id, action) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/withdrawals/${id}`, {
+      const res = await fetch(`${API_URL}/api/withdrawals/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +82,7 @@ const AdminWithdrawals = () => {
                 <th className="p-3 border">Email</th>
                 <th className="p-3 border">Amount</th>
                 <th className="p-3 border">Method</th>
-                <th className="p-3 border">Details</th> {/* ✅ Added details column */}
+                <th className="p-3 border">Details</th> {/* ✅ display withdrawal details */}
                 <th className="p-3 border">Status</th>
                 <th className="p-3 border">Date</th>
                 <th className="p-3 border">Action</th>
@@ -102,7 +103,7 @@ const AdminWithdrawals = () => {
                     <td className="p-3 border">{w.user?.email}</td>
                     <td className="p-3 border">₦{Number(w.amount).toLocaleString()}</td>
                     <td className="p-3 border">{w.method}</td>
-                    <td className="p-3 border">{w.details}</td> {/* ✅ Display withdrawal details */}
+                    <td className="p-3 border">{w.details}</td> {/* ✅ shows withdrawal details */}
                     <td className="p-3 border">
                       <span
                         className={`px-3 py-1 rounded text-white ${
@@ -151,3 +152,5 @@ const AdminWithdrawals = () => {
 };
 
 export default AdminWithdrawals;
+
+
