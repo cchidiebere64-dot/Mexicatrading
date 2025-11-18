@@ -1,12 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function Deposit() {
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("USDT");
+  const [method, setMethod] = useState("");
   const [txid, setTxid] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [wallets, setWallets] = useState({}); // Stores admin-defined wallets
+
+  const API_URL = "https://mexicatradingbackend.onrender.com";
+
+  // Fetch wallets from backend on load
+  useEffect(() => {
+    const fetchWallets = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/admin/wallets`);
+        setWallets(res.data); // Expected format: { USDT: { address, caution }, BTC: {...}, ... }
+      } catch (err) {
+        console.error("Failed to fetch wallets:", err);
+      }
+    };
+    fetchWallets();
+  }, []);
 
   const handleDeposit = async (e) => {
     e.preventDefault();
@@ -17,7 +33,7 @@ export default function Deposit() {
 
     try {
       const res = await axios.post(
-        "https://mexicatradingbackend.onrender.com/api/deposits",
+        `${API_URL}/api/deposits`,
         { amount, method, txid },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -25,6 +41,7 @@ export default function Deposit() {
       setMessage(res.data.message);
       setAmount("");
       setTxid("");
+      setMethod("");
     } catch (err) {
       console.error("Deposit Error:", err.response?.data || err.message);
       setMessage(err.response?.data?.message || "Deposit failed.");
@@ -47,7 +64,6 @@ export default function Deposit() {
         )}
 
         <form onSubmit={handleDeposit} className="space-y-5">
-          {/* Amount */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Deposit Amount ($):</label>
             <input
@@ -60,22 +76,32 @@ export default function Deposit() {
             />
           </div>
 
-          {/* Method */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
             <select
               className="w-full p-3 rounded-xl border border-white/20 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
               value={method}
               onChange={(e) => setMethod(e.target.value)}
+              required
             >
-              <option value="USDT">USDT</option>
-              <option value="BTC">BTC</option>
-              <option value="ETH">ETH</option>
-              <option value="Bank">Bank Transfer</option>
+              <option value="">Select a method</option>
+              {Object.keys(wallets).map((key) => (
+                <option key={key} value={key}>
+                  {key}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Transaction ID */}
+          {/* Show wallet info and caution only if a method is selected */}
+          {method && amount && wallets[method] && (
+            <div className="bg-white/10 border border-white/20 p-4 rounded-xl mt-2 text-sm text-gray-300">
+              <p className="mb-2 font-semibold text-emerald-400">Payment Instructions:</p>
+              <p className="break-words">{wallets[method].address}</p>
+              <p className="mt-2 text-yellow-400 font-medium">{wallets[method].caution}</p>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Transaction ID / Proof (optional):</label>
             <input
@@ -87,7 +113,6 @@ export default function Deposit() {
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
