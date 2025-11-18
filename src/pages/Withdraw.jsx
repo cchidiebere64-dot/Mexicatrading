@@ -43,29 +43,32 @@ export default function Withdraw() {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex justify-center items-start">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg max-w-md w-full mt-10">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">🏧 Make a Withdrawal</h2>
+    <div className="min-h-screen bg-[#0b0f19] text-white flex justify-center items-start pt-20 pb-10 px-4">
+      <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-glow max-w-md w-full p-8 animate-fade-in">
+        <h2 className="text-3xl font-bold text-emerald-400 mb-6 flex items-center gap-2">
+          🏧 Make a Withdrawal
+        </h2>
 
         {message.text && (
           <div
-            className={`mb-4 p-3 rounded-lg text-center ${
+            className={`mb-6 p-4 rounded-xl text-center font-medium ${
               message.type === "success"
-                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                ? "bg-green-900/50 text-green-300 border border-green-400"
+                : "bg-red-900/50 text-red-300 border border-red-400"
             }`}
           >
             {message.text}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium mb-1">Select Withdrawal Method:</label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Withdrawal Method */}
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold text-sm text-gray-300">Select Withdrawal Method:</label>
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              className="w-full p-3 rounded-xl border border-white/20 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
             >
               <option value="TON">TON Wallet</option>
               <option value="Bank">Bank Transfer</option>
@@ -73,40 +76,43 @@ export default function Withdraw() {
             </select>
           </div>
 
-          <div>
-            <label className="block font-medium mb-1">Withdrawal Details:</label>
+          {/* Withdrawal Details */}
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold text-sm text-gray-300">Withdrawal Details:</label>
             <input
               type="text"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Wallet address / Bank account number"
-              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              className="w-full p-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
               required
             />
           </div>
 
-          <div>
-            <label className="block font-medium mb-1">Withdrawal Amount ($):</label>
+          {/* Withdrawal Amount */}
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold text-sm text-gray-300">Withdrawal Amount ($):</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
               placeholder="e.g. 50"
+              className="w-full p-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
               required
             />
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+            className="w-full py-3 rounded-xl bg-emerald-400 text-black font-semibold hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/50 disabled:opacity-50 flex justify-center items-center gap-2"
           >
             {loading ? "Submitting..." : "Submit Withdrawal"}
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-6 text-sm text-gray-400">
           📌 Double-check your withdrawal details. Incorrect info may result in loss of funds.
         </p>
       </div>
