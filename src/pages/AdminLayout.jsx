@@ -13,6 +13,7 @@ export default function AdminLayout() {
     { path: "/admin/plans", label: "📦 Manage Plans" },
     { path: "/admin/deposits", label: "💰 Deposits" },
     { path: "/admin/withdrawals", label: "💸 Withdrawals" },
+    { path: "/admin/wallets", label: "🛠️ Manage Wallets" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -111,3 +112,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+
