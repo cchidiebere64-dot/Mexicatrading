@@ -6,40 +6,60 @@ export default function Withdraw() {
   const [method, setMethod] = useState("TON");
   const [details, setDetails] = useState("");
   const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: "", type: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!amount || amount <= 0) {
-      return alert("❌ Enter a valid withdrawal amount.");
+      setMessage({ text: "❌ Enter a valid withdrawal amount.", type: "error" });
+      return;
     }
     if (!details) {
-      return alert("❌ Enter your withdrawal details.");
+      setMessage({ text: "❌ Enter your withdrawal details.", type: "error" });
+      return;
     }
 
     try {
-      const token = sessionStorage.getItem("token");
-     await axios.post(
-  `${API_URL}/api/withdrawals`, // ✅ correct
-  { amount, method, details },
-  { headers: { Authorization: `Bearer ${token}` } }
-);
+      setLoading(true);
+      setMessage({ text: "", type: "" });
 
-      alert("✅ Withdrawal request submitted! Wait for admin approval.");
+      const token = sessionStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/api/withdrawals`,
+        { amount, method, details },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setMessage({ text: "✅ Withdrawal request submitted! Wait for admin approval.", type: "success" });
       setAmount("");
       setDetails("");
     } catch (err) {
-      alert(err.response?.data?.message || "❌ Withdrawal failed");
+      setMessage({ text: err.response?.data?.message || "❌ Withdrawal failed", type: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex justify-center">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg max-w-md w-full">
+    <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex justify-center items-start">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg max-w-md w-full mt-10">
         <h2 className="text-2xl font-bold text-red-600 mb-4">🏧 Make a Withdrawal</h2>
 
-        {/* Withdrawal Form */}
+        {message.text && (
+          <div
+            className={`mb-4 p-3 rounded-lg text-center ${
+              message.type === "success"
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Method Selection */}
           <div>
             <label className="block font-medium mb-1">Select Withdrawal Method:</label>
             <select
@@ -53,7 +73,6 @@ export default function Withdraw() {
             </select>
           </div>
 
-          {/* Withdrawal Details */}
           <div>
             <label className="block font-medium mb-1">Withdrawal Details:</label>
             <input
@@ -66,7 +85,6 @@ export default function Withdraw() {
             />
           </div>
 
-          {/* Amount */}
           <div>
             <label className="block font-medium mb-1">Withdrawal Amount ($):</label>
             <input
@@ -79,21 +97,19 @@ export default function Withdraw() {
             />
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition"
+            disabled={loading}
+            className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
           >
-            Submit Withdrawal
+            {loading ? "Submitting..." : "Submit Withdrawal"}
           </button>
         </form>
 
-        {/* Note */}
         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-          📌 Please double-check your withdrawal details. Incorrect information may result in loss of funds.
+          📌 Double-check your withdrawal details. Incorrect info may result in loss of funds.
         </p>
       </div>
     </div>
   );
 }
-
