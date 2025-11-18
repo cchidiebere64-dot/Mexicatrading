@@ -73,86 +73,86 @@ export default function AdminDeposits() {
   if (loading)
     return <div className="p-5 text-center">Loading deposits...</div>;
 
-  return (
-    <AdminLayout>
-      <div className="p-5">
-        <h1 className="text-2xl font-bold mb-4">User Deposits</h1>
+ <AdminLayout>
+  <div className="p-5">
+    <h1 className="text-2xl font-bold mb-4">User Deposits</h1>
 
-        <div className="overflow-x-auto">
-          <thead className="bg-gray-100">
-  <tr>
-    <th className="p-3 border">User</th>
-    <th className="p-3 border">Email</th>
-    <th className="p-3 border">Amount</th>
-    <th className="p-3 border">Method</th> {/* ✅ Added */}
-    <th className="p-3 border">Transaction ID</th> {/* ✅ Added */}
-    <th className="p-3 border">Status</th>
-    <th className="p-3 border">Date</th>
-    <th className="p-3 border">Action</th>
-  </tr>
-</thead>
+    <div className="overflow-x-auto">
+      <table className="min-w-full border bg-white shadow-md">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="p-3 border">User</th>
+            <th className="p-3 border">Email</th>
+            <th className="p-3 border">Amount</th>
+            <th className="p-3 border">Method</th>
+            <th className="p-3 border">Transaction ID</th>
+            <th className="p-3 border">Status</th>
+            <th className="p-3 border">Date</th>
+            <th className="p-3 border">Action</th>
+          </tr>
+        </thead>
 
-<tbody>
-  {deposits.length === 0 ? (
-    <tr>
-      <td colSpan={8} className="text-center p-4">
-        No deposits found
-      </td>
-    </tr>
-  ) : (
-    deposits.map((d) => (
-      <tr key={d._id} className="border-b">
-        <td className="p-3 border">{d.user?.name}</td>
-        <td className="p-3 border">{d.user?.email}</td>
-        <td className="p-3 border">₦{Number(d.amount).toLocaleString()}</td>
-        <td className="p-3 border">{d.method}</td> {/* ✅ Show deposit method */}
-        <td className="p-3 border">{d.txid}</td> {/* ✅ Show transaction ID */}
-        <td className="p-3 border">
-          <span
-            className={`px-3 py-1 text-white rounded ${
-              d.status === "pending"
-                ? "bg-yellow-500"
-                : d.status === "approved"
-                ? "bg-green-600"
-                : "bg-red-600"
-            }`}
-          >
-            {d.status}
-          </span>
-        </td>
-        <td className="p-3 border">{new Date(d.createdAt).toLocaleString()}</td>
-        <td className="p-3 border">
-          {d.status === "pending" ? (
-            <>
-              <button
-                disabled={actionLoading === d._id}
-                onClick={() => handleAction(d._id, "approve")}
-                className="bg-green-600 text-white px-3 py-1 rounded mr-2 disabled:opacity-50"
-              >
-                {actionLoading === d._id ? "Processing..." : "Approve"}
-              </button>
-              <button
-                disabled={actionLoading === d._id}
-                onClick={() => handleAction(d._id, "reject")}
-                className="bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
-              >
-                {actionLoading === d._id ? "Processing..." : "Reject"}
-              </button>
-            </>
+        <tbody>
+          {deposits.length === 0 ? (
+            <tr>
+              <td colSpan={8} className="text-center p-4">
+                No deposits found
+              </td>
+            </tr>
           ) : (
-            <span className="text-gray-500">Processed</span>
+            deposits.map((d) => (
+              <tr key={d._id} className="border-b">
+                <td className="p-3 border">{d.user?.name}</td>
+                <td className="p-3 border">{d.user?.email}</td>
+                <td className="p-3 border">₦{Number(d.amount).toLocaleString()}</td>
+                <td className="p-3 border">{d.method}</td>
+                <td className="p-3 border">{d.txid}</td>
+                <td className="p-3 border">
+                  <span
+                    className={`px-3 py-1 text-white rounded ${
+                      d.status === "pending"
+                        ? "bg-yellow-500"
+                        : d.status === "approved"
+                        ? "bg-green-600"
+                        : "bg-red-600"
+                    }`}
+                  >
+                    {d.status}
+                  </span>
+                </td>
+                <td className="p-3 border">{new Date(d.createdAt).toLocaleString()}</td>
+                <td className="p-3 border">
+                  {d.status === "pending" ? (
+                    <>
+                      <button
+                        disabled={actionLoading === d._id}
+                        onClick={() => handleAction(d._id, "approve")}
+                        className="bg-green-600 text-white px-3 py-1 rounded mr-2 disabled:opacity-50"
+                      >
+                        {actionLoading === d._id ? "Processing..." : "Approve"}
+                      </button>
+                      <button
+                        disabled={actionLoading === d._id}
+                        onClick={() => handleAction(d._id, "reject")}
+                        className="bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                      >
+                        {actionLoading === d._id ? "Processing..." : "Reject"}
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-gray-500">Processed</span>
+                  )}
+                </td>
+              </tr>
+            ))
           )}
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</AdminLayout>
 
-
-          </table>
-        </div>
-      </div>
-    </AdminLayout>
   );
 }
+
 
