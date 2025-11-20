@@ -15,7 +15,8 @@ export default function Deposit() {
   useEffect(() => {
     const fetchWallets = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/admin/wallets`);
+        const res = await axios.get(`${API_URL}/api/wallets/public/all`);
+
         setWallets(res.data); // Expected format: { USDT: { address, caution }, BTC: {...}, ... }
       } catch (err) {
         console.error("Failed to fetch wallets:", err);
@@ -129,3 +130,4 @@ export default function Deposit() {
     </div>
   );
 }
+
