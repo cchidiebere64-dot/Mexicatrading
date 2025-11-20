@@ -10,7 +10,7 @@ const [loading, setLoading] = useState(false);
 const [wallets, setWallets] = useState({});
 const [showWarning, setShowWarning] = useState(false);
 
-const API_URL = "[https://mexicatradingbackend.onrender.com](https://mexicatradingbackend.onrender.com)";
+  const API_URL = "https://mexicatradingbackend.onrender.com";
 
 useEffect(() => {
 const fetchWallets = async () => {
@@ -33,10 +33,11 @@ const token = sessionStorage.getItem("token");
 ```
 try {
   const res = await axios.post(
-    `${API_URL}/api/deposits`,
-    { amount, method, txid },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  `${API_URL}/api/deposits`,
+  { amount, method, txid },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+
   setMessage(res.data.message);
   setAmount("");
   setTxid("");
@@ -142,3 +143,4 @@ return ( <div className="min-h-screen bg-[#0b0f19] flex justify-center items-sta
 
 );
 }
+
