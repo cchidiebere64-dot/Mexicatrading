@@ -12,25 +12,32 @@ const [actionLoading, setActionLoading] = useState(false);
 const API_URL = "[https://mexicatradingbackend.onrender.com](https://mexicatradingbackend.onrender.com)";
 const token = sessionStorage.getItem("adminToken");
 
-// Fetch wallets
 const fetchWallets = async () => {
 try {
 const res = await axios.get(`${API_URL}/api/admin/wallets`, {
 headers: { Authorization: `Bearer ${token}` },
 });
-setWallets(res.data); // backend returns object keyed by name
+
+```
+  // Convert array to object keyed by name
+  const obj = {};
+  res.data.forEach((w) => {
+    obj[w.name] = { ...w, caution: w.caution || "" };
+  });
+  setWallets(obj);
 } catch (err) {
-console.error("Failed to fetch wallets:", err);
+  console.error("Failed to fetch wallets:", err);
 } finally {
-setLoading(false);
+  setLoading(false);
 }
+```
+
 };
 
 useEffect(() => {
 fetchWallets();
 }, []);
 
-// Add or update wallet
 const handleSubmit = async (e) => {
 e.preventDefault();
 setActionLoading(true);
@@ -57,13 +64,11 @@ setActionLoading(false);
 }
 };
 
-// Edit wallet
 const handleEdit = (wallet) => {
 setForm({ name: wallet.name, address: wallet.address, caution: wallet.caution });
 setEditId(wallet._id);
 };
 
-// Delete wallet
 const handleDelete = async (id) => {
 if (!window.confirm("Are you sure you want to delete this wallet?")) return;
 try {
@@ -83,7 +88,6 @@ if (loading) return <div className="p-5 text-center">Loading wallets...</div>;
 return ( <AdminLayout> <div className="p-5"> <h1 className="text-2xl font-bold mb-4">Manage Wallets</h1>
 
 ```
-    {/* Wallet Form */}
     <form onSubmit={handleSubmit} className="mb-6 space-y-4 max-w-md">
       <input
         type="text"
@@ -129,7 +133,6 @@ return ( <AdminLayout> <div className="p-5"> <h1 className="text-2xl font-bold m
       )}
     </form>
 
-    {/* Wallets Table */}
     <div className="overflow-x-auto">
       <table className="min-w-full border bg-white shadow-md">
         <thead className="bg-gray-100">
@@ -155,7 +158,9 @@ return ( <AdminLayout> <div className="p-5"> <h1 className="text-2xl font-bold m
                 <td className="p-3 border">{wallets[key].caution}</td>
                 <td className="p-3 border flex gap-2">
                   <button
-                    onClick={() => handleEdit({ _id: wallets[key]._id, name: key, address: wallets[key].address, caution: wallets[key].caution })}
+                    onClick={() =>
+                      handleEdit({ _id: wallets[key]._id, name: key, address: wallets[key].address, caution: wallets[key].caution })
+                    }
                     className="px-3 py-1 bg-yellow-400 text-black rounded"
                   >
                     Edit
