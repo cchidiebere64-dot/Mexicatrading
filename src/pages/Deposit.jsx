@@ -11,27 +11,22 @@ export default function Deposit() {
 
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
+  // Fetch wallets from backend on load
   useEffect(() => {
-  const fetchWallets = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/wallets/public/all`);
+    const fetchWallets = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/wallets/public/all`);
 
-      // Convert array → object
-      const formatted = {};
-      res.data.forEach((w) => {
-        formatted[w.name] = {
-          address: w.address,
-          caution: w.caution,
-        };
-      });
+        // Backend returns an OBJECT, NOT ARRAY
+        // So we store it directly
+        setWallets(res.data);
 
-      setWallets(formatted);
-    } catch (err) {
-      console.error("Failed to fetch wallets:", err);
-    }
-  };
-  fetchWallets();
-}, []);
+      } catch (err) {
+        console.error("Failed to fetch wallets:", err);
+      }
+    };
+    fetchWallets();
+  }, []);
 
   const handleDeposit = async (e) => {
     e.preventDefault();
@@ -62,7 +57,7 @@ export default function Deposit() {
   return (
     <div className="min-h-screen bg-[#0b0f19] flex justify-center items-start pt-20 pb-10 px-4">
       <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-glow max-w-md w-full p-8 animate-fade-in">
-        <h2 className="text-3xl font-bold text-emerald-400 mb-6 text-center flex items-center justify-center gap-2">
+        <h2 className="text-3xl font-bold text-emerald-400 mb-6 text-center">
           💰 Deposit Funds
         </h2>
 
@@ -74,7 +69,9 @@ export default function Deposit() {
 
         <form onSubmit={handleDeposit} className="space-y-5">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-gray-300">Deposit Amount ($):</label>
+            <label className="text-sm font-semibold text-gray-300">
+              Deposit Amount ($):
+            </label>
             <input
               type="number"
               placeholder="Enter amount"
@@ -86,7 +83,9 @@ export default function Deposit() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
+            <label className="text-sm font-semibold text-gray-300">
+              Payment Method:
+            </label>
             <select
               className="w-full p-3 rounded-xl border border-white/20 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
               value={method}
@@ -94,6 +93,8 @@ export default function Deposit() {
               required
             >
               <option value="">Select a method</option>
+
+              {/* Backend returns an OBJECT, so use Object.keys */}
               {Object.keys(wallets).map((key) => (
                 <option key={key} value={key}>
                   {key}
@@ -102,17 +103,23 @@ export default function Deposit() {
             </select>
           </div>
 
-          {/* Show wallet info and caution only if a method is selected */}
+          {/* Show wallet info */}
           {method && amount && wallets[method] && (
             <div className="bg-white/10 border border-white/20 p-4 rounded-xl mt-2 text-sm text-gray-300">
-              <p className="mb-2 font-semibold text-emerald-400">Payment Instructions:</p>
+              <p className="mb-2 font-semibold text-emerald-400">
+                Payment Instructions:
+              </p>
               <p className="break-words">{wallets[method].address}</p>
-              <p className="mt-2 text-yellow-400 font-medium">{wallets[method].caution}</p>
+              <p className="mt-2 text-yellow-400 font-medium">
+                {wallets[method].caution}
+              </p>
             </div>
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-gray-300">Transaction ID / Proof (optional):</label>
+            <label className="text-sm font-semibold text-gray-300">
+              Transaction ID / Proof (optional):
+            </label>
             <input
               type="text"
               placeholder="TxID or proof"
@@ -125,7 +132,7 @@ export default function Deposit() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-emerald-400 text-black font-semibold hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/50 disabled:opacity-50 flex justify-center items-center"
+            className="w-full py-3 rounded-xl bg-emerald-400 text-black font-semibold hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/50 disabled:opacity-50"
           >
             {loading ? "Submitting..." : "Submit Deposit"}
           </button>
@@ -138,5 +145,3 @@ export default function Deposit() {
     </div>
   );
 }
-
-
