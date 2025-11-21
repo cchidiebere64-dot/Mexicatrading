@@ -104,7 +104,9 @@ export default function Deposit() {
             />
           </div>
 
-        {/* 2️⃣ Payment Method */}
+        
+
+{/* 2️⃣ Payment Method */}
 <div className="flex flex-col gap-1">
   <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
 
@@ -150,9 +152,9 @@ export default function Deposit() {
             onClick={() => handleSelectWallet(w)}
             className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex items-center justify-between"
           >
-            {/* Coin name — highly visible */}
-            <span className="text-white text-xl font-extrabold">{w.name}</span>
-            {/* Optional: small address preview */}
+            {/* Coin name — make very bright and readable */}
+            <span className="text-white text-2xl font-extrabold">{w.name}</span>
+            {/* Address preview (secondary) */}
             <span className="text-gray-400 text-sm break-all">{w.address}</span>
           </button>
         ))}
@@ -167,7 +169,6 @@ export default function Deposit() {
     </div>
   </div>
 )}
-
 
 
 
@@ -262,6 +263,7 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
 
