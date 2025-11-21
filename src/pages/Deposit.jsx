@@ -150,11 +150,14 @@ export default function Deposit() {
           <button
             key={w._id || w.name}
             onClick={() => handleSelectWallet(w)}
-            className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex items-center justify-between"
+            className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex flex-col"
           >
-            {/* Coin name — make very bright and readable */}
-            <span className="text-white text-2xl font-extrabold">{w.name}</span>
-            {/* Address preview (secondary) */}
+            {/* 1️⃣ Wallet Name — make it visible */}
+            <span className="text-white text-xl font-extrabold mb-1">
+              {w.name || "Unnamed Wallet"}
+            </span>
+
+            {/* 2️⃣ Wallet Address — secondary */}
             <span className="text-gray-400 text-sm break-all">{w.address}</span>
           </button>
         ))}
@@ -169,6 +172,7 @@ export default function Deposit() {
     </div>
   </div>
 )}
+
 
 
 
@@ -263,6 +267,7 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
 
