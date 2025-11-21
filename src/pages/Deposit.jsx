@@ -104,28 +104,16 @@ export default function Deposit() {
             />
           </div>
 
-         {/* Payment Method */}
-<div className="flex flex-col gap-1">
-  <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
-  <button
-    type="button"
-    onClick={() => setSelectModalOpen(true)}
-    className="w-full text-left p-4 rounded-xl border border-white/20 bg-gray-700 text-white text-xl font-bold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition flex items-center justify-between"
-  >
-    <span>{selectedWallet ? selectedWallet.name : "Select a payment method"}</span>
-    <span className="text-sm text-gray-300">▼</span>
-  </button>
-</div>
-
-{/* Modal: Select Method */}
+        {/* Modal: Select Method */}
 {selectModalOpen && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    {/* Background overlay */}
     <div
       className="absolute inset-0"
       onClick={() => setSelectModalOpen(false)}
     ></div>
 
-    <div className="relative max-w-md w-full bg-gray-800 border border-white/10 rounded-2xl p-6 z-60">
+    <div className="relative max-w-md w-full bg-gray-900 border border-white/20 rounded-2xl p-6 z-60">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-emerald-300">Select Payment Method</h3>
         <button
@@ -138,17 +126,19 @@ export default function Deposit() {
 
       <div className="space-y-3 max-h-80 overflow-auto">
         {wallets.length === 0 && (
-          <p className="text-sm text-gray-300">No methods available.</p>
+          <p className="text-sm text-gray-300">No payment methods available.</p>
         )}
 
         {wallets.map((w) => (
           <button
             key={w._id || w.name}
             onClick={() => handleSelectWallet(w)}
-            className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-700 hover:bg-gray-600 transition flex items-center justify-between"
+            className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex items-center justify-between"
           >
-            <span className="text-xl font-bold text-white">{w.name}</span>
-            <span className="text-sm text-gray-300 break-all">{w.address}</span>
+            {/* Coin name — highly visible */}
+            <span className="text-white text-xl font-extrabold">{w.name}</span>
+            {/* Optional: small address preview */}
+            <span className="text-gray-400 text-sm break-all">{w.address}</span>
           </button>
         ))}
       </div>
@@ -162,6 +152,7 @@ export default function Deposit() {
     </div>
   </div>
 )}
+
 
 
           {/* Selected Wallet Warning + Details */}
@@ -255,6 +246,7 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
 
