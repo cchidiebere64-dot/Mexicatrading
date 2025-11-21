@@ -104,13 +104,13 @@ export default function Deposit() {
             />
           </div>
 
-          {/* Payment Method */}
+         {/* Payment Method */}
 <div className="flex flex-col gap-1">
   <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
   <button
     type="button"
     onClick={() => setSelectModalOpen(true)}
-    className="w-full text-left p-4 rounded-xl border border-white/20 bg-gray-700 text-white text-lg font-semibold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition flex items-center justify-between"
+    className="w-full text-left p-4 rounded-xl border border-white/20 bg-gray-700 text-white text-xl font-bold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition flex items-center justify-between"
   >
     <span>{selectedWallet ? selectedWallet.name : "Select a payment method"}</span>
     <span className="text-sm text-gray-300">▼</span>
@@ -120,7 +120,6 @@ export default function Deposit() {
 {/* Modal: Select Method */}
 {selectModalOpen && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-    {/* Background overlay */}
     <div
       className="absolute inset-0"
       onClick={() => setSelectModalOpen(false)}
@@ -148,7 +147,7 @@ export default function Deposit() {
             onClick={() => handleSelectWallet(w)}
             className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-700 hover:bg-gray-600 transition flex items-center justify-between"
           >
-            <span className="text-lg font-semibold text-white">{w.name}</span>
+            <span className="text-xl font-bold text-white">{w.name}</span>
             <span className="text-sm text-gray-300 break-all">{w.address}</span>
           </button>
         ))}
@@ -256,5 +255,6 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
