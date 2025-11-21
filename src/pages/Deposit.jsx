@@ -15,7 +15,8 @@ export default function Deposit() {
  useEffect(() => {
   const fetchWallets = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/wallets/public/all`);
+      const res = await axios.get(`${API_URL}/api/admin/wallets/public/all`);
+
 
       // Convert array to object:
       const formatted = {};
@@ -148,5 +149,6 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
