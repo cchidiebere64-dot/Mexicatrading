@@ -45,36 +45,61 @@ export default function Deposit() {
     }
   };
 
-  const handleDeposit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
+ const handleDeposit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
 
+  try {
     const token = sessionStorage.getItem("token");
-    if (!method) {
+
+    if (!token) {
+      setMessage("You are not logged in. Please log in first.");
+      setLoading(false);
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      setMessage("Please enter a valid deposit amount.");
+      setLoading(false);
+      return;
+    }
+
+    if (!selectedWallet || !selectedWallet.name) {
       setMessage("Please select a payment method.");
       setLoading(false);
       return;
     }
 
-    try {
-      const res = await axios.post(
-        `${API_URL}/api/deposits`,
-        { amount, method, txid },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    // Make sure amount is a number
+    const depositData = {
+      amount: parseFloat(amount),
+      method: selectedWallet.name, // this is what backend expects
+      txid: txid || "",
+    };
 
-      setMessage(res.data.message || "Deposit submitted.");
-      setAmount("");
-      setTxid("");
-      setMethod("");
-      setSelectedWallet(null);
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Deposit failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const res = await axios.post(
+      `${API_URL}/api/deposits`,
+      depositData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setMessage(res.data.message || "Deposit submitted successfully");
+    setAmount("");
+    setTxid("");
+    setSelectedWallet(null);
+  } catch (err) {
+    console.error("Deposit request failed:", err.response?.data || err.message);
+    setMessage(err.response?.data?.message || "Deposit failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-[#0b0f19] flex justify-center items-start pt-20 pb-10 px-4">
@@ -264,6 +289,7 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
 
