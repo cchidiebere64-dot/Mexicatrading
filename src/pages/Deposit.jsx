@@ -175,36 +175,52 @@ export default function Deposit() {
       </div>
 
       {/* Select Wallet Modal */}
-      {selectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="absolute inset-0" onClick={() => setSelectModalOpen(false)}></div>
-          <div className="relative w-full max-w-md mx-4 bg-gray-900 border border-white/20 rounded-2xl p-6 z-60">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-emerald-300">Select Payment Method</h3>
-              <button onClick={() => setSelectModalOpen(false)} className="text-sm text-gray-400 hover:text-white">✕</button>
-            </div>
-            <div className="space-y-3 max-h-80 overflow-auto">
-              {wallets.length === 0 && <p className="text-sm text-gray-300">No payment methods available.</p>}
-              {wallets.map((w) => (
-                <button
-                  key={w._id || w.name}
-                  onClick={() => handleSelectWallet(w)}
-                  className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex flex-col sm:flex-row sm:justify-between sm:items-center"
-                >
-                  <span className="text-white text-lg sm:text-xl font-bold">{w.name}</span>
-                  <span className="text-gray-400 text-xs sm:text-sm break-words sm:break-normal">{w.address}</span>
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setSelectModalOpen(false)}
-              className="mt-4 w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 transition"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+{selectModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6">
+    {/* Background overlay */}
+    <div className="absolute inset-0" onClick={() => setSelectModalOpen(false)}></div>
+
+    <div className="relative w-full max-w-md bg-gray-900 border border-white/20 rounded-2xl p-4 sm:p-6 z-60 flex flex-col max-h-[90vh]">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg sm:text-xl font-bold text-emerald-300">Select Payment Method</h3>
+        <button
+          onClick={() => setSelectModalOpen(false)}
+          className="text-sm text-gray-400 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Wallet list - scrollable */}
+      <div className="overflow-auto flex-1 space-y-3">
+        {wallets.length === 0 && (
+          <p className="text-sm text-gray-300">No payment methods available.</p>
+        )}
+        {wallets.map((w) => (
+          <button
+            key={w._id || w.name}
+            onClick={() => handleSelectWallet(w)}
+            className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex flex-col sm:flex-row sm:justify-between sm:items-center"
+          >
+            <span className="text-white text-lg sm:text-xl font-bold">{w.name}</span>
+            <span className="text-gray-400 text-xs sm:text-sm break-words sm:break-normal">{w.address}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Cancel button */}
+      <button
+        onClick={() => setSelectModalOpen(false)}
+        className="mt-4 w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 transition"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
+
