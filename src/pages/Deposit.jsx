@@ -17,7 +17,7 @@ export default function Deposit() {
     try {
       const res = await axios.get(`${API_URL}/api/wallets/public/all`);
 
-      // Convert array to object: { "USDT": {...}, "BTC": {...} }
+      // Convert array to object:
       const formatted = {};
       res.data.forEach((w) => {
         formatted[w.name] = {
@@ -148,4 +148,5 @@ export default function Deposit() {
     </div>
   );
 }
+
 
