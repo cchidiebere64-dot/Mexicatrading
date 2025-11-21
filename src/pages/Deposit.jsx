@@ -104,7 +104,22 @@ export default function Deposit() {
             />
           </div>
 
-        {/* Modal: Select Method */}
+        {/* 2️⃣ Payment Method */}
+<div className="flex flex-col gap-1">
+  <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
+
+  {/* Main button user clicks to select method */}
+  <button
+    type="button"
+    onClick={() => setSelectModalOpen(true)}
+    className="w-full text-left p-4 rounded-xl border border-white/20 bg-gray-700 text-white text-lg font-semibold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition flex items-center justify-between"
+  >
+    <span>{selectedWallet ? selectedWallet.name : "Select a payment method"}</span>
+    <span className="text-sm text-gray-300">▼</span>
+  </button>
+</div>
+
+{/* Modal: Select Method */}
 {selectModalOpen && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
     {/* Background overlay */}
@@ -152,6 +167,7 @@ export default function Deposit() {
     </div>
   </div>
 )}
+
 
 
 
@@ -246,6 +262,7 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
 
