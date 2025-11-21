@@ -13,7 +13,7 @@ export default function Deposit() {
 
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
-  // Fetch wallets on mount
+  // Fetch wallets
   useEffect(() => {
     const fetchWallets = async () => {
       try {
@@ -26,7 +26,7 @@ export default function Deposit() {
     fetchWallets();
   }, []);
 
-  // Select a wallet
+  // Handle wallet selection
   const handleSelectWallet = (wallet) => {
     setSelectedWallet(wallet);
     setSelectModalOpen(false);
@@ -65,7 +65,7 @@ export default function Deposit() {
         return;
       }
 
-      if (!selectedWallet || !selectedWallet.name) {
+      if (!selectedWallet) {
         setMessage("Please select a payment method.");
         setLoading(false);
         return;
@@ -80,9 +80,7 @@ export default function Deposit() {
       const res = await axios.post(
         `${API_URL}/api/deposits`,
         depositData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setMessage(res.data.message || "Deposit submitted successfully!");
@@ -138,6 +136,29 @@ export default function Deposit() {
             </button>
           </div>
 
+          {/* Selected Wallet Info */}
+          {selectedWallet && (
+            <div className="p-4 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl mt-2 space-y-3">
+              <p className="font-semibold text-yellow-400">⚠ CAUTION</p>
+              <p className="text-sm">
+                Only send <b>{selectedWallet.name}</b> to the address below. Any other asset sent will be permanently lost.
+              </p>
+              {selectedWallet.caution && (
+                <p className="text-sm text-gray-300">{selectedWallet.caution}</p>
+              )}
+              <div className="flex justify-between items-center mt-2 bg-gray-900 p-3 rounded-lg break-all font-mono">
+                <span className="truncate">{selectedWallet.address}</span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="ml-2 px-3 py-1 bg-emerald-400 rounded-lg text-black font-semibold"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Transaction ID */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Transaction ID / Proof (optional):</label>
@@ -161,11 +182,10 @@ export default function Deposit() {
         </form>
       </div>
 
-      {/* Select Payment Modal */}
+      {/* Select Wallet Modal */}
       {selectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="absolute inset-0" onClick={() => setSelectModalOpen(false)}></div>
-
           <div className="relative max-w-md w-full bg-gray-900 border border-white/20 rounded-2xl p-6 z-60">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-emerald-300">Select Payment Method</h3>
@@ -176,7 +196,6 @@ export default function Deposit() {
 
             <div className="space-y-3 max-h-80 overflow-auto">
               {wallets.length === 0 && <p className="text-sm text-gray-300">No payment methods available.</p>}
-
               {wallets.map((w) => (
                 <button
                   key={w._id || w.name}
