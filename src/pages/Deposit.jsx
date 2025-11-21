@@ -106,25 +106,24 @@ export default function Deposit() {
 
         
 
-{/* 2️⃣ Payment Method */}
+{/* Payment Method Field */}
 <div className="flex flex-col gap-1">
   <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
 
-  {/* Main button user clicks to select method */}
   <button
     type="button"
     onClick={() => setSelectModalOpen(true)}
-    className="w-full text-left p-4 rounded-xl border border-white/20 bg-gray-700 text-white text-lg font-semibold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition flex items-center justify-between"
+    className="w-full text-left p-4 rounded-xl border border-white/20 bg-gray-700 text-white text-lg font-semibold hover:bg-gray-600 transition flex items-center justify-between"
   >
     <span>{selectedWallet ? selectedWallet.name : "Select a payment method"}</span>
     <span className="text-sm text-gray-300">▼</span>
   </button>
 </div>
 
-{/* Modal: Select Method */}
+{/* Modal showing all admin wallets */}
 {selectModalOpen && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-    {/* Background overlay */}
+    {/* Click outside to close */}
     <div
       className="absolute inset-0"
       onClick={() => setSelectModalOpen(false)}
@@ -152,13 +151,11 @@ export default function Deposit() {
             onClick={() => handleSelectWallet(w)}
             className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex flex-col"
           >
-            {/* 1️⃣ Wallet Name — make it visible */}
-            <span className="text-white text-xl font-extrabold mb-1">
-              {w.name || "Unnamed Wallet"}
-            </span>
+            {/* Wallet Name — bright, bold, visible */}
+            <span className="text-white text-xl font-extrabold">{w.name}</span>
 
-            {/* 2️⃣ Wallet Address — secondary */}
-            <span className="text-gray-400 text-sm break-all">{w.address}</span>
+            {/* Wallet Address — clearly visible */}
+            <span className="text-gray-200 text-sm break-all mt-1">{w.address}</span>
           </button>
         ))}
       </div>
@@ -267,6 +264,7 @@ export default function Deposit() {
     </div>
   );
 }
+
 
 
 
