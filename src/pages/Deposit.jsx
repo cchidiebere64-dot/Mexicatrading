@@ -12,18 +12,28 @@ export default function Deposit() {
 
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
-  // Fetch available wallets
-  useEffect(() => {
-    const fetchWallets = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/wallets/public/all`);
-        setWallets(res.data);
-      } catch (err) {
-        console.error("Failed to fetch wallets:", err);
-      }
-    };
-    fetchWallets();
-  }, []);
+ useEffect(() => {
+  const fetchWallets = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/wallets/public/all`);
+
+      // Convert array to object: { "USDT": {...}, "BTC": {...} }
+      const formatted = {};
+      res.data.forEach((w) => {
+        formatted[w.name] = {
+          address: w.address,
+          caution: w.caution || "Send only to this wallet!",
+        };
+      });
+
+      setWallets(formatted);
+    } catch (err) {
+      console.error("Failed to fetch wallets:", err);
+    }
+  };
+  fetchWallets();
+}, []);
+
 
   const handleDeposit = async (e) => {
     e.preventDefault();
@@ -138,3 +148,4 @@ export default function Deposit() {
     </div>
   );
 }
+
