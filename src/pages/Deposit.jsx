@@ -128,29 +128,39 @@ export default function Deposit() {
             </button>
           </div>
 
-          {/* Selected Wallet Info */}
-          {selectedWallet && (
-            <div className="p-4 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl mt-2 space-y-2">
-              <p className="font-semibold text-yellow-400 text-sm sm:text-base">⚠ CAUTION</p>
-              <p className="text-xs sm:text-sm">
-                Only send <b>{selectedWallet.name}</b> to the address below. Any other asset sent will be permanently lost.
-              </p>
-              {selectedWallet.caution && (
-                <p className="text-xs sm:text-sm text-gray-300">{selectedWallet.caution}</p>
-              )}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 bg-gray-900 p-3 rounded-lg">
-                <span className="break-words sm:truncate w-full sm:w-auto">{selectedWallet.address}</span>
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="mt-2 sm:mt-0 sm:ml-3 px-3 py-1 bg-emerald-400 rounded-lg text-black font-semibold w-full sm:w-auto"
-                >
-                  {copied ? "Copied!" : "Copy"}
-                </button>
-              </div>
-            </div>
-          )}
 
+          {/* Selected Wallet Warning + Details */}
+{selectedWallet && (
+  <div className="p-4 mt-2 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl space-y-3 w-full break-words">
+    {/* Warning Title */}
+    <p className="font-semibold text-yellow-400">⚠ CAUTION</p>
+
+    {/* Warning message */}
+    <p className="text-sm sm:text-base">
+      Only send <b>{selectedWallet.name}</b> to the address below. Any other asset sent will be permanently lost.
+    </p>
+
+    {/* Wallet address + copy */}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-2 bg-gray-900 p-3 rounded-lg w-full">
+      <span className="break-all font-mono text-sm sm:text-base sm:flex-1">{selectedWallet.address}</span>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="mt-2 sm:mt-0 sm:ml-3 px-3 py-2 bg-emerald-400 rounded-lg text-black font-semibold text-sm sm:text-base"
+      >
+        {copied ? "Copied!" : "Copy"}
+      </button>
+    </div>
+
+    {/* Optional caution from admin */}
+    {selectedWallet.caution && (
+      <p className="text-sm sm:text-base text-gray-300">{selectedWallet.caution}</p>
+    )}
+  </div>
+)}
+
+
+          
           {/* Transaction ID */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Transaction ID / Proof (optional):</label>
@@ -223,4 +233,5 @@ export default function Deposit() {
     </div>
   );
 }
+
 
