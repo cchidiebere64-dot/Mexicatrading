@@ -13,7 +13,6 @@ export default function Deposit() {
 
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
-  // Fetch wallets
   useEffect(() => {
     const fetchWallets = async () => {
       try {
@@ -26,14 +25,12 @@ export default function Deposit() {
     fetchWallets();
   }, []);
 
-  // Handle wallet selection
   const handleSelectWallet = (wallet) => {
     setSelectedWallet(wallet);
     setSelectModalOpen(false);
     setCopied(false);
   };
 
-  // Copy wallet address
   const handleCopy = async () => {
     if (!selectedWallet?.address) return;
     try {
@@ -45,7 +42,6 @@ export default function Deposit() {
     }
   };
 
-  // Submit deposit
   const handleDeposit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -58,13 +54,11 @@ export default function Deposit() {
         setLoading(false);
         return;
       }
-
       if (!amount || parseFloat(amount) <= 0) {
         setMessage("Please enter a valid deposit amount.");
         setLoading(false);
         return;
       }
-
       if (!selectedWallet) {
         setMessage("Please select a payment method.");
         setLoading(false);
@@ -77,11 +71,9 @@ export default function Deposit() {
         txid: txid || "",
       };
 
-      const res = await axios.post(
-        `${API_URL}/api/deposits`,
-        depositData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await axios.post(`${API_URL}/api/deposits`, depositData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setMessage(res.data.message || "Deposit submitted successfully!");
       setAmount("");
@@ -97,8 +89,8 @@ export default function Deposit() {
 
   return (
     <div className="min-h-screen bg-[#0b0f19] flex justify-center items-start pt-20 pb-10 px-4">
-      <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-glow max-w-2xl w-full p-8">
-        <h2 className="text-3xl font-bold text-emerald-400 mb-6 text-center">💰 Deposit Funds</h2>
+      <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-glow w-full max-w-lg p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-emerald-400 mb-6 text-center">💰 Deposit Funds</h2>
 
         {message && (
           <div className="mb-6 p-3 text-center rounded-xl font-medium bg-emerald-900/50 text-emerald-300 border border-emerald-400">
@@ -106,7 +98,7 @@ export default function Deposit() {
           </div>
         )}
 
-        <form onSubmit={handleDeposit} className="grid gap-6">
+        <form onSubmit={handleDeposit} className="grid gap-4 sm:gap-6">
           {/* Amount */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Deposit Amount ($):</label>
@@ -138,20 +130,20 @@ export default function Deposit() {
 
           {/* Selected Wallet Info */}
           {selectedWallet && (
-            <div className="p-4 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl mt-2 space-y-3">
-              <p className="font-semibold text-yellow-400">⚠ CAUTION</p>
-              <p className="text-sm">
+            <div className="p-4 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl mt-2 space-y-2">
+              <p className="font-semibold text-yellow-400 text-sm sm:text-base">⚠ CAUTION</p>
+              <p className="text-xs sm:text-sm">
                 Only send <b>{selectedWallet.name}</b> to the address below. Any other asset sent will be permanently lost.
               </p>
               {selectedWallet.caution && (
-                <p className="text-sm text-gray-300">{selectedWallet.caution}</p>
+                <p className="text-xs sm:text-sm text-gray-300">{selectedWallet.caution}</p>
               )}
-              <div className="flex justify-between items-center mt-2 bg-gray-900 p-3 rounded-lg break-all font-mono">
-                <span className="truncate">{selectedWallet.address}</span>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 bg-gray-900 p-3 rounded-lg">
+                <span className="break-words sm:truncate w-full sm:w-auto">{selectedWallet.address}</span>
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="ml-2 px-3 py-1 bg-emerald-400 rounded-lg text-black font-semibold"
+                  className="mt-2 sm:mt-0 sm:ml-3 px-3 py-1 bg-emerald-400 rounded-lg text-black font-semibold w-full sm:w-auto"
                 >
                   {copied ? "Copied!" : "Copy"}
                 </button>
@@ -186,28 +178,24 @@ export default function Deposit() {
       {selectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="absolute inset-0" onClick={() => setSelectModalOpen(false)}></div>
-          <div className="relative max-w-md w-full bg-gray-900 border border-white/20 rounded-2xl p-6 z-60">
+          <div className="relative w-full max-w-md mx-4 bg-gray-900 border border-white/20 rounded-2xl p-6 z-60">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-emerald-300">Select Payment Method</h3>
-              <button onClick={() => setSelectModalOpen(false)} className="text-sm text-gray-400 hover:text-white">
-                ✕
-              </button>
+              <button onClick={() => setSelectModalOpen(false)} className="text-sm text-gray-400 hover:text-white">✕</button>
             </div>
-
             <div className="space-y-3 max-h-80 overflow-auto">
               {wallets.length === 0 && <p className="text-sm text-gray-300">No payment methods available.</p>}
               {wallets.map((w) => (
                 <button
                   key={w._id || w.name}
                   onClick={() => handleSelectWallet(w)}
-                  className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex flex-col"
+                  className="w-full text-left p-4 rounded-xl border border-white/10 bg-gray-800 hover:bg-gray-700 transition flex flex-col sm:flex-row sm:justify-between sm:items-center"
                 >
-                  <span className="text-white text-xl font-bold">{w.name}</span>
-                  <span className="text-gray-400 text-sm break-all">{w.address}</span>
+                  <span className="text-white text-lg sm:text-xl font-bold">{w.name}</span>
+                  <span className="text-gray-400 text-xs sm:text-sm break-words sm:break-normal">{w.address}</span>
                 </button>
               ))}
             </div>
-
             <button
               onClick={() => setSelectModalOpen(false)}
               className="mt-4 w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 transition"
