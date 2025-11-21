@@ -118,26 +118,29 @@ export default function Deposit() {
           </div>
 
           {/* Selected Wallet Warning + Details */}
-          {selectedWallet && (
-            <div className="p-4 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl mt-2 space-y-3">
-              <p className="font-semibold text-yellow-400">⚠ CAUTION</p>
-              <p className="text-sm">
-                Only send <b>{selectedWallet.name}</b> to the address below. Any other asset sent will be
-                permanently lost.
-              </p>
+{selectedWallet && (
+  <div className="p-4 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl mt-2 space-y-3">
+    <p className="font-semibold text-yellow-400">⚠ CAUTION</p>
+    <p className="text-sm">
+      Only send <b>{selectedWallet.name}</b> to the address below. Any other asset sent will be
+      permanently lost.
+    </p>
 
-              <div className="flex justify-between items-center mt-2 bg-gray-900 p-3 rounded-lg break-all font-mono">
-                <span>{selectedWallet.address}</span>
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="ml-2 px-3 py-1 bg-emerald-400 rounded-lg text-black font-semibold"
-                >
-                  {copied ? "Copied!" : "Copy"}
-                </button>
-              </div>
-            </div>
-          )}
+    <div className="flex items-center mt-2 bg-gray-900 p-3 rounded-lg font-mono">
+      <span className="text-sm break-all overflow-hidden max-w-full mr-3">
+        {selectedWallet.address}
+      </span>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="flex-shrink-0 px-3 py-1 bg-emerald-400 rounded-lg text-black font-semibold hover:bg-emerald-500 transition"
+      >
+        {copied ? "Copied!" : "Copy"}
+      </button>
+    </div>
+  </div>
+)}
+
 
           {/* 3️⃣ Transaction ID / Proof */}
           <div className="flex flex-col gap-1">
@@ -205,3 +208,4 @@ export default function Deposit() {
     </div>
   );
 }
+
