@@ -8,21 +8,17 @@ export default function Deposit() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Wallets from server (array)
   const [wallets, setWallets] = useState([]);
-  const [selectedWallet, setSelectedWallet] = useState(null); // full wallet object
+  const [selectedWallet, setSelectedWallet] = useState(null);
   const [selectModalOpen, setSelectModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Backend base (change if needed)
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
-  // Fetch available wallets on mount
   useEffect(() => {
     const fetchWallets = async () => {
       try {
         const res = await axios.get(`${API_URL}/api/admin/wallets/public/all`);
-        // Expecting an array: [{ _id, name, address, caution }, ...]
         setWallets(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Failed to fetch wallets:", err);
@@ -31,7 +27,6 @@ export default function Deposit() {
     fetchWallets();
   }, []);
 
-  // When a wallet is selected from modal
   const handleSelectWallet = (wallet) => {
     setSelectedWallet(wallet);
     setMethod(wallet.name);
@@ -39,7 +34,6 @@ export default function Deposit() {
     setCopied(false);
   };
 
-  // Copy address to clipboard
   const handleCopy = async () => {
     if (!selectedWallet?.address) return;
     try {
@@ -51,13 +45,12 @@ export default function Deposit() {
     }
   };
 
-  // Submit deposit
   const handleDeposit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const token = sessionStorage.getItem("token"); // user token
+    const token = sessionStorage.getItem("token");
     if (!method) {
       setMessage("Please select a payment method.");
       setLoading(false);
@@ -95,7 +88,7 @@ export default function Deposit() {
         )}
 
         <form onSubmit={handleDeposit} className="grid grid-cols-1 gap-6">
-          {/* AMOUNT */}
+          {/* 1️⃣ Deposit Amount */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Deposit Amount ($):</label>
             <input
@@ -111,7 +104,42 @@ export default function Deposit() {
             />
           </div>
 
-          {/* TRANSACTION ID */}
+          {/* 2️⃣ Payment Method */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
+            <button
+              type="button"
+              onClick={() => setSelectModalOpen(true)}
+              className="w-full text-left p-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition flex items-center justify-between"
+            >
+              <span>{selectedWallet ? selectedWallet.name : "Select a payment method"}</span>
+              <span className="text-sm text-gray-300">▼</span>
+            </button>
+          </div>
+
+          {/* Selected Wallet Warning + Details */}
+          {selectedWallet && (
+            <div className="p-4 border-l-4 border-yellow-400 bg-gray-800 text-white rounded-xl mt-2 space-y-3">
+              <p className="font-semibold text-yellow-400">⚠ CAUTION</p>
+              <p className="text-sm">
+                Only send <b>{selectedWallet.name}</b> to the address below. Any other asset sent will be
+                permanently lost.
+              </p>
+
+              <div className="flex justify-between items-center mt-2 bg-gray-900 p-3 rounded-lg break-all font-mono">
+                <span>{selectedWallet.address}</span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="ml-2 px-3 py-1 bg-emerald-400 rounded-lg text-black font-semibold"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 3️⃣ Transaction ID / Proof */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-300">Transaction ID / Proof (optional):</label>
             <input
@@ -123,147 +151,54 @@ export default function Deposit() {
             />
           </div>
 
-          {/* PAYMENT METHOD (opens modal) */}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-gray-300">Payment Method:</label>
-
-            <button
-              type="button"
-              onClick={() => setSelectModalOpen(true)}
-              className="w-full text-left p-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition flex items-center justify-between"
-            >
-              <span>{selectedWallet ? `${selectedWallet.name}` : "Select a payment method"}</span>
-              <span className="text-sm text-gray-300">▼</span>
-            </button>
-          </div>
-
-          {/* POP-UP / WARNING + ADDRESS + COPY */}
-          {selectedWallet && (
-            <div className="p-4 border border-red-500 rounded bg-red-50/60 text-gray-800 mt-2 space-y-3">
-              {/* Dropdown-style warning (presented as a select-like block for clarity) */}
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-red-700 block">Only send</label>
-                  <div className="mt-1 p-2 rounded border border-red-200 bg-red-50 text-sm">
-                    <strong>{selectedWallet.name}</strong> — only send {selectedWallet.name} assets to this address.
-                    Other assets will be lost forever.
-                  </div>
-                </div>
-                {/* optional small icon / badge */}
-                <div className="text-xs uppercase px-2 py-1 rounded bg-red-100 text-red-700 font-semibold">
-                  Important
-                </div>
-              </div>
-
-              {/* Caution / admin message if present */}
-              {selectedWallet.caution && (
-                <div className="text-sm text-gray-700">
-                  {selectedWallet.caution}
-                </div>
-              )}
-
-              {/* Address block with copy */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex-1">
-                  <label className="text-xs text-gray-600">Wallet Address</label>
-                  <div className="mt-2 p-3 rounded-xl border border-white/10 bg-white/5 break-all text-sm font-mono">
-                    {selectedWallet.address}
-                  </div>
-                </div>
-
-                <div className="flex-shrink-0 flex flex-col items-stretch gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    className="px-4 py-2 rounded-xl bg-emerald-400 text-black font-semibold hover:bg-emerald-500 transition"
-                  >
-                    {copied ? "Copied!" : "Copy Address"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // optionally open wallet in new tab, or show QR - placeholder behavior
-                      // For now we simply focus the address to help copy
-                      const el = document.querySelector(".wallet-address-focus");
-                      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }}
-                    className="px-4 py-2 rounded-xl border border-white/10 text-sm text-white/80 hover:bg-white/3 transition"
-                  >
-                    Show QR
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Submit */}
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-emerald-400 text-black font-semibold hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/50 disabled:opacity-50"
-            >
-              {loading ? "Submitting..." : "Submit Deposit"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-xl bg-emerald-400 text-black font-semibold hover:bg-emerald-500 transition shadow-lg shadow-emerald-500/50 disabled:opacity-50"
+          >
+            {loading ? "Submitting..." : "Submit Deposit"}
+          </button>
         </form>
-
-        <p className="mt-6 text-sm text-gray-400 text-center">
-          📌 Ensure your payment details are correct to avoid delays.
-        </p>
       </div>
 
       {/* Modal: Select Method */}
       {selectModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          aria-modal="true"
-          role="dialog"
-        >
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setSelectModalOpen(false)}
-          />
-          <div className="relative max-w-lg w-full mx-4 bg-[#0b0f19] border border-white/10 rounded-2xl p-6 z-60">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[#0b0f19] border border-white/10 rounded-2xl p-6 max-w-md w-full z-60">
+            <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-emerald-300">Select Payment Method</h3>
               <button
                 onClick={() => setSelectModalOpen(false)}
                 className="text-sm text-gray-400 hover:text-white"
-                aria-label="Close"
               >
                 ✕
               </button>
             </div>
 
-            <div className="grid gap-3 max-h-[50vh] overflow-auto">
+            <div className="space-y-3 max-h-80 overflow-auto">
               {wallets.length === 0 && (
-                <div className="p-4 text-sm text-gray-300">No methods available.</div>
+                <p className="text-sm text-gray-300">No methods available.</p>
               )}
 
               {wallets.map((w) => (
                 <button
                   key={w._id || w.name}
                   onClick={() => handleSelectWallet(w)}
-                  className="text-left p-3 rounded-xl border border-white/6 bg-white/2 hover:bg-white/5 transition flex items-center justify-between"
+                  className="w-full text-left p-3 rounded-xl border border-white/6 bg-white/2 hover:bg-white/5 transition flex justify-between items-center"
                 >
-                  <div>
-                    <div className="font-semibold text-white">{w.name}</div>
-                    <div className="text-xs text-gray-300 mt-1 break-all">{w.address}</div>
-                  </div>
-                  <div className="text-sm text-gray-400">Select</div>
+                  <span className="font-semibold">{w.name}</span>
+                  <span className="text-xs text-gray-400 break-all">{w.address}</span>
                 </button>
               ))}
             </div>
 
-            <div className="mt-4 text-right">
-              <button
-                onClick={() => setSelectModalOpen(false)}
-                className="px-4 py-2 text-sm rounded-xl border border-white/10 hover:bg-white/3"
-              >
-                Cancel
-              </button>
-            </div>
+            <button
+              onClick={() => setSelectModalOpen(false)}
+              className="mt-4 w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 transition"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
