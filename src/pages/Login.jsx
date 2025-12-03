@@ -19,7 +19,7 @@ export default function Login() {
 
   try {
     console.log("🔹 Sending login request...");
-    const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+    const res = await axios.post(`${API_URL}/api/auth/login`, { email, password }, { timeout: 30000 });
 
     console.log("✅ Login response:", res.data);
 
@@ -113,4 +113,5 @@ export default function Login() {
     </div>
   );
 }
+
 
