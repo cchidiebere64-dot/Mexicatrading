@@ -15,19 +15,20 @@ export default function Home() {
     Grow your wealth with tailored plans that suit your lifestyle.
   </p>
   <div className="flex gap-4">
-    <Link
-      to="/register"
-      className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-    >
-      Get Started
-    </Link>
-    <Link
-      to="/plans"
-      className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
-    >
-      View Plans
-    </Link>
-  </div>
+  <Link
+    to="/register"
+    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+  >
+    Get Started
+  </Link>
+  <Link
+    to="/login"
+    className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
+  >
+    Login
+  </Link>
+</div>
+
 </section>
 
       
@@ -111,6 +112,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 
