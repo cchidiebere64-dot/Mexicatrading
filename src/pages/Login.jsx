@@ -42,8 +42,14 @@ export default function Login() {
         console.log("🎯 Admin login success, redirecting to admin dashboard...");
         navigate("/admin");
       } else {
-        console.log("🎯 Login success, redirecting to dashboard...");
-        navigate("/dashboard");
+       console.log("🎯 Login success, redirecting to dashboard...");
+navigate("/dashboard");
+
+// Force React to reload auth state
+setTimeout(() => {
+  window.location.reload();
+}, 100);
+
       }
     } else {
       setError("Invalid response from server.");
@@ -113,5 +119,6 @@ export default function Login() {
     </div>
   );
 }
+
 
 
