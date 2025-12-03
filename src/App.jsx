@@ -25,6 +25,15 @@ import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminCreditUser from "./pages/AdminCreditUser";
 import AdminWallets from "./pages/AdminWallets";
 
+// 🔥 WAKE SERVER IMMEDIATELY WHEN APP OPENS
+const API_URL = "https://mexicatradingbackend.onrender.com";
+function useWakeServer() {
+  useEffect(() => {
+    fetch(API_URL + "/api/auth/login", { method: "POST" })
+      .catch(() => console.log("Server waking up..."));
+  }, []);
+}
+
 function PageWrapper({ children }) {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -44,6 +53,8 @@ function PageWrapper({ children }) {
 }
 
 export default function App() {
+  useWakeServer(); // 🔥 Wake Render backend automatically
+
   const token = sessionStorage.getItem("token"); // normal user
   const adminToken = sessionStorage.getItem("adminToken"); // admin
 
@@ -79,7 +90,7 @@ export default function App() {
             {/* Public admin login */}
             <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Protected admin routes with layout and nested pages */}
+            {/* Protected admin routes */}
             <Route
               path="/admin"
               element={
@@ -104,4 +115,3 @@ export default function App() {
     </Router>
   );
 }
-
