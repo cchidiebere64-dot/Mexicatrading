@@ -20,7 +20,7 @@ export default function Home() {
         </p>
         <div className="flex gap-4">
           <Link
-            to="/login"
+            to="/register" // ✅ Changed to registration
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Get Started
@@ -64,7 +64,7 @@ export default function Home() {
         <h2 className="text-3xl font-bold mb-6">Ready to Grow Your Wealth?</h2>
         <p className="mb-8">Join thousands of smart investors today and secure your financial future.</p>
         <Link
-          to="/login"
+          to="/register" // ✅ Changed to registration
           className="bg-white text-emerald-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-200 transition"
         >
           Get Started
