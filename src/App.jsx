@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 // Components
 import Navbar from "./components/Navbar";
 import PageLoader from "./components/PageLoader";
-import InstallBanner from "./pages/InstallBanner";
+import InstallBanner from "./components/InstallBanner";
 
 // User pages
 import Home from "./pages/Home";
@@ -149,4 +149,5 @@ export default function App() {
     </Router>
   );
 }
+
 
