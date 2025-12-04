@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/Navbar";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import PageLoader from "./components/PageLoader";
+import InstallBanner from "./pages/InstallBanner"; // 🔹 Import your banner
 
 // User pages
 import Home from "./pages/Home";
@@ -25,15 +26,15 @@ import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminCreditUser from "./pages/AdminCreditUser";
 import AdminWallets from "./pages/AdminWallets";
 
-// 🔥 WAKE SERVER IMMEDIATELY WHEN APP OPENS
+// 🔥 Backend server
 const API_URL = "https://mexicatradingbackend.onrender.com";
+
 function useWakeServer() {
   useEffect(() => {
     fetch(API_URL + "/")
       .catch(() => console.log("Server waking up..."));
   }, []);
 }
-
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -54,15 +55,30 @@ function PageWrapper({ children }) {
 }
 
 export default function App() {
-  useWakeServer(); // 🔥 Wake Render backend automatically
+  useWakeServer(); // 🔥 Wake backend automatically
 
-  const token = sessionStorage.getItem("token"); // normal user
-  const adminToken = sessionStorage.getItem("adminToken"); // admin
+  const token = sessionStorage.getItem("token");
+  const adminToken = sessionStorage.getItem("adminToken");
+
+  // Register service worker for PWA
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then(() => console.log("🛠 Service Worker registered"))
+          .catch((err) => console.log("❌ SW registration failed:", err));
+      });
+    }
+  }, []);
 
   return (
     <Router>
       {/* Only show Navbar for normal users */}
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
+
+      {/* 🔹 PWA Install Banner */}
+      <InstallBanner />
 
       <PageWrapper>
         <div className="pt-16">
@@ -88,15 +104,11 @@ export default function App() {
             />
 
             {/* -------------------- ADMIN ROUTES -------------------- */}
-            {/* Public admin login */}
             <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Protected admin routes */}
             <Route
               path="/admin"
-              element={
-                adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />
-              }
+              element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}
             >
               <Route index element={<AdminDashboardHome />} />
               <Route path="users" element={<AdminUsers />} />
@@ -116,4 +128,3 @@ export default function App() {
     </Router>
   );
 }
-
