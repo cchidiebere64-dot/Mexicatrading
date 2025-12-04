@@ -31,8 +31,8 @@ export default function Home() {
           >
             Login
          
-            {/*</Link>
-          <button
+          </Link>
+          {/* <button
             onClick={handleDownload}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
@@ -74,4 +74,5 @@ export default function Home() {
     </div>
   );
 }
+
 
