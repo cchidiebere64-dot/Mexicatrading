@@ -1,41 +1,32 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/Navbar.jsx";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import PageLoader from "./components/PageLoader";
+import PageLoader from "./components/PageLoader.jsx";
 
 // User pages
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Deposit from "./pages/Deposit";
-import Plans from "./pages/Plans";
-import Withdraw from "./pages/Withdraw";
+import Home from "./pages/Home.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Deposit from "./pages/Deposit.jsx";
+import Plans from "./pages/Plans.jsx";
+import Withdraw from "./pages/Withdraw.jsx";
 
 // Admin pages
-import AdminLayout from "./pages/AdminLayout";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboardHome from "./pages/AdminDashboardHome";
-import AdminUsers from "./pages/AdminUsers";
-import AdminPlans from "./pages/AdminPlans";
-import ActivePlans from "./pages/ActivePlans";
-import AdminDeposits from "./pages/AdminDeposits";
-import AdminWithdrawals from "./pages/AdminWithdrawals";
-import AdminCreditUser from "./pages/AdminCreditUser";
-import AdminWallets from "./pages/AdminWallets";
+import AdminLayout from "./pages/AdminLayout.jsx";
+import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminDashboardHome from "./pages/AdminDashboardHome.jsx";
+import AdminUsers from "./pages/AdminUsers.jsx";
+import AdminPlans from "./pages/AdminPlans.jsx";
+import ActivePlans from "./pages/ActivePlans.jsx";
+import AdminDeposits from "./pages/AdminDeposits.jsx";
+import AdminWithdrawals from "./pages/AdminWithdrawals.jsx";
+import AdminCreditUser from "./pages/AdminCreditUser.jsx";
+import AdminWallets from "./pages/AdminWallets.jsx";
 
 // PWA Install Banner
-import InstallBanner from "./components/InstallBanner";
-
-// 🔥 Wake server
-const API_URL = "https://mexicatradingbackend.onrender.com";
-function useWakeServer() {
-  useEffect(() => {
-    fetch(API_URL + "/")
-      .catch(() => console.log("Server waking up..."));
-  }, []);
-}
+import InstallBanner from "./components/InstallBanner.jsx";
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -56,16 +47,12 @@ function PageWrapper({ children }) {
 }
 
 export default function App() {
-  useWakeServer();
-
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
 
   return (
     <Router>
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
-      
-      {/* PWA install prompt */}
       <InstallBanner />
 
       <PageWrapper>
