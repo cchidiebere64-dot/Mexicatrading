@@ -33,7 +33,8 @@ const API_URL = "https://mexicatradingbackend.onrender.com";
 // 🔥 Wake server immediately
 function useWakeServer() {
   useEffect(() => {
-    fetch(API_URL + "/")
+    fetch(API_URL + "/api/test/ping") // make sure this exists on your backend
+      .then(() => console.log("Server awake"))
       .catch(() => console.log("Server waking up..."));
   }, []);
 }
@@ -148,3 +149,4 @@ export default function App() {
     </Router>
   );
 }
+
