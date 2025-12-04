@@ -1,9 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
 import PageLoader from "./components/PageLoader";
-import InstallBanner from "./pages/InstallBanner"; // Your install prompt
 
 // User pages
 import Home from "./pages/Home";
@@ -26,14 +25,16 @@ import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminCreditUser from "./pages/AdminCreditUser";
 import AdminWallets from "./pages/AdminWallets";
 
+// 🔥 Backend wake-up
 const API_URL = "https://mexicatradingbackend.onrender.com";
-
 function useWakeServer() {
   useEffect(() => {
-    fetch(API_URL + "/").catch(() => console.log("Server waking up..."));
+    fetch(API_URL + "/")
+      .catch(() => console.log("Server waking up..."));
   }, []);
 }
 
+// Page loading wrapper
 function PageWrapper({ children }) {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -52,20 +53,50 @@ function PageWrapper({ children }) {
   );
 }
 
+// 🔹 PWA Install Prompt Hook
+function usePWAInstallPrompt() {
+  useEffect(() => {
+    let deferredPrompt;
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault(); // Stop automatic prompt
+      deferredPrompt = e;
+
+      // Show prompt to user after 1 second
+      setTimeout(async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt(); // show browser prompt
+          const choice = await deferredPrompt.userChoice;
+          if (choice.outcome === "accepted") {
+            console.log("✅ User installed the app");
+          } else {
+            console.log("❌ User dismissed install");
+          }
+          deferredPrompt = null;
+        }
+      }, 1000);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  }, []);
+}
+
 export default function App() {
-  useWakeServer();
+  useWakeServer(); // wake server on app open
+  usePWAInstallPrompt(); // trigger install prompt
 
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
 
-  // Register service worker
+  // 🔹 Register service worker
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/sw.js")
-          .then(() => console.log("Service Worker registered"))
-          .catch((err) => console.log("SW registration failed:", err));
+          .then(() => console.log("🛠 Service Worker registered"))
+          .catch((err) => console.log("❌ SW registration failed:", err));
       });
     }
   }, []);
@@ -73,7 +104,6 @@ export default function App() {
   return (
     <Router>
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
-      <InstallBanner /> {/* PWA install prompt */}
       <PageWrapper>
         <div className="pt-16">
           <Routes>
