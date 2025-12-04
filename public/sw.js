@@ -4,7 +4,6 @@ const urlsToCache = [
   "/index.html",
   "/logo.png",
   "/style.css"
-  // add other static assets if needed
 ];
 
 self.addEventListener("install", (event) => {
@@ -22,10 +21,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) =>
       Promise.all(
         cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
-            console.log("🟡 Removing old cache:", name);
-            return caches.delete(name);
-          }
+          if (name !== CACHE_NAME) return caches.delete(name);
         })
       )
     )
