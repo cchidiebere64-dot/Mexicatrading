@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 
-export default function Home() {
+export default function Home({ showDownloadButton = true }) {
   const handleDownload = () => {
     const link = document.createElement("a");
-    link.href = "/MexicatradingSetup.exe"; // Make sure this file is in public/
+    link.href = "/MexicatradingSetup.exe"; // Must be in public/
     link.download = "MexicatradingSetup.exe";
     link.click();
   };
@@ -31,12 +31,14 @@ export default function Home() {
           >
             Login
           </Link>
-          <button
-            onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            Download
-          </button>
+          {showDownloadButton && (
+            <button
+              onClick={handleDownload}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+            >
+              Download
+            </button>
+          )}
         </div>
       </section>
 
