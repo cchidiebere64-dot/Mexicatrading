@@ -29,10 +29,11 @@ import AdminWallets from "./pages/AdminWallets";
 const API_URL = "https://mexicatradingbackend.onrender.com";
 function useWakeServer() {
   useEffect(() => {
-    fetch(API_URL + "/api/auth/login", { method: "POST" })
+    fetch(API_URL + "/")
       .catch(() => console.log("Server waking up..."));
   }, []);
 }
+
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -115,3 +116,4 @@ export default function App() {
     </Router>
   );
 }
+
