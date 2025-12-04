@@ -1,13 +1,6 @@
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = "/MexicatradingSetup.exe"; // must be in public/
-    link.download = "MexicatradingSetup.exe";
-    link.click();
-  };
-
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
       {/* HERO */}
@@ -30,14 +23,7 @@ export default function Home() {
             className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Login
-         
           </Link>
-          <button
-            onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            Download
-          </button>
         </div>
       </section>
 
@@ -74,6 +60,3 @@ export default function Home() {
     </div>
   );
 }
-
-
-
