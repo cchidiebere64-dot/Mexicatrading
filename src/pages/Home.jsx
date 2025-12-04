@@ -30,13 +30,14 @@ export default function Home() {
             className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Login
-          </Link>
+         
+            {/*</Link>
           <button
             onClick={handleDownload}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Download
-          </button>
+          </button>*/}
         </div>
       </section>
 
@@ -73,3 +74,4 @@ export default function Home() {
     </div>
   );
 }
+
