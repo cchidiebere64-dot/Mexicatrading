@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 export default function Home() {
   const handleDownload = () => {
     const link = document.createElement("a");
-    link.href = "/MexicatradingSetup.exe"; // file in public/
-    link.download = "MexicatradingSetup.exe"; // filename when saved
+    link.href = "/MexicatradingSetup.exe"; // file placed in public/
+    link.download = "MexicatradingSetup.exe";
     link.click();
   };
 
