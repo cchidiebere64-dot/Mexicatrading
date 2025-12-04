@@ -9,7 +9,7 @@ ReactDOM.createRoot(document.getElementById("admin-root")).render(
   </React.StrictMode>
 );
 
-// Service Worker registration
+// ✅ Service Worker registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
