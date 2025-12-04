@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 export default function Home() {
   const handleDownload = () => {
     const link = document.createElement("a");
-    link.href = "/MexicatradingSetup.exe"; // file placed in public/
+    link.href = "/MexicatradingSetup.exe"; // must be in public/
     link.download = "MexicatradingSetup.exe";
     link.click();
   };
