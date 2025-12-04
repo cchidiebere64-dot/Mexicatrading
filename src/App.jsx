@@ -1,4 +1,4 @@
-how do i add it import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -116,3 +116,4 @@ export default function App() {
     </Router>
   );
 }
+
