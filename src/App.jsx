@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import PageLoader from "./components/PageLoader";
-import InstallBanner from "./pages/InstallBanner"; // 🔹 Import your banner
+import InstallBanner from "./pages/InstallBanner"; // Your install prompt
 
 // User pages
 import Home from "./pages/Home";
@@ -26,13 +26,11 @@ import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminCreditUser from "./pages/AdminCreditUser";
 import AdminWallets from "./pages/AdminWallets";
 
-// 🔥 Backend server
 const API_URL = "https://mexicatradingbackend.onrender.com";
 
 function useWakeServer() {
   useEffect(() => {
-    fetch(API_URL + "/")
-      .catch(() => console.log("Server waking up..."));
+    fetch(API_URL + "/").catch(() => console.log("Server waking up..."));
   }, []);
 }
 
@@ -55,61 +53,44 @@ function PageWrapper({ children }) {
 }
 
 export default function App() {
-  useWakeServer(); // 🔥 Wake backend automatically
+  useWakeServer();
 
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
 
-  // Register service worker for PWA
+  // Register service worker
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/sw.js")
-          .then(() => console.log("🛠 Service Worker registered"))
-          .catch((err) => console.log("❌ SW registration failed:", err));
+          .then(() => console.log("Service Worker registered"))
+          .catch((err) => console.log("SW registration failed:", err));
       });
     }
   }, []);
 
   return (
     <Router>
-      {/* Only show Navbar for normal users */}
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
-
-      {/* 🔹 PWA Install Banner */}
-      <InstallBanner />
-
+      <InstallBanner /> {/* PWA install prompt */}
       <PageWrapper>
         <div className="pt-16">
           <Routes>
-            {/* -------------------- USER ROUTES -------------------- */}
+            {/* USER ROUTES */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/plans" element={<Plans />} />
 
             {/* Protected user routes */}
-            <Route
-              path="/dashboard"
-              element={token ? <Dashboard /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/deposit"
-              element={token ? <Deposit /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/withdraw"
-              element={token ? <Withdraw /> : <Navigate to="/login" />}
-            />
+            <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
+            <Route path="/deposit" element={token ? <Deposit /> : <Navigate to="/login" />} />
+            <Route path="/withdraw" element={token ? <Withdraw /> : <Navigate to="/login" />} />
 
-            {/* -------------------- ADMIN ROUTES -------------------- */}
+            {/* ADMIN ROUTES */}
             <Route path="/admin/login" element={<AdminLogin />} />
-
-            <Route
-              path="/admin"
-              element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}
-            >
+            <Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}>
               <Route index element={<AdminDashboardHome />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="plans" element={<AdminPlans />} />
@@ -120,7 +101,7 @@ export default function App() {
               <Route path="/admin/wallets" element={<AdminWallets />} />
             </Route>
 
-            {/* -------------------- DEFAULT -------------------- */}
+            {/* DEFAULT */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
