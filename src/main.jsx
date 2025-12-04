@@ -1,4 +1,4 @@
-import React from "react";
+\import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./style.css";
@@ -9,7 +9,7 @@ ReactDOM.createRoot(document.getElementById("admin-root")).render(
   </React.StrictMode>
 );
 
-// ✅ Service Worker registration
+// Service Worker registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
