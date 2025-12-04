@@ -25,7 +25,7 @@ import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminCreditUser from "./pages/AdminCreditUser";
 import AdminWallets from "./pages/AdminWallets";
 
-// 🔥 WAKE SERVER IMMEDIATELY WHEN APP OPENS
+// 🔥 Backend wake-up
 const API_URL = "https://mexicatradingbackend.onrender.com";
 function useWakeServer() {
   useEffect(() => {
@@ -34,7 +34,32 @@ function useWakeServer() {
   }, []);
 }
 
+// 🔹 PWA install prompt
+function AppInstallPrompt() {
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault(); // prevent default automatic prompt
+      console.log("📲 PWA install prompt ready");
 
+      setTimeout(async () => {
+        await e.prompt(); // show the prompt
+        const choice = await e.userChoice;
+        if (choice.outcome === "accepted") {
+          console.log("✅ User installed the app");
+        } else {
+          console.log("❌ User dismissed the install");
+        }
+      }, 3000); // 3-second delay
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  }, []);
+
+  return null; // no UI needed
+}
+
+// Page loading wrapper
 function PageWrapper({ children }) {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -54,66 +79,63 @@ function PageWrapper({ children }) {
 }
 
 export default function App() {
-  useWakeServer(); // 🔥 Wake Render backend automatically
+  useWakeServer(); // wake server on app open
 
-  const token = sessionStorage.getItem("token"); // normal user
+  const token = sessionStorage.getItem("token"); // user
   const adminToken = sessionStorage.getItem("adminToken"); // admin
 
+  // 🔹 Register service worker
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then(() => console.log("🛠 Service Worker registered"))
+          .catch((err) => console.log("❌ SW registration failed:", err));
+      });
+    }
+  }, []);
+
   return (
-    <Router>
-      {/* Only show Navbar for normal users */}
-      {!window.location.pathname.startsWith("/admin") && <Navbar />}
+    <>
+      <AppInstallPrompt /> {/* triggers install prompt automatically */}
 
-      <PageWrapper>
-        <div className="pt-16">
-          <Routes>
-            {/* -------------------- USER ROUTES -------------------- */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/plans" element={<Plans />} />
+      <Router>
+        {!window.location.pathname.startsWith("/admin") && <Navbar />}
 
-            {/* Protected user routes */}
-            <Route
-              path="/dashboard"
-              element={token ? <Dashboard /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/deposit"
-              element={token ? <Deposit /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/withdraw"
-              element={token ? <Withdraw /> : <Navigate to="/login" />}
-            />
+        <PageWrapper>
+          <div className="pt-16">
+            <Routes>
+              {/* USER ROUTES */}
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/plans" element={<Plans />} />
 
-            {/* -------------------- ADMIN ROUTES -------------------- */}
-            {/* Public admin login */}
-            <Route path="/admin/login" element={<AdminLogin />} />
+              {/* Protected user routes */}
+              <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
+              <Route path="/deposit" element={token ? <Deposit /> : <Navigate to="/login" />} />
+              <Route path="/withdraw" element={token ? <Withdraw /> : <Navigate to="/login" />} />
 
-            {/* Protected admin routes */}
-            <Route
-              path="/admin"
-              element={
-                adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />
-              }
-            >
-              <Route index element={<AdminDashboardHome />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="plans" element={<AdminPlans />} />
-              <Route path="active-plans" element={<ActivePlans />} />
-              <Route path="deposits" element={<AdminDeposits />} />
-              <Route path="withdrawals" element={<AdminWithdrawals />} />
-              <Route path="credit-user" element={<AdminCreditUser />} />
-              <Route path="/admin/wallets" element={<AdminWallets />} />
-            </Route>
+              {/* ADMIN ROUTES */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}>
+                <Route index element={<AdminDashboardHome />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="plans" element={<AdminPlans />} />
+                <Route path="active-plans" element={<ActivePlans />} />
+                <Route path="deposits" element={<AdminDeposits />} />
+                <Route path="withdrawals" element={<AdminWithdrawals />} />
+                <Route path="credit-user" element={<AdminCreditUser />} />
+                <Route path="/admin/wallets" element={<AdminWallets />} />
+              </Route>
 
-            {/* -------------------- DEFAULT -------------------- */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </PageWrapper>
-    </Router>
+              {/* DEFAULT */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </PageWrapper>
+      </Router>
+    </>
   );
 }
-
