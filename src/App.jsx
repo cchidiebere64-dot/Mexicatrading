@@ -34,31 +34,6 @@ function useWakeServer() {
   }, []);
 }
 
-// 🔹 PWA install prompt
-function AppInstallPrompt() {
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault(); // prevent default automatic prompt
-      console.log("📲 PWA install prompt ready");
-
-      setTimeout(async () => {
-        await e.prompt(); // show the prompt
-        const choice = await e.userChoice;
-        if (choice.outcome === "accepted") {
-          console.log("✅ User installed the app");
-        } else {
-          console.log("❌ User dismissed the install");
-        }
-      }, 3000); // 3-second delay
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-  }, []);
-
-  return null; // no UI needed
-}
-
 // Page loading wrapper
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -78,11 +53,41 @@ function PageWrapper({ children }) {
   );
 }
 
+// 🔹 PWA Install Prompt Hook
+function usePWAInstallPrompt() {
+  useEffect(() => {
+    let deferredPrompt;
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault(); // Stop automatic prompt
+      deferredPrompt = e;
+
+      // Show prompt to user after 1 second
+      setTimeout(async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt(); // show browser prompt
+          const choice = await deferredPrompt.userChoice;
+          if (choice.outcome === "accepted") {
+            console.log("✅ User installed the app");
+          } else {
+            console.log("❌ User dismissed install");
+          }
+          deferredPrompt = null;
+        }
+      }, 1000);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  }, []);
+}
+
 export default function App() {
   useWakeServer(); // wake server on app open
+  usePWAInstallPrompt(); // trigger install prompt
 
-  const token = sessionStorage.getItem("token"); // user
-  const adminToken = sessionStorage.getItem("adminToken"); // admin
+  const token = sessionStorage.getItem("token");
+  const adminToken = sessionStorage.getItem("adminToken");
 
   // 🔹 Register service worker
   useEffect(() => {
@@ -97,45 +102,40 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      <AppInstallPrompt /> {/* triggers install prompt automatically */}
+    <Router>
+      {!window.location.pathname.startsWith("/admin") && <Navbar />}
+      <PageWrapper>
+        <div className="pt-16">
+          <Routes>
+            {/* USER ROUTES */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/plans" element={<Plans />} />
 
-      <Router>
-        {!window.location.pathname.startsWith("/admin") && <Navbar />}
+            {/* Protected user routes */}
+            <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
+            <Route path="/deposit" element={token ? <Deposit /> : <Navigate to="/login" />} />
+            <Route path="/withdraw" element={token ? <Withdraw /> : <Navigate to="/login" />} />
 
-        <PageWrapper>
-          <div className="pt-16">
-            <Routes>
-              {/* USER ROUTES */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/plans" element={<Plans />} />
+            {/* ADMIN ROUTES */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}>
+              <Route index element={<AdminDashboardHome />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="plans" element={<AdminPlans />} />
+              <Route path="active-plans" element={<ActivePlans />} />
+              <Route path="deposits" element={<AdminDeposits />} />
+              <Route path="withdrawals" element={<AdminWithdrawals />} />
+              <Route path="credit-user" element={<AdminCreditUser />} />
+              <Route path="/admin/wallets" element={<AdminWallets />} />
+            </Route>
 
-              {/* Protected user routes */}
-              <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
-              <Route path="/deposit" element={token ? <Deposit /> : <Navigate to="/login" />} />
-              <Route path="/withdraw" element={token ? <Withdraw /> : <Navigate to="/login" />} />
-
-              {/* ADMIN ROUTES */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}>
-                <Route index element={<AdminDashboardHome />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="plans" element={<AdminPlans />} />
-                <Route path="active-plans" element={<ActivePlans />} />
-                <Route path="deposits" element={<AdminDeposits />} />
-                <Route path="withdrawals" element={<AdminWithdrawals />} />
-                <Route path="credit-user" element={<AdminCreditUser />} />
-                <Route path="/admin/wallets" element={<AdminWallets />} />
-              </Route>
-
-              {/* DEFAULT */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </div>
-        </PageWrapper>
-      </Router>
-    </>
+            {/* DEFAULT */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </PageWrapper>
+    </Router>
   );
 }
