@@ -1,52 +1,49 @@
-import { useState, useEffect } from "react";
+// src/components/InstallBanner.jsx
+import { useEffect, useState } from "react";
 
 export default function InstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [visible, setVisible] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
+    // Listen for the beforeinstallprompt event
     const handler = (e) => {
-      e.preventDefault(); // Prevent default mini-infobar
-      setDeferredPrompt(e); // Save the event for later
-      setVisible(true); // Show banner
+      e.preventDefault(); // Prevent automatic prompt
+      setDeferredPrompt(e);
+      setShowBanner(true); // Show our custom banner
+      console.log("🌟 PWA install prompt is ready");
     };
 
     window.addEventListener("beforeinstallprompt", handler);
+
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt(); // Show the install prompt
+    deferredPrompt.prompt(); // Show browser install prompt
     const choice = await deferredPrompt.userChoice;
-    if (choice.outcome === "accepted") {
-      console.log("✅ User installed the app");
-    } else {
-      console.log("❌ User dismissed install");
-    }
+    console.log("👍 User choice:", choice.outcome);
     setDeferredPrompt(null);
-    setVisible(false); // Hide banner
+    setShowBanner(false);
   };
 
-  if (!visible) return null;
+  const handleDismiss = () => {
+    setShowBanner(false);
+  };
+
+  if (!showBanner) return null; // Don't render anything if not ready
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 bg-emerald-600 text-white p-4 rounded-lg shadow-lg flex justify-between items-center z-50">
-      <span className="font-semibold">Install Mexicatrading App for a better experience!</span>
-      <div className="flex gap-2">
-        <button
-          onClick={handleInstallClick}
-          className="bg-white text-emerald-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200 transition"
-        >
-          Install
-        </button>
-        <button
-          onClick={() => setVisible(false)}
-          className="px-4 py-2 rounded-lg hover:bg-gray-200 transition"
-        >
-          Cancel
-        </button>
-      </div>
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white p-4 rounded-lg shadow-lg flex items-center gap-4 z-50">
+      <span>Install Mexicatrading for a better experience!</span>
+      <button
+        onClick={handleInstallClick}
+        className="bg-white text-emerald-600 px-3 py-1 rounded font-semibold hover:bg-gray-200"
+      >
+        Install
+      </button>
+      <button onClick={handleDismiss} className="text-white font-bold ml-2">✕</button>
     </div>
   );
 }
