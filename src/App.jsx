@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/Navbar";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import PageLoader from "./components/PageLoader";
+import InstallBanner from "./pages/InstallBanner"; // 🔹 Import your banner
 
 // User pages
 import Home from "./pages/Home";
@@ -25,8 +26,9 @@ import AdminWithdrawals from "./pages/AdminWithdrawals";
 import AdminCreditUser from "./pages/AdminCreditUser";
 import AdminWallets from "./pages/AdminWallets";
 
-// 🔥 Backend wake-up
+// 🔥 Backend server
 const API_URL = "https://mexicatradingbackend.onrender.com";
+
 function useWakeServer() {
   useEffect(() => {
     fetch(API_URL + "/")
@@ -34,7 +36,6 @@ function useWakeServer() {
   }, []);
 }
 
-// Page loading wrapper
 function PageWrapper({ children }) {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -53,43 +54,13 @@ function PageWrapper({ children }) {
   );
 }
 
-// 🔹 PWA Install Prompt Hook
-function usePWAInstallPrompt() {
-  useEffect(() => {
-    let deferredPrompt;
-
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault(); // Stop automatic prompt
-      deferredPrompt = e;
-
-      // Show prompt to user after 1 second
-      setTimeout(async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt(); // show browser prompt
-          const choice = await deferredPrompt.userChoice;
-          if (choice.outcome === "accepted") {
-            console.log("✅ User installed the app");
-          } else {
-            console.log("❌ User dismissed install");
-          }
-          deferredPrompt = null;
-        }
-      }, 1000);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-  }, []);
-}
-
 export default function App() {
-  useWakeServer(); // wake server on app open
-  usePWAInstallPrompt(); // trigger install prompt
+  useWakeServer(); // 🔥 Wake backend automatically
 
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
 
-  // 🔹 Register service worker
+  // Register service worker for PWA
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
@@ -103,24 +74,42 @@ export default function App() {
 
   return (
     <Router>
+      {/* Only show Navbar for normal users */}
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
+
+      {/* 🔹 PWA Install Banner */}
+      <InstallBanner />
+
       <PageWrapper>
         <div className="pt-16">
           <Routes>
-            {/* USER ROUTES */}
+            {/* -------------------- USER ROUTES -------------------- */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/plans" element={<Plans />} />
 
             {/* Protected user routes */}
-            <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
-            <Route path="/deposit" element={token ? <Deposit /> : <Navigate to="/login" />} />
-            <Route path="/withdraw" element={token ? <Withdraw /> : <Navigate to="/login" />} />
+            <Route
+              path="/dashboard"
+              element={token ? <Dashboard /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/deposit"
+              element={token ? <Deposit /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/withdraw"
+              element={token ? <Withdraw /> : <Navigate to="/login" />}
+            />
 
-            {/* ADMIN ROUTES */}
+            {/* -------------------- ADMIN ROUTES -------------------- */}
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}>
+
+            <Route
+              path="/admin"
+              element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}
+            >
               <Route index element={<AdminDashboardHome />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="plans" element={<AdminPlans />} />
@@ -131,7 +120,7 @@ export default function App() {
               <Route path="/admin/wallets" element={<AdminWallets />} />
             </Route>
 
-            {/* DEFAULT */}
+            {/* -------------------- DEFAULT -------------------- */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
