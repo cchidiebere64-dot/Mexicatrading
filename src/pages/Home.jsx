@@ -31,14 +31,14 @@ export default function Home({ showDownloadButton = true }) {
           >
             Login
           </Link>
-          {showDownloadButton && (
-      {/*<button
+          {/* {showDownloadButton && (
+            <button
               onClick={handleDownload}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
             >
               Download
-            </button>*/}
-          )}
+            </button>
+          )}*/}
         </div>
       </section>
 
@@ -75,4 +75,3 @@ export default function Home({ showDownloadButton = true }) {
     </div>
   );
 }
-
