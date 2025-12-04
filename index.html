@@ -2,18 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo.png" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+
+    <!-- ✅ PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- ✅ Browser theme color (for Android install prompt) -->
+    <meta name="theme-color" content="#0f172a" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mexicatrading</title>
   </head>
   <body>
-    <!-- 👇 Must be "root", not "app" -->
     <div id="root"></div>
 
-    <!-- 👇 Make sure this points to main.jsx -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-
-
