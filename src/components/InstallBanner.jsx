@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+{/*import { useState, useEffect } from "react";
 
 export default function InstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -50,3 +50,5 @@ export default function InstallBanner() {
     </div>
   );
 }
+
+*/}
