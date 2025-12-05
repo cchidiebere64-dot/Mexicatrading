@@ -26,7 +26,7 @@ import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
 
 // PWA Install Banner
-import InstallBanner from "./components/InstallBanner.jsx";
+// import InstallBanner from "./components/InstallBanner.jsx";
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -53,7 +53,7 @@ export default function App() {
   return (
     <Router>
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
-      <InstallBanner />
+      {/* <InstallBanner /> */}
 
       <PageWrapper>
         <div className="pt-16">
@@ -90,3 +90,4 @@ export default function App() {
     </Router>
   );
 }
+
