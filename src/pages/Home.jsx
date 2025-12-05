@@ -1,13 +1,6 @@
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = "/MexicatradingSetup.exe"; // Make sure this file is in public/
-    link.download = "MexicatradingSetup.exe";
-    link.click();
-  };
-
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
       {/* HERO */}
@@ -18,25 +11,21 @@ export default function Home() {
         <p className="text-lg md:text-xl max-w-2xl mb-8">
           Your trusted platform for secure and profitable investments. Grow your wealth with tailored plans.
         </p>
+
         <div className="flex gap-4">
           <Link
-            to="/register" // ✅ Changed to registration
+            to="/register"
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Get Started
           </Link>
+
           <Link
             to="/login"
             className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Login
           </Link>
-          <button
-            onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            Download
-          </button>*
         </div>
       </section>
 
@@ -63,8 +52,9 @@ export default function Home() {
       <section className="py-20 px-6 text-center bg-emerald-600 text-white">
         <h2 className="text-3xl font-bold mb-6">Ready to Grow Your Wealth?</h2>
         <p className="mb-8">Join thousands of smart investors today and secure your financial future.</p>
+
         <Link
-          to="/register" // ✅ Changed to registration
+          to="/register"
           className="bg-white text-emerald-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-200 transition"
         >
           Get Started
@@ -73,5 +63,3 @@ export default function Home() {
     </div>
   );
 }
-
-
