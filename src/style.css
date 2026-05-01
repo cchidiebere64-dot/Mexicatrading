@@ -153,53 +153,33 @@
 }
 
 
-/* Glowing pulse animation for icons */
+/* Professional subtle icon glow */
 @keyframes iconPulse {
-  0% {
-    filter: drop-shadow(0 0 0px #10b981);
-    opacity: 0.6;
-  }
-  50% {
-    filter: drop-shadow(0 0 8px #10b981) drop-shadow(0 0 16px #34d399);
-    opacity: 1;
-  }
-  100% {
-    filter: drop-shadow(0 0 0px #10b981);
-    opacity: 0.6;
-  }
+  0% { filter: drop-shadow(0 0 0px #10b981); opacity: 0.7; }
+  50% { filter: drop-shadow(0 0 4px #10b981); opacity: 1; }
+  100% { filter: drop-shadow(0 0 0px #10b981); opacity: 0.7; }
 }
 
 .btn-primary svg {
-  animation: iconPulse 1.8s ease-in-out infinite;
+  animation: iconPulse 3s ease-in-out infinite;
 }
 
 .btn-primary:nth-child(1) svg { animation-delay: 0s; }
-.btn-primary:nth-child(2) svg { animation-delay: 0.6s; }
-.btn-primary:nth-child(3) svg { animation-delay: 1.2s; }
+.btn-primary:nth-child(2) svg { animation-delay: 1s; }
+.btn-primary:nth-child(3) svg { animation-delay: 2s; }
 
-
-
-/* Pulsing border glow for buttons */
+/* Professional subtle border breath */
 @keyframes borderPulse {
-  0% {
-    box-shadow: 0 0 0px 0px rgba(16, 185, 129, 0);
-    border-color: rgba(16, 185, 129, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 12px 4px rgba(52, 211, 153, 0.6), 0 0 24px 8px rgba(16, 185, 129, 0.3);
-    border-color: rgba(52, 211, 153, 1);
-  }
-  100% {
-    box-shadow: 0 0 0px 0px rgba(16, 185, 129, 0);
-    border-color: rgba(16, 185, 129, 0.3);
-  }
+  0% { box-shadow: 0 0 0px 0px rgba(16, 185, 129, 0); border-color: rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.7); }
+  100% { box-shadow: 0 0 0px 0px rgba(16, 185, 129, 0); border-color: rgba(16, 185, 129, 0.2); }
 }
 
 .btn-primary {
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  animation: borderPulse 2.5s ease-in-out infinite;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  animation: borderPulse 4s ease-in-out infinite;
 }
 
 .btn-primary:nth-child(1) { animation-delay: 0s; }
-.btn-primary:nth-child(2) { animation-delay: 0.8s; }
-.btn-primary:nth-child(3) { animation-delay: 1.6s; }
+.btn-primary:nth-child(2) { animation-delay: 1.3s; }
+.btn-primary:nth-child(3) { animation-delay: 2.6s; }
