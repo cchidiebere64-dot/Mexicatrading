@@ -417,7 +417,7 @@ return (
 
 )}
 
-
+</section>
 
 
     {/* COMPLETED PLANS */}
@@ -471,7 +471,7 @@ return (
 
 
 )}
-
+</section>
 
 
 
