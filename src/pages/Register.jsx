@@ -32,7 +32,7 @@ export default function Register() {
 
       if (res.data.token) {
         sessionStorage.setItem("token", res.data.token);
-        navigate("/dashboard");
+        navigate("/login");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
