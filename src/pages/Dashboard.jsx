@@ -59,82 +59,11 @@ useEffect(() => {
     hide_top_toolbar: false,
     allow_symbol_change: true,
     hide_legend: false,
+    enable_publishing: false,
+    save_image: false,
   });
 
   widgetContainer.appendChild(script);
-}, []);
-  
-
-  // TradingView live chart embed
-useEffect(() => {
-  const widgetContainer = document.getElementById("tradingview-widget");
-  if (!widgetContainer) return;
-
-  widgetContainer.innerHTML = "";
-
-  const script = document.createElement("script");
-  script.src =
-    "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-  script.async = true;
-
-  script.innerHTML = JSON.stringify({
-    autosize: true,
-    symbol: "BINANCE:BTCUSDT",
-    interval: "15",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    hide_top_toolbar: false,
-    allow_symbol_change: true,
-    hide_legend: false,
-  });
-
-  widgetContainer.appendChild(script);
-}, []);
-
-  
-useEffect(() => {
-  let isMounted = true;
-
-  const loadChart = () => {
-    const container = document.getElementById("tradingview-widget");
-    if (!container || !isMounted) return;
-
-    container.innerHTML = "";
-
-    const script = document.createElement("script");
-    script.src =
-      "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-    script.async = true;
-
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: "BINANCE:BTCUSDT",
-      interval: "15",
-      timezone: "Etc/UTC",
-      theme: "dark",
-      style: "1",
-      locale: "en",
-      enable_publishing: false,
-      allow_symbol_change: true,
-      hide_top_toolbar: false,
-      save_image: false,
-      calendar: false,
-      hide_volume: false,
-    });
-
-    container.appendChild(script);
-  };
-
-  const timer = setTimeout(loadChart, 300);
-
-  return () => {
-    isMounted = false;
-    clearTimeout(timer);
-
-    const container = document.getElementById("tradingview-widget");
-    if (container) container.innerHTML = "";
-  };
 }, []);
   
 
