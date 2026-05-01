@@ -38,33 +38,7 @@ export default function Dashboard() {
   }, []);
 
   // TradingView live chart embed
-useEffect(() => {
-  const widgetContainer = document.getElementById("tradingview-widget");
-  if (!widgetContainer) return;
 
-  widgetContainer.innerHTML = "";
-
-  const script = document.createElement("script");
-  script.src =
-    "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-  script.async = true;
-
-  script.innerHTML = JSON.stringify({
-    autosize: true,
-    symbol: "BINANCE:BTCUSDT",
-    interval: "15",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    hide_top_toolbar: false,
-    allow_symbol_change: true,
-    hide_legend: false,
-    enable_publishing: false,
-    save_image: false,
-  });
-
-  widgetContainer.appendChild(script);
-}, []);
   
 
   if (loading)
