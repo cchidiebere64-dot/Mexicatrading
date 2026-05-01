@@ -5,7 +5,7 @@ export default function Home() {
   const showDownloadButton = false;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] text-white overflow-hidden">
+    className="relative min-h-screen bg-[#0a0f1c] text-white"
 
       {/* BACKGROUND GLOW EFFECT */}
       <div className="absolute inset-0">
