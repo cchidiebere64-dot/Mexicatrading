@@ -8,7 +8,7 @@ export default function LockScreen({ onUnlock }) {
     setLoading(true);
 
     try {
-      const res = await fetch("YOUR_BACKEND_URL/api/reauth", {
+      const res = await fetch("https://mexicatradingbackend.onrender.com/api/auth/reauth", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
