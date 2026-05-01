@@ -1,35 +1,10 @@
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-
-
 import "react-circular-progressbar/dist/styles.css";
-
-
 import React, { useEffect, useState } from "react";
-
-
 import axios from "axios";
-
-
 import { useNavigate } from "react-router-dom";
-
-
-import {
-
-
-Wallet,
-
-
-TrendingUp,
-
-
-ArrowDownCircle,
-
-
-ArrowUpCircle,
-
-
-} from "lucide-react";
-
+import {Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle, } from "lucide-react";
+import TradingViewWidget from "react-tradingview-widget";
 
 export default function Dashboard() {
 
@@ -94,56 +69,6 @@ fetchDashboard();
 
 
 // TradingView live chart embed
-
-
-useEffect(() => {
-
-
-const widgetContainer = document.getElementById("tradingview-widget");
-
-if (!widgetContainer) return;
-
-widgetContainer.innerHTML = "";
-
-
-
-const script = document.createElement("script");
-
-script.src =
-
-  "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-
-script.async = true;
-
-script.innerHTML = JSON.stringify({
-
-  autosize: true,
-
-  symbol: "BINANCE:BTCUSDT",
-
-  interval: "15",
-
-  theme: "dark",
-
-  style: "1",
-
-  locale: "en",
-
-  hide_top_toolbar: false,
-
-  allow_symbol_change: true,
-
-  hide_legend: false,
-
-});
-
-
-
-widgetContainer.appendChild(script);
-
-
-
-}, []);
 
 
 if (loading)
@@ -249,16 +174,15 @@ return (
     {/* LIVE CHART */}
 
     <section>
-
-      <div
-
-        id="tradingview-widget"
-
-        className="rounded-xl border border-white/10 h-[400px] shadow-glow"
-
-      />
-
-    </section>
+  <div className="rounded-xl border border-white/10 shadow-glow overflow-hidden">
+    <TradingViewWidget
+      symbol="BINANCE:BTCUSDT"
+      theme="dark"
+      locale="en"
+      autosize
+    />
+  </div>
+</section>
 
 
 
