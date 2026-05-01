@@ -1,140 +1,196 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { User, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function Register() {
+  const API_URL = "https://mexicatradingbackend.onrender.com";
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const navigate = useNavigate();
-  const API_URL = "https://mexicatradingbackend.onrender.com";
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
-      const res = await axios.post(
-        `${API_URL}/api/auth/login`,
-        { email, password },
-        { timeout: 30000 }
-      );
-
-      if (res.data?.token) {
-        const userData = {
-          _id: res.data._id,
-          name: res.data.name,
-          email: res.data.email,
-          balance: res.data.balance,
-          isAdmin: res.data.isAdmin || false,
-        };
-
-        // store session
+      const res = await axios.post(`${API_URL}/api/auth/register`, form);
+      if (res.data.token) {
         sessionStorage.setItem("token", res.data.token);
-        sessionStorage.setItem("user", JSON.stringify(userData));
-
-        // admin handling (unchanged logic)
-        if (userData.isAdmin) {
-          sessionStorage.setItem("adminToken", res.data.token);
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-
-          // keep your existing refresh logic (important for your app state)
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
-        }
-      } else {
-        setError("Invalid response from server.");
+        navigate("/login", { state: { email: form.email } });
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#0a0f1c] text-white overflow-hidden px-4">
+    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4">
 
-      {/* background glow */}
+      {/* AMBIENT BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[500px] h-[500px] bg-emerald-500/20 blur-[120px] rounded-full top-[-120px] left-[-120px]" />
-        <div className="absolute w-[500px] h-[500px] bg-blue-500/20 blur-[120px] rounded-full bottom-[-120px] right-[-120px]" />
+        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
+        <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
+        {/* Grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`,
+            backgroundSize: "60px 60px",
+          }}
+        />
       </div>
 
-      {/* login form */}
-      <form
-        onSubmit={handleLogin}
-        className="relative w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl hover:scale-[1.01] transition"
+      {/* BACK TO HOME */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 text-white/30 hover:text-white/70 text-sm transition flex items-center gap-1"
       >
-        <h2 className="text-3xl font-bold text-center mb-2">
-          Welcome Back
-        </h2>
+        ← MexicaTrading
+      </Link>
 
-        <p className="text-center text-gray-400 mb-6">
-          Login to continue 🚀
-        </p>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative w-full max-w-md"
+      >
+        {/* CARD */}
+        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl">
 
-        {error && (
-          <p className="text-red-400 text-center mb-4 bg-red-500/10 border border-red-500/20 p-2 rounded-lg">
-            {error}
-          </p>
-        )}
+          {/* HEADER */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Secure Registration
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight mb-2">Create Account</h2>
+            <p className="text-white/40 text-sm">Join MexicaTrading and start building wealth today</p>
+          </div>
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/10 outline-none focus:border-emerald-400"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="username"
-        />
+          {/* ERROR */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 p-3 rounded-xl"
+            >
+              {error}
+            </motion.div>
+          )}
 
-        <div className="relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/10 outline-none focus:border-emerald-400"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-          />
+          {/* FORM */}
+          <form onSubmit={handleSubmit} className="space-y-4">
 
+            {/* Full Name */}
+            <div className="relative group">
+              <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Full Name"
+                required
+                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="relative group">
+              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Email Address"
+                required
+                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="relative group">
+              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {/* Terms note */}
+            <p className="text-white/25 text-xs text-center px-2">
+              By registering, you agree to our Terms of Service and Privacy Policy.
+            </p>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* DIVIDER */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-white/8" />
+            <span className="text-white/20 text-xs">already a member?</span>
+            <div className="flex-1 h-px bg-white/8" />
+          </div>
+
+          {/* LOGIN LINK */}
           <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-400"
+            onClick={() => navigate("/login")}
+            className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium"
           >
-            {showPassword ? "🙈" : "👁️"}
+            Sign In to Your Account
           </button>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 transition font-semibold shadow-lg active:scale-95"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p className="text-center text-sm mt-5 text-gray-400">
-          Don’t have an account?{" "}
-          <span
-            onClick={() => navigate("/register")}
-            className="text-emerald-400 cursor-pointer hover:underline"
-          >
-            Register
-          </span>
-        </p>
-      </form>
+        {/* TRUST BADGES */}
+        <div className="flex items-center justify-center gap-6 mt-6 text-white/20 text-xs">
+          <span>🔒 SSL Secured</span>
+          <span>·</span>
+          <span>🛡️ Data Protected</span>
+          <span>·</span>
+          <span>⚡ Instant Access</span>
+        </div>
+      </motion.div>
     </div>
   );
 }
