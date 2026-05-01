@@ -1,34 +1,57 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 
-export default function Register() {
-  const API_URL = "https://mexicatradingbackend.onrender.com";
-  const navigate = useNavigate();
-
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [error, setError] = useState("");
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const navigate = useNavigate();
+  const API_URL = "https://mexicatradingbackend.onrender.com";
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, form);
-      if (res.data.token) {
+      const res = await axios.post(
+        `${API_URL}/api/auth/login`,
+        { email, password },
+        { timeout: 30000 }
+      );
+
+      if (res.data?.token) {
+        const userData = {
+          _id: res.data._id,
+          name: res.data.name,
+          email: res.data.email,
+          balance: res.data.balance,
+          isAdmin: res.data.isAdmin || false,
+        };
+
         sessionStorage.setItem("token", res.data.token);
-        navigate("/login", { state: { email: form.email } });
+        sessionStorage.setItem("user", JSON.stringify(userData));
+
+        if (userData.isAdmin) {
+          sessionStorage.setItem("adminToken", res.data.token);
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+        }
+      } else {
+        setError("Invalid response from server.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -72,10 +95,10 @@ export default function Register() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Secure Registration
+              Secure Login
             </div>
-            <h2 className="text-3xl font-bold tracking-tight mb-2">Create Account</h2>
-            <p className="text-white/40 text-sm">Join MexicaTrading and start building wealth today</p>
+            <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome Back</h2>
+            <p className="text-white/40 text-sm">Sign in to access your investment dashboard</p>
           </div>
 
           {/* ERROR */}
@@ -90,33 +113,19 @@ export default function Register() {
           )}
 
           {/* FORM */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-
-            {/* Full Name */}
-            <div className="relative group">
-              <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Full Name"
-                required
-                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
-              />
-            </div>
+          <form onSubmit={handleLogin} className="space-y-4">
 
             {/* Email */}
             <div className="relative group">
               <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
               <input
                 type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
                 placeholder="Email Address"
-                required
                 className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="username"
               />
             </div>
 
@@ -125,12 +134,12 @@ export default function Register() {
               <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
               <input
                 type={showPassword ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={handleChange}
                 placeholder="Password"
-                required
                 className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -141,11 +150,6 @@ export default function Register() {
               </button>
             </div>
 
-            {/* Terms note */}
-            <p className="text-white/25 text-xs text-center px-2">
-              By registering, you agree to our Terms of Service and Privacy Policy.
-            </p>
-
             {/* Submit */}
             <button
               type="submit"
@@ -155,11 +159,11 @@ export default function Register() {
               {loading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating account...
+                  Signing in...
                 </>
               ) : (
                 <>
-                  Create Account
+                  Sign In
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -169,16 +173,16 @@ export default function Register() {
           {/* DIVIDER */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-white/8" />
-            <span className="text-white/20 text-xs">already a member?</span>
+            <span className="text-white/20 text-xs">new to mexicatrading?</span>
             <div className="flex-1 h-px bg-white/8" />
           </div>
 
-          {/* LOGIN LINK */}
+          {/* REGISTER LINK */}
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/register")}
             className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium"
           >
-            Sign In to Your Account
+            Create a Free Account
           </button>
         </div>
 
