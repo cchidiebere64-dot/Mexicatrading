@@ -183,3 +183,37 @@
 .btn-primary:nth-child(1) { animation-delay: 0s; }
 .btn-primary:nth-child(2) { animation-delay: 1.3s; }
 .btn-primary:nth-child(3) { animation-delay: 2.6s; }
+
+
+) : (
+  <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-white/10 bg-white/5 text-center gap-3">
+    <TrendingUp size={36} className="text-emerald-400 opacity-50" />
+    <p className="text-white font-semibold text-lg">No Active Plans Yet</p>
+    <p className="text-white/40 text-sm max-w-xs">Start growing your wealth by choosing an investment plan tailored for you.</p>
+    <button onClick={() => navigate("/plans")} className="mt-2 px-5 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm hover:bg-emerald-500/30 transition-all">
+      Browse Plans →
+    </button>
+  </div>
+)}
+
+
+) : (
+  <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-white/10 bg-white/5 text-center gap-3">
+    <ArrowUpCircle size={36} className="text-emerald-400 opacity-50" />
+    <p className="text-white font-semibold text-lg">No Completed Plans Yet</p>
+    <p className="text-white/40 text-sm max-w-xs">Your completed investments and earned profits will appear here.</p>
+  </div>
+)}
+
+
+
+) : (
+  <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-white/10 bg-white/5 text-center gap-3">
+    <Wallet size={36} className="text-emerald-400 opacity-50" />
+    <p className="text-white font-semibold text-lg">No Transactions Yet</p>
+    <p className="text-white/40 text-sm max-w-xs">Your deposits, withdrawals and activity history will show up here.</p>
+    <button onClick={() => navigate("/deposit")} className="mt-2 px-5 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm hover:bg-emerald-500/30 transition-all">
+      Make First Deposit →
+    </button>
+  </div>
+)}
