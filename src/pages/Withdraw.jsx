@@ -32,7 +32,7 @@ export default function Withdraw() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setMessage({ text: "✅ Withdrawal request submitted! Wait for admin approval.", type: "success" });
+      setMessage({ text: "✅ Withdrawal request submitted! Wait for support approval.", type: "success" });
       setAmount("");
       setDetails("");
     } catch (err) {
