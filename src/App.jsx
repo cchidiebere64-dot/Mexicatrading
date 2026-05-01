@@ -26,32 +26,6 @@ import AdminWithdrawals from "./pages/AdminWithdrawals.jsx";
 import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
 
-
-
-function useAppLock() {
-  const [locked, setLocked] = useState(false);
-
-  useEffect(() => {
-    const handleBlur = () => {
-  if (sessionStorage.getItem("token") || sessionStorage.getItem("adminToken")) {
-    setLocked(true);
-  }
-};
-
-const handleFocus = () => {};
-
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, []);
-
-  return [locked, setLocked];
-}
-
 // PWA Install Banner
 // import InstallBanner from "./components/InstallBanner.jsx";
 
@@ -76,18 +50,48 @@ function PageWrapper({ children }) {
 export default function App() {
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
- 
-  const [locked, setLocked] = useAppLock();
-  
+
+  // 🔐 LOCK STATE (persistent)
+  const [locked, setLocked] = useState(
+    sessionStorage.getItem("locked") === "true"
+  );
+
+  // 🔐 restore lock after refresh
+  useEffect(() => {
+    if (sessionStorage.getItem("locked") === "true") {
+      setLocked(true);
+    }
+  }, []);
+
+  // 🔐 trigger lock when user leaves app
+  useEffect(() => {
+    const handleBlur = () => {
+      if (sessionStorage.getItem("token") || sessionStorage.getItem("adminToken")) {
+        sessionStorage.setItem("locked", "true");
+        setLocked(true);
+      }
+    };
+
+    window.addEventListener("blur", handleBlur);
+
+    return () => window.removeEventListener("blur", handleBlur);
+  }, []);
+
   return (
     <Router>
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
       {/* <InstallBanner /> */}
 
-   {(token || adminToken) && locked && (
-  <LockScreen onUnlock={() => setLocked(false)} />
-)}
-      
+      {/* 🔐 LOCK SCREEN */}
+      {(token || adminToken) && locked && (
+        <LockScreen
+          onUnlock={() => {
+            sessionStorage.removeItem("locked");
+            setLocked(false);
+          }}
+        />
+      )}
+
       <PageWrapper>
         <div className="pt-16">
           <Routes>
@@ -122,5 +126,4 @@ export default function App() {
       </PageWrapper>
     </Router>
   );
-}
-
+              }
