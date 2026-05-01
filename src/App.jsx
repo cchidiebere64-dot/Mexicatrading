@@ -33,7 +33,11 @@ function useAppLock() {
 
   useEffect(() => {
     const handleBlur = () => setLocked(true);
-    const handleFocus = () => setLocked(true);
+    const handleFocus = () => {
+  if (sessionStorage.getItem("token") || sessionStorage.getItem("adminToken")) {
+    setLocked(true);
+  }
+};
 
     window.addEventListener("blur", handleBlur);
     window.addEventListener("focus", handleFocus);
