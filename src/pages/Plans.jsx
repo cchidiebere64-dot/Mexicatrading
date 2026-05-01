@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Plans() {
   const API_URL = "https://mexicatradingbackend.onrender.com";
+  const navigate = useNavigate();
 
   const plans = [
     {
@@ -40,9 +42,25 @@ export default function Plans() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleChoosePlan = async (plan) => {
-    setLoading(true);
+  // NEW MODAL STATES
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activePlan, setActivePlan] = useState(null);
+  const [balanceCheck, setBalanceCheck] = useState(null);
+
+  const openModal = (plan) => {
+    setActivePlan(plan);
+    setModalOpen(true);
     setMessage("");
+    setBalanceCheck(null);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setActivePlan(null);
+  };
+
+  const handleConfirm = async () => {
+    setLoading(true);
 
     try {
       const profileRes = await fetch(`${API_URL}/api/dashboard`, {
@@ -54,9 +72,8 @@ export default function Plans() {
       const profileData = await profileRes.json();
       const balance = profileData.balance || 0;
 
-      if (balance < plan.price) {
-        setMessage("❌ Insufficient balance. Please deposit first.");
-        alert("⚠️ You do not have enough balance to invest in this plan.");
+      if (balance < activePlan.price) {
+        setBalanceCheck("insufficient");
         setLoading(false);
         return;
       }
@@ -68,16 +85,21 @@ export default function Plans() {
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          plan: plan.name,
-          amount: plan.price,
+          plan: activePlan.name,
+          amount: activePlan.price,
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        setSelectedPlan(plan.name);
-        setMessage(`✅ Successfully invested in ${plan.name} plan!`);
+        setBalanceCheck("success");
+        setMessage("✅ Investment confirmed successfully!");
+        
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
+
       } else {
         setMessage(`❌ ${data.message || "Transaction failed"}`);
       }
@@ -91,88 +113,122 @@ export default function Plans() {
   return (
     <div className="relative min-h-screen px-6 py-16 bg-[#0a0f1c] text-white overflow-hidden">
 
-      {/* background glow */}
+      {/* BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[140px] rounded-full top-[-200px] left-[-200px]" />
         <div className="absolute w-[600px] h-[600px] bg-blue-500/10 blur-[140px] rounded-full bottom-[-200px] right-[-200px]" />
       </div>
 
-      {/* header */}
+      {/* HEADER */}
       <div className="text-center mb-14 relative">
-        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
+        <h2 className="text-4xl font-bold">
           Investment <span className="text-emerald-400">Plans</span>
         </h2>
-        <p className="text-gray-400 mt-3">
-          Choose a plan that fits your financial growth strategy
-        </p>
       </div>
 
-      {/* message */}
+      {/* MESSAGE */}
       {message && (
-        <div
-          className={`max-w-2xl mx-auto mb-10 p-4 rounded-xl text-center font-semibold backdrop-blur-md border ${
-            message.startsWith("✅")
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
-              : "bg-red-500/10 border-red-500/20 text-red-300"
-          }`}
-        >
+        <div className="text-center mb-6 text-emerald-300">
           {message}
         </div>
       )}
 
-      {/* cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto relative">
+      {/* CARDS */}
+      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto relative">
 
-        {plans.map((plan, idx) => {
-          const isSelected = selectedPlan === plan.name;
+        {plans.map((plan, idx) => (
+          <div
+            key={idx}
+            className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-xl hover:scale-[1.03] transition"
+          >
+            <h3 className="text-2xl font-bold">{plan.name}</h3>
+            <p className="text-gray-400">{plan.profit}</p>
 
-          return (
-            <div
-              key={idx}
-              className={`relative rounded-2xl p-6 border backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 ${
-                isSelected
-                  ? "border-emerald-400 shadow-emerald-500/20 shadow-2xl"
-                  : "border-white/10 shadow-black/40 shadow-xl"
-              } bg-white/5`}
+            <div className="text-3xl text-emerald-400 my-4">
+              ${plan.price}
+            </div>
+
+            <ul className="text-gray-300 mb-6 space-y-1">
+              {plan.features.map((f, i) => (
+                <li key={i}>✔ {f}</li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => openModal(plan)}
+              className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 rounded-xl"
             >
+              Choose Plan
+            </button>
+          </div>
+        ))}
+      </div>
 
-              {/* glow accent */}
-              <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition bg-gradient-to-br from-emerald-500/10 to-blue-500/10 pointer-events-none" />
+      {/* MODAL */}
+      {modalOpen && activePlan && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
 
-              <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
-              <p className="text-gray-400 mb-3">{plan.profit}</p>
+          <div className="bg-[#111827] border border-white/10 p-6 rounded-2xl w-full max-w-md">
 
-              <div className="text-4xl font-extrabold text-emerald-400 mb-6">
-                ${plan.price}
+            <h2 className="text-xl font-bold mb-2">
+              Confirm Investment
+            </h2>
+
+            <p className="text-gray-400 mb-4">
+              You are about to subscribe to:
+            </p>
+
+            <div className="bg-white/5 p-4 rounded-xl mb-4">
+              <p><b>Plan:</b> {activePlan.name}</p>
+              <p><b>Price:</b> ${activePlan.price}</p>
+              <p><b>Profit:</b> {activePlan.profit}</p>
+            </div>
+
+            {/* STATUS */}
+            {balanceCheck === "insufficient" && (
+              <div className="text-red-400 mb-3">
+                Insufficient balance.
               </div>
+            )}
 
-              <ul className="space-y-2 mb-6 text-gray-300">
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <span className="text-emerald-400">✔</span> {f}
-                  </li>
-                ))}
-              </ul>
+            {balanceCheck === "success" && (
+              <div className="text-emerald-400 mb-3">
+                Success! Redirecting...
+              </div>
+            )}
+
+            {/* BUTTONS */}
+            <div className="flex gap-3">
 
               <button
-                onClick={() => handleChoosePlan(plan)}
-                disabled={loading && isSelected}
-                className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${
-                  isSelected
-                    ? "bg-emerald-500 text-white"
-                    : "bg-white/10 hover:bg-emerald-500 hover:text-white border border-white/10"
-                }`}
+                onClick={closeModal}
+                className="flex-1 py-2 bg-gray-600 rounded-lg"
               >
-                {loading && isSelected
-                  ? "Processing..."
-                  : isSelected
-                  ? "Active Plan ✓"
-                  : "Choose Plan"}
+                Cancel
               </button>
+
+              {balanceCheck === "insufficient" ? (
+                <button
+                  onClick={() => navigate("/deposit")}
+                  className="flex-1 py-2 bg-emerald-500 rounded-lg"
+                >
+                  Deposit
+                </button>
+              ) : (
+                <button
+                  onClick={handleConfirm}
+                  disabled={loading}
+                  className="flex-1 py-2 bg-emerald-500 rounded-lg"
+                >
+                  {loading ? "Processing..." : "Confirm"}
+                </button>
+              )}
+
             </div>
-          );
-        })}
-      </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
