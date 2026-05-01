@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar.jsx";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import PageLoader from "./components/PageLoader.jsx";
+import LockScreen from "./components/LockScreen.jsx";
 
 // User pages
 import Home from "./pages/Home.jsx";
@@ -24,6 +25,27 @@ import AdminDeposits from "./pages/AdminDeposits.jsx";
 import AdminWithdrawals from "./pages/AdminWithdrawals.jsx";
 import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
+
+
+
+function useAppLock() {
+  const [locked, setLocked] = useState(false);
+
+  useEffect(() => {
+    const handleBlur = () => setLocked(true);
+    const handleFocus = () => setLocked(true);
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
+
+  return [locked, setLocked];
+}
 
 // PWA Install Banner
 // import InstallBanner from "./components/InstallBanner.jsx";
@@ -49,12 +71,18 @@ function PageWrapper({ children }) {
 export default function App() {
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
-
+ 
+  const [locked, setLocked] = useAppLock();
+  
   return (
     <Router>
       {!window.location.pathname.startsWith("/admin") && <Navbar />}
       {/* <InstallBanner /> */}
 
+   {(token || adminToken) && locked && (
+  <LockScreen onUnlock={() => setLocked(false)} />
+)}
+      
       <PageWrapper>
         <div className="pt-16">
           <Routes>
