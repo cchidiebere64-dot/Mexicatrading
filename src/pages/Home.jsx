@@ -5,10 +5,10 @@ export default function Home() {
   const showDownloadButton = false;
 
   return (
-    className="relative min-h-screen bg-[#0a0f1c] text-white"
+    <div className="relative min-h-screen bg-[#0a0f1c] text-white overflow-x-hidden">
 
       {/* BACKGROUND GLOW EFFECT */}
-      <div className="absolute inset-0">
+      <div className="fixed inset-0 pointer-events-none">
         <div className="absolute w-[500px] h-[500px] bg-emerald-500/20 blur-[120px] rounded-full top-[-100px] left-[-100px]" />
         <div className="absolute w-[500px] h-[500px] bg-blue-500/20 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
       </div>
