@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle, } from "lucide-react";
-import TradingViewWidget from "react-tradingview-widget";
+
 
 export default function Dashboard() {
 
@@ -173,14 +173,16 @@ return (
 
     {/* LIVE CHART */}
 
-    <section>
-  <div className="rounded-xl border border-white/10 shadow-glow overflow-hidden">
-    <TradingViewWidget
-      symbol="BINANCE:BTCUSDT"
-      theme="dark"
-      locale="en"
-      autosize
-    />
+   <section>
+  <div className="rounded-xl border border-white/10 shadow-glow overflow-hidden h-[400px]">
+    <iframe
+      src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=BINANCE:BTCUSDT&interval=15&hidesidetoolbar=0&theme=dark&style=1&locale=en"
+      width="100%"
+      height="100%"
+      frameBorder="0"
+      allowTransparency="true"
+      scrolling="no"
+    ></iframe>
   </div>
 </section>
 
