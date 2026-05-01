@@ -1,36 +1,57 @@
+import { useState } from "react";
+
 export default function LockScreen({ onUnlock }) {
-  const authenticate = async () => {
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const unlock = async () => {
+    setLoading(true);
+
     try {
-      const cred = await navigator.credentials.get({
-        publicKey: {
-          challenge: new Uint8Array(32),
-          userVerification: "required",
-          timeout: 60000,
+      const res = await fetch("YOUR_BACKEND_URL/api/reauth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
+        body: JSON.stringify({ password }),
       });
 
-      if (cred) {
+      const data = await res.json();
+
+      if (data.success) {
         onUnlock();
+      } else {
+        alert("Wrong password");
       }
-    } catch (e) {
-      alert("Please enable fingerprint / Face ID on your device and try again.");
+    } catch (err) {
+      alert("Error connecting to server");
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 text-white">
-      
-      {/* Fingerprint icon (simple UI) */}
-      <div className="text-6xl mb-6">🔒</div>
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-xl w-80">
+        <h2 className="text-lg font-bold mb-3">Unlock App</h2>
 
-      <p className="mb-4 text-lg">Use fingerprint to unlock</p>
+        <input
+          type="password"
+          placeholder="Enter your password"
+          className="w-full border p-2 mb-3"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      <button
-        onClick={authenticate}
-        className="bg-white text-black px-6 py-3 rounded-xl font-semibold"
-      >
-        Tap to unlock
-      </button>
+        <button
+          onClick={unlock}
+          disabled={loading}
+          className="w-full bg-black text-white py-2"
+        >
+          {loading ? "Checking..." : "Unlock"}
+        </button>
+      </div>
     </div>
   );
 }
