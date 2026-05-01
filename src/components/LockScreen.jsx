@@ -1,6 +1,7 @@
 export default function LockScreen({ onUnlock }) {
   const unlock = async () => {
     try {
+      // Try to authenticate (login)
       await navigator.credentials.get({
         publicKey: {
           challenge: new Uint8Array(32),
@@ -10,8 +11,32 @@ export default function LockScreen({ onUnlock }) {
       });
 
       onUnlock();
-    } catch (error) {
-      alert("Authentication failed");
+    } catch (e) {
+      // If no credential exists → register fingerprint
+      try {
+        await navigator.credentials.create({
+          publicKey: {
+            challenge: new Uint8Array(32),
+            rp: { name: "My App" },
+            user: {
+              id: new Uint8Array(16),
+              name: "user@example.com",
+              displayName: "User",
+            },
+            pubKeyCredParams: [
+              { type: "public-key", alg: -7 },
+            ],
+            authenticatorSelection: {
+              userVerification: "required",
+            },
+            timeout: 60000,
+          },
+        });
+
+        alert("Fingerprint registered. Tap again to unlock.");
+      } catch (err) {
+        alert("Authentication not available");
+      }
     }
   };
 
