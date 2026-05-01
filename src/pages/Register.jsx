@@ -11,7 +11,9 @@ export default function Register() {
     email: "",
     password: "",
   });
+
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,84 +21,100 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, form);
+      const res = await axios.post(
+        `${API_URL}/api/auth/register`,
+        form
+      );
+
       if (res.data.token) {
         sessionStorage.setItem("token", res.data.token);
         navigate("/dashboard");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="relative flex items-center justify-center min-h-screen bg-[#0a0f1c] text-white overflow-hidden px-4">
+
+      {/* glow background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute w-[500px] h-[500px] bg-emerald-500/20 blur-[120px] rounded-full top-[-120px] left-[-120px]" />
+        <div className="absolute w-[500px] h-[500px] bg-blue-500/20 blur-[120px] rounded-full bottom-[-120px] right-[-120px]" />
+      </div>
+
+      {/* form */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md"
+        className="relative w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl hover:scale-[1.01] transition"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center text-emerald-600">
-          Create an Account 🚀
+        <h2 className="text-3xl font-bold text-center mb-2">
+          Create Account 🚀
         </h2>
 
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <p className="text-center text-gray-400 mb-6">
+          Join Mexicatrading and start investing
+        </p>
 
-        {/* Name Field */}
-        <div className="mb-4">
-          <label className="block mb-2 font-medium">Full Name</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="John Doe"
-          />
-        </div>
+        {error && (
+          <p className="text-red-400 text-center mb-4 bg-red-500/10 border border-red-500/20 p-2 rounded-lg">
+            {error}
+          </p>
+        )}
 
-        {/* Email Field */}
-        <div className="mb-4">
-          <label className="block mb-2 font-medium">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="you@example.com"
-          />
-        </div>
+        <input
+          type="text"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="Full Name"
+          required
+          className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/10 outline-none focus:border-emerald-400"
+        />
 
-        {/* Password Field */}
-        <div className="mb-6">
-          <label className="block mb-2 font-medium">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="********"
-          />
-        </div>
+        <input
+          type="email"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email"
+          required
+          className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/10 outline-none focus:border-emerald-400"
+        />
 
-        {/* Submit */}
+        <input
+          type="password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          placeholder="Password"
+          required
+          className="w-full p-3 mb-6 rounded-lg bg-white/10 border border-white/10 outline-none focus:border-emerald-400"
+        />
+
         <button
           type="submit"
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-semibold transition"
+          disabled={loading}
+          className="w-full py-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 transition font-semibold shadow-lg active:scale-95"
         >
-          Register
+          {loading ? "Creating account..." : "Register"}
         </button>
 
-        <p className="text-sm text-center mt-4 text-gray-600 dark:text-gray-400">
+        <p className="text-center text-sm mt-5 text-gray-400">
           Already have an account?{" "}
-          <a href="/login" className="text-emerald-600 hover:underline">
+          <span
+            onClick={() => navigate("/login")}
+            className="text-emerald-400 cursor-pointer hover:underline"
+          >
             Login
-          </a>
+          </span>
         </p>
       </form>
     </div>
