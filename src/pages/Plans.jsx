@@ -39,17 +39,13 @@ export default function Plans() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [processingPlan, setProcessingPlan] = useState(null);
 
   const handleChoosePlan = async (plan) => {
     setLoading(true);
-    setProcessingPlan(plan.name);
     setMessage("");
 
     try {
-      // simulate real system delay (makes it feel premium)
-      await new Promise((r) => setTimeout(r, 1200));
-
+      // Get user balance
       const profileRes = await fetch(`${API_URL}/api/dashboard`, {
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -59,13 +55,15 @@ export default function Plans() {
       const profileData = await profileRes.json();
       const balance = profileData.balance || 0;
 
+      // Block if insufficient balance
       if (balance < plan.price) {
-        setLoading(false);
-        setProcessingPlan(null);
         setMessage("❌ Insufficient balance. Please deposit first.");
+        alert("⚠️ You do not have enough balance to invest in this plan.");
+        setLoading(false);
         return;
       }
 
+      // Proceed investment
       const res = await fetch(`${API_URL}/api/investments`, {
         method: "POST",
         headers: {
@@ -87,88 +85,85 @@ export default function Plans() {
         setMessage(`❌ ${data.message || "Transaction failed"}`);
       }
     } catch (error) {
+      console.error("Investment error:", error);
       setMessage("❌ Network error. Please try again.");
     }
 
     setLoading(false);
-    setProcessingPlan(null);
   };
 
   return (
-    <div className="min-h-screen px-6 py-10 bg-[#0a0f1c] text-white">
-
-      {/* header */}
-      <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold mb-2">
-          💼 Investment Plans
-        </h2>
-        <p className="text-gray-400">
-          Choose a plan that matches your financial goals
+    <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <div className="text-center mb-10">
+        <h2 className="text-4xl font-bold mb-2">💼 Investment Plans</h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Choose a plan that suits your goals 🚀
         </p>
       </div>
 
-      {/* message */}
       {message && (
-        <div className="mb-6 text-center">
-          <span
-            className={`px-4 py-2 rounded-lg ${
-              message.startsWith("✅")
-                ? "bg-emerald-500/20 text-emerald-300"
-                : "bg-red-500/20 text-red-300"
-            }`}
-          >
-            {message}
-          </span>
+        <div
+          className={`mb-6 p-4 rounded-xl text-center font-semibold ${
+            message.startsWith("✅")
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {message}
         </div>
       )}
 
-      {/* cards */}
-      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {plans.map((plan, idx) => {
+          const isSelected = selectedPlan === plan.name;
+          const isLoading = loading;
 
-        {plans.map((plan, idx) => (
-          <div
-            key={idx}
-            className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:scale-[1.03] transition"
-          >
-
-            {/* glow */}
-            <div className="absolute inset-0 rounded-2xl opacity-20 blur-xl bg-emerald-500/10" />
-
-            <h3 className="text-2xl font-bold mb-2">
-              {plan.name}
-            </h3>
-
-            <p className="text-gray-400 mb-2">
-              {plan.profit}
-            </p>
-
-            <p className="text-3xl font-bold text-emerald-400 mb-6">
-              ${plan.price}
-            </p>
-
-            <ul className="space-y-2 mb-6 text-sm text-gray-300">
-              {plan.features.map((f, i) => (
-                <li key={i}>✔ {f}</li>
-              ))}
-            </ul>
-
-            <button
-              onClick={() => handleChoosePlan(plan)}
-              disabled={loading}
-              className={`w-full py-3 rounded-xl font-semibold transition active:scale-95 ${
-                selectedPlan === plan.name
-                  ? "bg-emerald-500"
-                  : "bg-white/10 hover:bg-emerald-500"
-              }`}
+          return (
+            <div
+              key={idx}
+              className={`p-6 rounded-2xl shadow-md border transition-transform duration-300 hover:scale-105 cursor-pointer ${
+                isSelected
+                  ? "border-emerald-500 ring-2 ring-emerald-400"
+                  : "border-gray-200 dark:border-gray-700"
+              } bg-white dark:bg-gray-800`}
             >
-              {processingPlan === plan.name
-                ? "Processing..."
-                : selectedPlan === plan.name
-                ? "Selected ✓"
-                : "Choose Plan"}
-            </button>
-          </div>
-        ))}
+              <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                {plan.profit}
+              </p>
+
+              <p className="text-3xl font-bold text-emerald-500 mb-6">
+                ${plan.price}
+              </p>
+
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-center">
+                    <span className="text-emerald-400 mr-2">✔</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => handleChoosePlan(plan)}
+                disabled={isLoading && isSelected}
+                className={`w-full py-2 rounded-xl font-semibold transition-all duration-300 ${
+                  isSelected
+                    ? "bg-emerald-500 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-emerald-500 hover:text-white"
+                }`}
+              >
+                {isLoading && isSelected
+                  ? "Processing..."
+                  : isSelected
+                  ? "Selected ✅"
+                  : "Choose Plan"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
