@@ -45,7 +45,6 @@ export default function Plans() {
     setMessage("");
 
     try {
-      // Get user balance
       const profileRes = await fetch(`${API_URL}/api/dashboard`, {
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -55,7 +54,6 @@ export default function Plans() {
       const profileData = await profileRes.json();
       const balance = profileData.balance || 0;
 
-      // Block if insufficient balance
       if (balance < plan.price) {
         setMessage("❌ Insufficient balance. Please deposit first.");
         alert("⚠️ You do not have enough balance to invest in this plan.");
@@ -63,7 +61,6 @@ export default function Plans() {
         return;
       }
 
-      // Proceed investment
       const res = await fetch(`${API_URL}/api/investments`, {
         method: "POST",
         headers: {
@@ -85,7 +82,6 @@ export default function Plans() {
         setMessage(`❌ ${data.message || "Transaction failed"}`);
       }
     } catch (error) {
-      console.error("Investment error:", error);
       setMessage("❌ Network error. Please try again.");
     }
 
@@ -93,72 +89,84 @@ export default function Plans() {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <div className="text-center mb-10">
-        <h2 className="text-4xl font-bold mb-2">💼 Investment Plans</h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Choose a plan that suits your goals 🚀
+    <div className="relative min-h-screen px-6 py-16 bg-[#0a0f1c] text-white overflow-hidden">
+
+      {/* background glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[140px] rounded-full top-[-200px] left-[-200px]" />
+        <div className="absolute w-[600px] h-[600px] bg-blue-500/10 blur-[140px] rounded-full bottom-[-200px] right-[-200px]" />
+      </div>
+
+      {/* header */}
+      <div className="text-center mb-14 relative">
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
+          Investment <span className="text-emerald-400">Plans</span>
+        </h2>
+        <p className="text-gray-400 mt-3">
+          Choose a plan that fits your financial growth strategy
         </p>
       </div>
 
+      {/* message */}
       {message && (
         <div
-          className={`mb-6 p-4 rounded-xl text-center font-semibold ${
+          className={`max-w-2xl mx-auto mb-10 p-4 rounded-xl text-center font-semibold backdrop-blur-md border ${
             message.startsWith("✅")
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-red-100 text-red-700"
+              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+              : "bg-red-500/10 border-red-500/20 text-red-300"
           }`}
         >
           {message}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto relative">
+
         {plans.map((plan, idx) => {
           const isSelected = selectedPlan === plan.name;
-          const isLoading = loading;
 
           return (
             <div
               key={idx}
-              className={`p-6 rounded-2xl shadow-md border transition-transform duration-300 hover:scale-105 cursor-pointer ${
+              className={`relative rounded-2xl p-6 border backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 ${
                 isSelected
-                  ? "border-emerald-500 ring-2 ring-emerald-400"
-                  : "border-gray-200 dark:border-gray-700"
-              } bg-white dark:bg-gray-800`}
+                  ? "border-emerald-400 shadow-emerald-500/20 shadow-2xl"
+                  : "border-white/10 shadow-black/40 shadow-xl"
+              } bg-white/5`}
             >
-              <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
 
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
-                {plan.profit}
-              </p>
+              {/* glow accent */}
+              <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition bg-gradient-to-br from-emerald-500/10 to-blue-500/10 pointer-events-none" />
 
-              <p className="text-3xl font-bold text-emerald-500 mb-6">
+              <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
+              <p className="text-gray-400 mb-3">{plan.profit}</p>
+
+              <div className="text-4xl font-extrabold text-emerald-400 mb-6">
                 ${plan.price}
-              </p>
+              </div>
 
-              <ul className="space-y-2 mb-6">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-center">
-                    <span className="text-emerald-400 mr-2">✔</span>
-                    {feature}
+              <ul className="space-y-2 mb-6 text-gray-300">
+                {plan.features.map((f, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <span className="text-emerald-400">✔</span> {f}
                   </li>
                 ))}
               </ul>
 
               <button
                 onClick={() => handleChoosePlan(plan)}
-                disabled={isLoading && isSelected}
-                className={`w-full py-2 rounded-xl font-semibold transition-all duration-300 ${
+                disabled={loading && isSelected}
+                className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${
                   isSelected
                     ? "bg-emerald-500 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-emerald-500 hover:text-white"
+                    : "bg-white/10 hover:bg-emerald-500 hover:text-white border border-white/10"
                 }`}
               >
-                {isLoading && isSelected
+                {loading && isSelected
                   ? "Processing..."
                   : isSelected
-                  ? "Selected ✅"
+                  ? "Active Plan ✓"
                   : "Choose Plan"}
               </button>
             </div>
