@@ -153,8 +153,6 @@
 }
 
 
-
-
 /* Glowing pulse animation for icons */
 @keyframes iconPulse {
   0% {
@@ -173,6 +171,7 @@
 
 .btn-primary svg {
   animation: iconPulse 1.8s ease-in-out infinite;
+}
 
 .btn-primary:nth-child(1) svg { animation-delay: 0s; }
 .btn-primary:nth-child(2) svg { animation-delay: 0.6s; }
