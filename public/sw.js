@@ -1,36 +1,29 @@
-const CACHE_NAME = "mexicatrading-cache-v1";
+const CACHE_NAME = "mexicatrading-cache-v2";
+
 const urlsToCache = [
   "/",
   "/index.html",
-  "/logo.png",
-  "/style.css"
+  "/logo.png"
 ];
 
+// Install
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("🟢 Caching app shell");
-      return cache.addAll(urlsToCache);
-    })
-  );
   self.skipWaiting();
 });
 
+// Activate (clear old caches completely)
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((name) => {
-          if (name !== CACHE_NAME) return caches.delete(name);
-        })
-      )
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
+// Fetch (NO blocking of updated assets)
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => cachedResponse || fetch(event.request))
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
