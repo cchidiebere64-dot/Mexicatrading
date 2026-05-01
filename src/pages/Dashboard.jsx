@@ -49,27 +49,24 @@ useEffect(() => {
     "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
   script.async = true;
 
-  script.innerHTML = JSON.stringify({
-    autosize: true,
-    symbol: "BINANCE:BTCUSDT",
-    interval: "15",
-    timezone: "Etc/UTC",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    enable_publishing: false,
-    allow_symbol_change: true,
-    hide_top_toolbar: false,
-    save_image: false,
-    calendar: false,
-    hide_volume: false,
-  });
+  script.innerHTML = `
+  {
+    "autosize": true,
+    "symbol": "BINANCE:BTCUSDT",
+    "interval": "15",
+    "timezone": "Etc/UTC",
+    "theme": "dark",
+    "style": "1",
+    "locale": "en",
+    "enable_publishing": false,
+    "allow_symbol_change": true,
+    "hide_top_toolbar": false,
+    "save_image": false,
+    "calendar": false,
+    "hide_volume": false
+  }`;
 
   container.appendChild(script);
-
-  return () => {
-    container.innerHTML = "";
-  };
 }, []);
   
 
