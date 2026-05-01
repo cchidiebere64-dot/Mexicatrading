@@ -255,7 +255,8 @@ return (
 
 
   
-Active Plans
+<section>
+  <h3 className="section-title">Active Plans</h3>
 
 
 {plans.length ? (
@@ -425,7 +426,8 @@ Active Plans
 
 
   
-Completed Plans
+<section>
+  <h3 className="section-title">Completed Plans</h3>
 
 
 {completed.length ? (
