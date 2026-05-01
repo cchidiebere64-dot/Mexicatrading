@@ -176,13 +176,13 @@ return (
    <section>
   <div className="rounded-xl border border-white/10 shadow-glow overflow-hidden h-[400px]">
     <iframe
-      src="https://www.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=15&theme=dark&style=1"
+      src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=15&theme=dark&style=1&hide_top_toolbar=0&allow_symbol_change=1"
       width="100%"
       height="100%"
       frameBorder="0"
-      allowTransparency="true"
       scrolling="no"
-    ></iframe>
+      allowTransparency="true"
+    />
   </div>
 </section>
 
