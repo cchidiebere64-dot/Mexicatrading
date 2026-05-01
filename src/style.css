@@ -173,4 +173,7 @@
 
 .btn-primary svg {
   animation: iconPulse 1.8s ease-in-out infinite;
-}
+
+.btn-primary:nth-child(1) svg { animation-delay: 0s; }
+.btn-primary:nth-child(2) svg { animation-delay: 0.6s; }
+.btn-primary:nth-child(3) svg { animation-delay: 1.2s; }
