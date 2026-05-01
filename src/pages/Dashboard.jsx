@@ -176,7 +176,7 @@ return (
    <section>
   <div className="rounded-xl border border-white/10 shadow-glow overflow-hidden h-[400px]">
     <iframe
-      src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=BINANCE:BTCUSDT&interval=15&hidesidetoolbar=0&theme=dark&style=1&locale=en"
+      src="https://www.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=15&theme=dark&style=1"
       width="100%"
       height="100%"
       frameBorder="0"
