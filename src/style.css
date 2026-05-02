@@ -185,3 +185,19 @@
 .btn-primary:nth-child(3) { animation-delay: 2.6s; }
 
 
+
+/* ── SECURITY: Disable text selection globally ── */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow selection only in input fields and textareas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
