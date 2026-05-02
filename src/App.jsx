@@ -54,28 +54,101 @@ function AppInner() {
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
 
-  // Track whether user has visited dashboard at least once this session
+  // ── Lock state — initialized from sessionStorage so it survives refresh ──
+  const [locked, setLocked] = useState(
+    sessionStorage.getItem("locked") === "true"
+  );
+
   const [hasVisitedDashboard, setHasVisitedDashboard] = useState(
     sessionStorage.getItem("hasVisitedDashboard") === "true"
   );
 
-  const [locked, setLocked] = useState(false);
-  const blurTimeRef = useRef(null); // timestamp when app was blurred
+  const blurTimeRef = useRef(null);
 
-  // Mark dashboard as visited
+  // ── SECURITY: Disable right-click ────────────────────────────────────────
   useEffect(() => {
-    if (location.pathname === "/dashboard" || location.pathname.startsWith("/admin")) {
+    const disableRightClick = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", disableRightClick);
+    return () => document.removeEventListener("contextmenu", disableRightClick);
+  }, []);
+
+  // ── SECURITY: Disable text selection ─────────────────────────────────────
+  useEffect(() => {
+    const disableSelect = (e) => e.preventDefault();
+    document.addEventListener("selectstart", disableSelect);
+    return () => document.removeEventListener("selectstart", disableSelect);
+  }, []);
+
+  // ── SECURITY: Disable copy/cut ────────────────────────────────────────────
+  useEffect(() => {
+    const disableCopy = (e) => e.preventDefault();
+    document.addEventListener("copy", disableCopy);
+    document.addEventListener("cut", disableCopy);
+    return () => {
+      document.removeEventListener("copy", disableCopy);
+      document.removeEventListener("cut", disableCopy);
+    };
+  }, []);
+
+  // ── SECURITY: Disable F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S ─────────────────
+  useEffect(() => {
+    const disableDevTools = (e) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
+        (e.ctrlKey && ["U", "S", "u", "s"].includes(e.key))
+      ) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", disableDevTools);
+    return () => document.removeEventListener("keydown", disableDevTools);
+  }, []);
+
+  // ── SECURITY: Disable drag ────────────────────────────────────────────────
+  useEffect(() => {
+    const disableDrag = (e) => e.preventDefault();
+    document.addEventListener("dragstart", disableDrag);
+    return () => document.removeEventListener("dragstart", disableDrag);
+  }, []);
+
+  // ── Mark dashboard as visited ─────────────────────────────────────────────
+  useEffect(() => {
+    if (
+      location.pathname === "/dashboard" ||
+      location.pathname.startsWith("/admin")
+    ) {
       sessionStorage.setItem("hasVisitedDashboard", "true");
       setHasVisitedDashboard(true);
     }
   }, [location.pathname]);
 
-  // Lock logic — only after dashboard visited, only when away 30s+
+  // ── Lock app helper — saves to sessionStorage so refresh keeps it locked ──
+  const lockApp = () => {
+    sessionStorage.setItem("locked", "true");
+    setLocked(true);
+  };
+
+  // ── Unlock helper — removes from sessionStorage ───────────────────────────
+  const handleUnlock = () => {
+    sessionStorage.removeItem("locked");
+    setLocked(false);
+    blurTimeRef.current = null;
+  };
+
+  // ── Clear lock on exempt pages ────────────────────────────────────────────
+  useEffect(() => {
+    if (EXEMPT_PATHS.includes(location.pathname)) {
+      sessionStorage.removeItem("locked");
+      setLocked(false);
+    }
+  }, [location.pathname]);
+
+  // ── Desktop: blur/focus lock logic ───────────────────────────────────────
   useEffect(() => {
     const isExempt = EXEMPT_PATHS.includes(location.pathname);
 
     const handleBlur = () => {
-      // Record when user left
       blurTimeRef.current = Date.now();
     };
 
@@ -85,12 +158,14 @@ function AppInner() {
       const awayMs = Date.now() - blurTimeRef.current;
       blurTimeRef.current = null;
 
-      const hasToken = sessionStorage.getItem("token") || sessionStorage.getItem("adminToken");
-      const visited = sessionStorage.getItem("hasVisitedDashboard") === "true";
+      const hasToken =
+        sessionStorage.getItem("token") ||
+        sessionStorage.getItem("adminToken");
+      const visited =
+        sessionStorage.getItem("hasVisitedDashboard") === "true";
 
-      // Only lock if: has token, visited dashboard, away 30s+, not on exempt page
       if (hasToken && visited && awayMs >= LOCK_TIMEOUT_MS && !isExempt) {
-        setLocked(true);
+        lockApp();
       }
     };
 
@@ -103,18 +178,35 @@ function AppInner() {
     };
   }, [location.pathname]);
 
-  // Never show lock on exempt pages — clear it if user navigates there
+  // ── Mobile: visibilitychange lock logic ──────────────────────────────────
   useEffect(() => {
     const isExempt = EXEMPT_PATHS.includes(location.pathname);
-    if (isExempt) {
-      setLocked(false);
-    }
-  }, [location.pathname]);
 
-  const handleUnlock = () => {
-    setLocked(false);
-    blurTimeRef.current = null;
-  };
+    const handleVisibility = () => {
+      if (document.hidden) {
+        blurTimeRef.current = Date.now();
+      } else {
+        if (!blurTimeRef.current) return;
+
+        const awayMs = Date.now() - blurTimeRef.current;
+        blurTimeRef.current = null;
+
+        const hasToken =
+          sessionStorage.getItem("token") ||
+          sessionStorage.getItem("adminToken");
+        const visited =
+          sessionStorage.getItem("hasVisitedDashboard") === "true";
+
+        if (hasToken && visited && awayMs >= LOCK_TIMEOUT_MS && !isExempt) {
+          lockApp();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
+  }, [location.pathname]);
 
   const isExemptPage = EXEMPT_PATHS.includes(location.pathname);
   const shouldShowLock =
@@ -140,13 +232,31 @@ function AppInner() {
             <Route path="/plans" element={<Plans />} />
 
             {/* Protected user routes */}
-            <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
-            <Route path="/deposit" element={token ? <Deposit /> : <Navigate to="/login" />} />
-            <Route path="/withdraw" element={token ? <Withdraw /> : <Navigate to="/login" />} />
+            <Route
+              path="/dashboard"
+              element={token ? <Dashboard /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/deposit"
+              element={token ? <Deposit /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/withdraw"
+              element={token ? <Withdraw /> : <Navigate to="/login" />}
+            />
 
             {/* ADMIN ROUTES */}
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />}>
+            <Route
+              path="/admin"
+              element={
+                adminToken ? (
+                  <AdminLayout />
+                ) : (
+                  <Navigate to="/admin/login" />
+                )
+              }
+            >
               <Route index element={<AdminDashboardHome />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="plans" element={<AdminPlans />} />
