@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import PageLoader from "./components/PageLoader.jsx";
 import LockScreen from "./components/LockScreen.jsx";
@@ -26,8 +26,10 @@ import AdminWithdrawals from "./pages/AdminWithdrawals.jsx";
 import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
 
-// PWA Install Banner
-// import InstallBanner from "./components/InstallBanner.jsx";
+const LOCK_TIMEOUT_MS = 30000; // 30 seconds
+
+// Pages where lock screen must NEVER appear
+const EXEMPT_PATHS = ["/login", "/register", "/admin/login", "/"];
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -47,50 +49,86 @@ function PageWrapper({ children }) {
   );
 }
 
-export default function App() {
+function AppInner() {
+  const location = useLocation();
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
 
-  // 🔐 LOCK STATE (persistent)
-  const [locked, setLocked] = useState(
-    sessionStorage.getItem("locked") === "true"
+  // Track whether user has visited dashboard at least once this session
+  const [hasVisitedDashboard, setHasVisitedDashboard] = useState(
+    sessionStorage.getItem("hasVisitedDashboard") === "true"
   );
 
-  // 🔐 restore lock after refresh
-  useEffect(() => {
-    if (sessionStorage.getItem("locked") === "true") {
-      setLocked(true);
-    }
-  }, []);
+  const [locked, setLocked] = useState(false);
+  const blurTimeRef = useRef(null); // timestamp when app was blurred
 
-  // 🔐 trigger lock when user leaves app
+  // Mark dashboard as visited
   useEffect(() => {
+    if (location.pathname === "/dashboard" || location.pathname.startsWith("/admin")) {
+      sessionStorage.setItem("hasVisitedDashboard", "true");
+      setHasVisitedDashboard(true);
+    }
+  }, [location.pathname]);
+
+  // Lock logic — only after dashboard visited, only when away 30s+
+  useEffect(() => {
+    const isExempt = EXEMPT_PATHS.includes(location.pathname);
+
     const handleBlur = () => {
-      if (sessionStorage.getItem("token") || sessionStorage.getItem("adminToken")) {
-        sessionStorage.setItem("locked", "true");
+      // Record when user left
+      blurTimeRef.current = Date.now();
+    };
+
+    const handleFocus = () => {
+      if (!blurTimeRef.current) return;
+
+      const awayMs = Date.now() - blurTimeRef.current;
+      blurTimeRef.current = null;
+
+      const hasToken = sessionStorage.getItem("token") || sessionStorage.getItem("adminToken");
+      const visited = sessionStorage.getItem("hasVisitedDashboard") === "true";
+
+      // Only lock if: has token, visited dashboard, away 30s+, not on exempt page
+      if (hasToken && visited && awayMs >= LOCK_TIMEOUT_MS && !isExempt) {
         setLocked(true);
       }
     };
 
     window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
 
-    return () => window.removeEventListener("blur", handleBlur);
-  }, []);
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [location.pathname]);
+
+  // Never show lock on exempt pages — clear it if user navigates there
+  useEffect(() => {
+    const isExempt = EXEMPT_PATHS.includes(location.pathname);
+    if (isExempt) {
+      setLocked(false);
+    }
+  }, [location.pathname]);
+
+  const handleUnlock = () => {
+    setLocked(false);
+    blurTimeRef.current = null;
+  };
+
+  const isExemptPage = EXEMPT_PATHS.includes(location.pathname);
+  const shouldShowLock =
+    locked &&
+    !isExemptPage &&
+    (token || adminToken) &&
+    hasVisitedDashboard;
 
   return (
-    <Router>
-      {!window.location.pathname.startsWith("/admin") && <Navbar />}
-      {/* <InstallBanner /> */}
+    <>
+      {!location.pathname.startsWith("/admin") && <Navbar />}
 
-      {/* 🔐 LOCK SCREEN */}
-      {(token || adminToken) && locked && (
-        <LockScreen
-          onUnlock={() => {
-            sessionStorage.removeItem("locked");
-            setLocked(false);
-          }}
-        />
-      )}
+      {/* LOCK SCREEN */}
+      {shouldShowLock && <LockScreen onUnlock={handleUnlock} />}
 
       <PageWrapper>
         <div className="pt-16">
@@ -124,6 +162,14 @@ export default function App() {
           </Routes>
         </div>
       </PageWrapper>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppInner />
     </Router>
   );
-              }
+}
