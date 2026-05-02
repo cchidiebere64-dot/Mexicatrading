@@ -3,11 +3,14 @@ import mexicanLogo from "../assets/mexican.png";
 import { useState, useEffect } from "react";
 import { X, Menu, LayoutDashboard, LogOut, ChevronRight } from "lucide-react";
 
+// Pages considered "outside the app"
+const OUTSIDE_PAGES = ["/", "/login", "/register"];
+
 const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/plans", label: "Plans" },
-  { to: "/deposit", label: "Deposit" },
-  { to: "/withdraw", label: "Withdraw" },
+  { to: "/", label: "Home", protected: false },
+  { to: "/plans", label: "Plans", protected: true },
+  { to: "/deposit", label: "Deposit", protected: true },
+  { to: "/withdraw", label: "Withdraw", protected: true },
 ];
 
 export default function Navbar() {
@@ -30,6 +33,19 @@ export default function Navbar() {
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
+
+  // Smart protected navigation
+  const handleProtectedNav = (path) => {
+    const currentPath = location.pathname;
+
+    // If currently on an outside page OR no token — force login
+    if (OUTSIDE_PAGES.includes(currentPath) || !token) {
+      navigate("/login");
+      return;
+    }
+
+    navigate(path);
+  };
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -64,27 +80,41 @@ export default function Navbar() {
 
           {/* DESKTOP LINKS */}
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isActive(link.to)
-                    ? "text-emerald-400 bg-emerald-500/10"
-                    : "text-white/50 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) =>
+              link.protected ? (
+                <button
+                  key={link.to}
+                  onClick={() => handleProtectedNav(link.to)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isActive(link.to)
+                      ? "text-emerald-400 bg-emerald-500/10"
+                      : "text-white/50 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isActive(link.to)
+                      ? "text-emerald-400 bg-emerald-500/10"
+                      : "text-white/50 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </nav>
 
           {/* DESKTOP RIGHT */}
           <div className="hidden md:flex items-center gap-2">
-            {token ? (
+            {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
               <>
                 <button
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => handleProtectedNav("/dashboard")}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all"
                 >
                   <LayoutDashboard size={15} />
@@ -151,8 +181,8 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* User info if logged in */}
-            {token && user?.name && (
+            {/* User info if logged in and inside app */}
+            {token && !OUTSIDE_PAGES.includes(location.pathname) && user?.name && (
               <div className="px-5 py-4 border-b border-white/8">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
@@ -168,25 +198,41 @@ export default function Navbar() {
 
             {/* Nav Links */}
             <nav className="flex flex-col gap-1 px-3 py-4 flex-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    isActive(link.to)
-                      ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                      : "text-white/50 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  {link.label}
-                  <ChevronRight size={14} className="opacity-40" />
-                </Link>
-              ))}
+              {navLinks.map((link) =>
+                link.protected ? (
+                  <button
+                    key={link.to}
+                    onClick={() => handleProtectedNav(link.to)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      isActive(link.to)
+                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                        : "text-white/50 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {link.label}
+                    <ChevronRight size={14} className="opacity-40" />
+                  </button>
+                ) : (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      isActive(link.to)
+                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                        : "text-white/50 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {link.label}
+                    <ChevronRight size={14} className="opacity-40" />
+                  </Link>
+                )
+              )}
 
-              {token && (
-                <Link
-                  to="/dashboard"
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+              {/* Dashboard link — only show if inside app */}
+              {token && !OUTSIDE_PAGES.includes(location.pathname) && (
+                <button
+                  onClick={() => handleProtectedNav("/dashboard")}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                     isActive("/dashboard")
                       ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
                       : "text-white/50 hover:text-white hover:bg-white/5"
@@ -194,13 +240,13 @@ export default function Navbar() {
                 >
                   Dashboard
                   <ChevronRight size={14} className="opacity-40" />
-                </Link>
+                </button>
               )}
             </nav>
 
             {/* Bottom Actions */}
             <div className="px-3 pb-6 space-y-2">
-              {token ? (
+              {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all"
