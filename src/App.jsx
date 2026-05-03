@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import PageLoader from "./components/PageLoader.jsx";
 import LockScreen from "./components/LockScreen.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
+
 
 // User pages
 import Home from "./pages/Home.jsx";
@@ -230,6 +233,9 @@ function AppInner() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/plans" element={<Plans />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
 
             {/* Protected user routes */}
             <Route
