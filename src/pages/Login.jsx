@@ -177,6 +177,14 @@ export default function Login() {
             <div className="flex-1 h-px bg-white/8" />
           </div>
 
+          <div className="text-right mb-4">
+  <Link to="/forgot-password" className="text-xs text-white/40 hover:text-emerald-400 transition">
+    Forgot Password?
+  </Link>
+</div>
+
+          
+
           {/* REGISTER LINK */}
           <button
             onClick={() => navigate("/register")}
