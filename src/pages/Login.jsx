@@ -64,7 +64,6 @@ export default function Login() {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
         <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        {/* Grid texture */}
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -150,11 +149,21 @@ export default function Login() {
               </button>
             </div>
 
+            {/* Forgot Password — right below password field */}
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-white/40 hover:text-emerald-400 transition"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2"
+              className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -176,14 +185,6 @@ export default function Login() {
             <span className="text-white/20 text-xs">new to mexicatrading?</span>
             <div className="flex-1 h-px bg-white/8" />
           </div>
-
-          <div className="text-right mb-4">
-  <Link to="/forgot-password" className="text-xs text-white/40 hover:text-emerald-400 transition">
-    Forgot Password?
-  </Link>
-</div>
-
-          
 
           {/* REGISTER LINK */}
           <button
