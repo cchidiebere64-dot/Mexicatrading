@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Plus, Pencil, Trash2, X, DollarSign, Percent, RefreshCw, AlertTriangle } from "lucide-react";
+import { Package, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle } from "lucide-react";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 
@@ -13,7 +13,7 @@ export default function AdminPlans() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
-  const [form, setForm] = useState({ name: "", min: "", max: "", profit: "", duration: "" });
+  const [form, setForm] = useState({ name: "", min: "", max: "", profit: "", duration: "", description: "" });
 
   const token = sessionStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}` };
@@ -39,21 +39,20 @@ export default function AdminPlans() {
 
   const openCreate = () => {
     setEditPlan(null);
-    setForm({ name: "", min: "", max: "", profit: "", duration: "" });
+    setForm({ name: "", min: "", max: "", profit: "", duration: "", description: "" });
     setShowModal(true);
   };
 
   const openEdit = (plan) => {
     setEditPlan(plan);
-    
-// CORRECT ✅
-setForm({
-  name: plan.name || "",
-  min: plan.minAmount || "",
-  max: plan.maxAmount || "",
-  profit: plan.profitRate || "",
-  duration: plan.duration || "",
-});
+    setForm({
+      name: plan.name || "",
+      min: plan.minAmount || "",
+      max: plan.maxAmount || "",
+      profit: plan.profitRate || "",
+      duration: plan.duration || "",
+      description: plan.description || "",
+    });
     setShowModal(true);
   };
 
@@ -162,21 +161,23 @@ setForm({
 
               <div>
                 <h3 className="text-white font-bold text-base">{p.name}</h3>
-                {p.duration && <p className="text-white/30 text-xs mt-0.5">{p.duration} days duration</p>}
+                {p.description && <p className="text-white/30 text-xs mt-0.5">{p.description}</p>}
+                {p.duration && <p className="text-white/20 text-xs mt-0.5">{p.duration} days duration</p>}
               </div>
 
+              {/* ✅ Fixed field names to match model */}
               <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/8">
                 <div>
                   <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Min</p>
-                  <p className="text-white font-semibold text-sm">${Number(p.min).toLocaleString()}</p>
+                  <p className="text-white font-semibold text-sm">${Number(p.minAmount || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Max</p>
-                  <p className="text-white font-semibold text-sm">${Number(p.max).toLocaleString()}</p>
+                  <p className="text-white font-semibold text-sm">${Number(p.maxAmount || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Profit</p>
-                  <p className="text-emerald-400 font-bold text-sm">{p.profit}%</p>
+                  <p className="text-emerald-400 font-bold text-sm">{p.profitRate}%</p>
                 </div>
               </div>
             </motion.div>
@@ -202,12 +203,12 @@ setForm({
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {[
-                  // CURRENT
-                  { label: "Plan Name", key: "name" },
-                  { label: "Minimum ($)", key: "min" },
-                  { label: "Maximum ($)", key: "max" },
-                  { label: "Profit (%)", key: "profit" },
+                  { label: "Plan Name", key: "name", placeholder: "e.g. Gold Plan", type: "text" },
+                  { label: "Minimum ($)", key: "min", placeholder: "e.g. 100", type: "number" },
+                  { label: "Maximum ($)", key: "max", placeholder: "e.g. 5000", type: "number" },
+                  { label: "Profit Rate (%)", key: "profit", placeholder: "e.g. 25", type: "number" },
                   { label: "Duration (days)", key: "duration", placeholder: "e.g. 7", type: "number" },
+                  { label: "Description (optional)", key: "description", placeholder: "Brief plan description", type: "text" },
                 ].map((field) => (
                   <div key={field.key} className="space-y-1.5">
                     <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">{field.label}</label>
@@ -216,7 +217,7 @@ setForm({
                       placeholder={field.placeholder}
                       value={form[field.key]}
                       onChange={(e) => setForm(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      required
+                      required={field.key !== "description"}
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white"
                     />
                   </div>
@@ -267,4 +268,4 @@ setForm({
       </AnimatePresence>
     </div>
   );
-              }
+                }
