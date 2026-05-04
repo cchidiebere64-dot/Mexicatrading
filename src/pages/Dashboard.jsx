@@ -253,29 +253,48 @@ export default function Dashboard() {
 
         {/* GREETING */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
-          <div>
-            <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
-            <h2 className="text-2xl font-bold mt-0.5">
-              {data.name} <span className="text-emerald-400">👋</span>
-            </h2>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-3 text-xs text-white/30">
-              {location.country && (
-                <span className="flex items-center gap-1.5">
-                  <Globe size={12} />
-                  {flagEmoji(location.flag)} {location.country}
-                </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <Calendar size={12} />
-                {t("dashboard.memberSince")} {memberSince}
-              </span>
-              <span className="flex items-center gap-1.5 text-emerald-400/70">
-                <BadgeCheck size={12} />
-                {t("dashboard.verified")}
-              </span>
-            </div>
+        {/* GREETING */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
+  <div>
+    <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
+    <h2 className="text-2xl font-bold mt-0.5">
+      {data.name} <span className="text-emerald-400">👋</span>
+    </h2>
+  </div>
+  <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex items-center gap-3 text-xs text-white/30">
+      {location.country && (
+        <span className="flex items-center gap-1.5">
+          <Globe size={12} />
+          {flagEmoji(location.flag)} {location.country}
+        </span>
+      )}
+      <span className="flex items-center gap-1.5">
+        <Calendar size={12} />
+        {t("dashboard.memberSince")} {memberSince}
+      </span>
+      <span className="flex items-center gap-1.5 text-emerald-400/70">
+        <BadgeCheck size={12} />
+        {t("dashboard.verified")}
+      </span>
+    </div>
+    {lastUpdated && (
+      <span className="text-white/20 text-xs flex items-center gap-1">
+        <RefreshCw size={10} />
+        {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+      </span>
+    )}
+    {/* Refresh + Language on same line as greeting */}
+    <button
+      onClick={() => fetchDashboard(false)}
+      disabled={refreshing}
+      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all"
+    >
+      <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+    </button>
+    <LanguageSelector />
+  </div>
+</div>
             {/* Last updated indicator */}
             {lastUpdated && (
               <span className="text-white/20 text-xs flex items-center gap-1">
