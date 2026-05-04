@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { X, Menu, LayoutDashboard, LogOut, ChevronRight } from "lucide-react";
 import LanguageSelector from "./LanguageSelector.jsx";
 
-
-
 // Pages considered "outside the app"
 const OUTSIDE_PAGES = ["/", "/login", "/register"];
 
@@ -25,28 +23,22 @@ export default function Navbar() {
   const token = sessionStorage.getItem("token");
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
-  // Detect scroll for navbar shadow
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Smart protected navigation
   const handleProtectedNav = (path) => {
     const currentPath = location.pathname;
-
-    // If currently on an outside page OR no token — force login
     if (OUTSIDE_PAGES.includes(currentPath) || !token) {
       navigate("/login");
       return;
     }
-
     navigate(path);
   };
 
@@ -114,6 +106,7 @@ export default function Navbar() {
 
           {/* DESKTOP RIGHT */}
           <div className="hidden md:flex items-center gap-2">
+            <LanguageSelector />
             {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
               <>
                 <button
@@ -123,11 +116,6 @@ export default function Navbar() {
                   <LayoutDashboard size={15} />
                   Dashboard
                 </button>
-
-              
-               <LanguageSelector />
-
-                
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
@@ -167,13 +155,11 @@ export default function Navbar() {
       {/* MOBILE MENU OVERLAY */}
       {menuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
 
-          {/* Drawer */}
           <div className="absolute top-0 right-0 h-full w-72 bg-[#0e1422] border-l border-white/8 shadow-2xl flex flex-col">
 
             {/* Drawer Header */}
@@ -236,7 +222,6 @@ export default function Navbar() {
                 )
               )}
 
-              {/* Dashboard link — only show if inside app */}
               {token && !OUTSIDE_PAGES.includes(location.pathname) && (
                 <button
                   onClick={() => handleProtectedNav("/dashboard")}
@@ -254,6 +239,12 @@ export default function Navbar() {
 
             {/* Bottom Actions */}
             <div className="px-3 pb-6 space-y-2">
+
+              {/* Language Selector — always visible on mobile */}
+              <div className="flex justify-center py-2">
+                <LanguageSelector />
+              </div>
+
               {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
                 <button
                   onClick={handleLogout}
@@ -264,39 +255,6 @@ export default function Navbar() {
                 </button>
               ) : (
                 <>
-                  {/* Bottom Actions */}
-<div className="px-3 pb-6 space-y-2">
-
-  {/* Language Selector — always visible on mobile */}
-  <div className="flex justify-center py-2">
-    <LanguageSelector />
-  </div>
-
-  {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
-    <button
-      onClick={handleLogout}
-      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all"
-    >
-      <LogOut size={15} />
-      Logout
-    </button>
-  ) : (
-    <>
-      <Link
-        to="/login"
-        className="block text-center py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-sm font-medium hover:bg-white/10 transition-all"
-      >
-        Sign In
-      </Link>
-      <Link
-        to="/register"
-        className="block text-center py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20"
-      >
-        Get Started
-      </Link>
-    </>
-  )}
-</div>
                   <Link
                     to="/login"
                     className="block text-center py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-sm font-medium hover:bg-white/10 transition-all"
