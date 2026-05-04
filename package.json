@@ -17,7 +17,10 @@
   "recharts": "^2.12.7",
   "react-circular-progressbar": "^2.1.0",
   "react-icons": "^4.11.0",
-  "framer-motion": "^11.0.0"
+  "framer-motion": "^11.0.0",
+  "i18next": "^23.7.6",
+  "react-i18next": "^14.0.1",
+  "i18next-browser-languagedetector": "^7.2.0"
 },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.2",
