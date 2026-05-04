@@ -2,6 +2,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import mexicanLogo from "../assets/mexican.png";
 import { useState, useEffect } from "react";
 import { X, Menu, LayoutDashboard, LogOut, ChevronRight } from "lucide-react";
+import LanguageSelector from "./LanguageSelector.jsx";
+
+
 
 // Pages considered "outside the app"
 const OUTSIDE_PAGES = ["/", "/login", "/register"];
@@ -120,6 +123,11 @@ export default function Navbar() {
                   <LayoutDashboard size={15} />
                   Dashboard
                 </button>
+
+              
+               <LanguageSelector />
+
+                
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
