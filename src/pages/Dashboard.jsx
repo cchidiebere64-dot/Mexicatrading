@@ -9,6 +9,7 @@ import {
   BadgeCheck, Globe, Calendar, ChevronRight,
   Activity, DollarSign, BarChart2, Clock,
 } from "lucide-react";
+import LanguageSelector from "../components/LanguageSelector.jsx";
 
 // ── Animated number count-up ──────────────────────────────────────────────────
 function CountUp({ end, prefix = "", duration = 1200 }) {
@@ -140,15 +141,19 @@ export default function Dashboard() {
       </div>
 
       {/* TOP NAV */}
-      <header className="fixed w-full top-0 z-20 backdrop-blur-xl bg-[#080c18]/80 border-b border-white/5 px-5 py-3 flex items-center justify-between">
-        <h1 className="text-base font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent tracking-tight">
-          MexicaTrading
-        </h1>
-        <div className="flex items-center gap-2 text-xs text-white/40">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          Live
-        </div>
-      </header>
+      {/* TOP NAV */}
+<header className="fixed w-full top-0 z-20 backdrop-blur-xl bg-[#080c18]/80 border-b border-white/5 px-5 py-3 flex items-center justify-between">
+  <h1 className="text-base font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent tracking-tight">
+    MexicaTrading
+  </h1>
+  <div className="flex items-center gap-3">
+    <LanguageSelector />
+    <div className="flex items-center gap-1.5 text-xs text-white/40">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+      Live
+    </div>
+  </div>
+</header>
 
       {/* TICKER */}
       <div className="ticker-fixed">
