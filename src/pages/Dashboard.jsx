@@ -165,30 +165,34 @@ export default function Dashboard() {
       <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-6 animate-fade-in">
 
         {/* GREETING */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
-          <div>
-            <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
-            <h2 className="text-2xl font-bold mt-0.5">
-              {data.name} <span className="text-emerald-400">👋</span>
-            </h2>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-white/30">
-            {location.country && (
-              <span className="flex items-center gap-1.5">
-                <Globe size={12} />
-                {flagEmoji(location.flag)} {location.country}
-              </span>
-            )}
-            <span className="flex items-center gap-1.5">
-              <Calendar size={12} />
-              {t("dashboard.memberSince")} {memberSince}
-            </span>
-            <span className="flex items-center gap-1.5 text-emerald-400/70">
-              <BadgeCheck size={12} />
-              {t("dashboard.verified")}
-            </span>
-          </div>
-        </div>
+       {/* GREETING */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
+  <div>
+    <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
+    <h2 className="text-2xl font-bold mt-0.5">
+      {data.name} <span className="text-emerald-400">👋</span>
+    </h2>
+  </div>
+  <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 text-xs text-white/30">
+      {location.country && (
+        <span className="flex items-center gap-1.5">
+          <Globe size={12} />
+          {flagEmoji(location.flag)} {location.country}
+        </span>
+      )}
+      <span className="flex items-center gap-1.5">
+        <Calendar size={12} />
+        {t("dashboard.memberSince")} {memberSince}
+      </span>
+      <span className="flex items-center gap-1.5 text-emerald-400/70">
+        <BadgeCheck size={12} />
+        {t("dashboard.verified")}
+      </span>
+    </div>
+    <LanguageSelector />
+  </div>
+</div>
 
         {/* HERO PORTFOLIO CARD */}
         <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-teal-500/5 p-6 sm:p-8">
