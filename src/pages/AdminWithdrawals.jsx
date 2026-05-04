@@ -1,156 +1,203 @@
-import React, { useEffect, useState } from "react";
-import AdminLayout from "../components/AdminLayout";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpCircle, RefreshCw, Search, Check, X, Clock, CheckCircle, XCircle, Filter } from "lucide-react";
 
-const AdminWithdrawals = () => {
+const API_URL = "https://mexicatradingbackend.onrender.com";
+
+export default function AdminWithdrawals() {
   const [withdrawals, setWithdrawals] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [message, setMessage] = useState({ text: "", type: "" });
 
   const token = sessionStorage.getItem("adminToken");
-  const API_URL = "https://mexicatradingbackend.onrender.com"; // ✅ full backend URL
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
-  // Fetch withdrawals
   const fetchWithdrawals = async () => {
+    setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/withdrawals`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await fetch(`${API_URL}/api/withdrawals`, { headers });
       if (!res.ok) throw new Error("Failed to fetch withdrawals");
-
       const data = await res.json();
       setWithdrawals(data);
+      setFiltered(data);
     } catch (err) {
-      console.error("❌ Error fetching withdrawals:", err);
+      showMessage("Failed to load withdrawals.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Approve/Reject withdrawal
+  useEffect(() => { fetchWithdrawals(); }, []);
+
+  useEffect(() => {
+    let result = withdrawals;
+    if (filter !== "all") result = result.filter(w => w.status === filter);
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(w =>
+        w.user?.name?.toLowerCase().includes(q) ||
+        w.user?.email?.toLowerCase().includes(q) ||
+        w.method?.toLowerCase().includes(q) ||
+        w.details?.toLowerCase().includes(q)
+      );
+    }
+    setFiltered(result);
+  }, [search, filter, withdrawals]);
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  };
+
   const handleAction = async (id, action) => {
-    setActionLoading(id);
+    setActionLoading(id + action);
     try {
       const res = await fetch(`${API_URL}/api/withdrawals/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        method: "PUT", headers,
         body: JSON.stringify({ action }),
       });
-
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Action failed");
-
-      setWithdrawals((prev) =>
-        prev.map((w) =>
-          w._id === id
-            ? { ...w, status: action === "approve" ? "approved" : "rejected" }
-            : w
-        )
-      );
-
-      alert(data.message);
+      if (!res.ok) throw new Error(data.message);
+      setWithdrawals(prev => prev.map(w => w._id === id ? { ...w, status: action === "approve" ? "approved" : "rejected" } : w));
+      showMessage(`Withdrawal ${action === "approve" ? "approved" : "rejected"} successfully.`);
     } catch (err) {
-      console.error("❌ Error:", err);
-      alert(err.message || "Failed to update withdrawal");
+      showMessage(err.message || "Action failed.", "error");
     } finally {
       setActionLoading(null);
     }
   };
 
-  useEffect(() => {
-    fetchWithdrawals();
-  }, []);
+  const pending = withdrawals.filter(w => w.status === "pending").length;
+  const approved = withdrawals.filter(w => w.status === "approved").length;
+  const rejected = withdrawals.filter(w => w.status === "rejected").length;
 
-  if (loading) return <div className="text-center p-5">Loading withdrawals...</div>;
+  if (loading)
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
+        <p className="text-white/30 text-sm animate-pulse">Loading withdrawals...</p>
+      </div>
+    );
 
   return (
-    <AdminLayout>
-      <div className="p-5">
-        <h1 className="text-2xl font-bold mb-5">Admin Withdrawals</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white">Withdrawals</h1>
+          <p className="text-white/30 text-xs mt-0.5">{withdrawals.length} total withdrawal requests</p>
+        </div>
+        <button onClick={fetchWithdrawals} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm transition-all">
+          <RefreshCw size={14} /> Refresh
+        </button>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-200 bg-white shadow-md">
-            <thead className="bg-gray-100 border-b">
-              <tr>
-                <th className="p-3 border">User</th>
-                <th className="p-3 border">Email</th>
-                <th className="p-3 border">Amount</th>
-                <th className="p-3 border">Method</th>
-                <th className="p-3 border">Details</th> {/* ✅ display withdrawal details */}
-                <th className="p-3 border">Status</th>
-                <th className="p-3 border">Date</th>
-                <th className="p-3 border">Action</th>
-              </tr>
-            </thead>
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: "Pending", value: pending, color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20", icon: <Clock size={16} className="text-yellow-400" /> },
+          { label: "Approved", value: approved, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", icon: <CheckCircle size={16} className="text-emerald-400" /> },
+          { label: "Rejected", value: rejected, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", icon: <XCircle size={16} className="text-red-400" /> },
+        ].map((s, i) => (
+          <div key={i} className={`p-4 rounded-2xl border ${s.bg} flex items-center justify-between`}>
+            <div>
+              <p className="text-white/40 text-xs uppercase tracking-widest">{s.label}</p>
+              <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
+            </div>
+            {s.icon}
+          </div>
+        ))}
+      </div>
 
-            <tbody>
-              {withdrawals.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-5 text-center text-gray-500">
-                    No withdrawals found
-                  </td>
-                </tr>
-              ) : (
-                withdrawals.map((w) => (
-                  <tr key={w._id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 border">{w.user?.name}</td>
-                    <td className="p-3 border">{w.user?.email}</td>
-                    <td className="p-3 border">₦{Number(w.amount).toLocaleString()}</td>
-                    <td className="p-3 border">{w.method}</td>
-                    <td className="p-3 border">{w.details}</td> {/* ✅ shows withdrawal details */}
-                    <td className="p-3 border">
-                      <span
-                        className={`px-3 py-1 rounded text-white ${
-                          w.status === "pending"
-                            ? "bg-yellow-500"
-                            : w.status === "approved"
-                            ? "bg-green-600"
-                            : "bg-red-600"
-                        }`}
-                      >
-                        {w.status}
-                      </span>
-                    </td>
-                    <td className="p-3 border">{new Date(w.createdAt).toLocaleString()}</td>
-                    <td className="p-3 border space-x-2">
-                      {w.status === "pending" ? (
-                        <>
-                          <button
-                            disabled={actionLoading === w._id}
-                            onClick={() => handleAction(w._id, "approve")}
-                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {actionLoading === w._id ? "Processing..." : "Approve"}
-                          </button>
-                          <button
-                            disabled={actionLoading === w._id}
-                            onClick={() => handleAction(w._id, "reject")}
-                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:opacity-50"
-                          >
-                            {actionLoading === w._id ? "Processing..." : "Reject"}
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-gray-500 italic">Processed</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      <AnimatePresence>
+        {message.text && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className={`p-4 rounded-xl text-sm text-center font-medium border ${message.type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
+            {message.text}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25" />
+          <input type="text" placeholder="Search by user, method, wallet..." value={search} onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white" />
+        </div>
+        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3">
+          <Filter size={14} className="text-white/25" />
+          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-transparent text-white/60 text-sm outline-none py-2 pr-2">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
         </div>
       </div>
-    </AdminLayout>
+
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-3">
+          <ArrowUpCircle size={20} className="text-white/20" />
+          <p className="text-white/40 text-sm">No withdrawals found</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((w, i) => (
+            <motion.div key={w._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+              className="p-5 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition-all">
+              <div className="flex items-start justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/20 flex items-center justify-center text-red-400 font-bold shrink-0">
+                    {w.user?.name?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">{w.user?.name || "Unknown"}</p>
+                    <p className="text-white/30 text-xs">{w.user?.email || "—"}</p>
+                  </div>
+                </div>
+                <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${w.status === "pending" ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25" : w.status === "approved" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25" : "bg-red-500/15 text-red-400 border border-red-500/25"}`}>
+                  {w.status === "pending" ? "⏳ Pending" : w.status === "approved" ? "✅ Approved" : "❌ Rejected"}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-white/8">
+                <div>
+                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Amount</p>
+                  <p className="text-red-400 font-bold">-${Number(w.amount).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Method</p>
+                  <p className="text-white text-sm font-medium">{w.method || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Wallet / Account</p>
+                  <p className="text-white/50 text-xs font-mono truncate">{w.details || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Date</p>
+                  <p className="text-white/50 text-xs">{w.createdAt ? new Date(w.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p>
+                </div>
+              </div>
+              {w.status === "pending" && (
+                <div className="flex gap-3 mt-4">
+                  <button onClick={() => handleAction(w._id, "approve")} disabled={actionLoading === w._id + "approve"}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/25 transition-all disabled:opacity-50">
+                    {actionLoading === w._id + "approve" ? <span className="w-3.5 h-3.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" /> : <Check size={14} />}
+                    Approve
+                  </button>
+                  <button onClick={() => handleAction(w._id, "reject")} disabled={actionLoading === w._id + "reject"}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition-all disabled:opacity-50">
+                    {actionLoading === w._id + "reject" ? <span className="w-3.5 h-3.5 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" /> : <X size={14} />}
+                    Reject
+                  </button>
+                </div>
+              )}
+              {w.status !== "pending" && <p className="text-white/20 text-xs mt-4">Processed — no further action required</p>}
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
   );
-};
-
-export default AdminWithdrawals;
-
-
+                }
