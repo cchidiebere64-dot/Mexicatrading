@@ -200,10 +200,11 @@ export default function AdminPlans() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {[
-                  { label: "Plan Name", key: "name", placeholder: "e.g. Gold Plan", type: "text" },
-                  { label: "Minimum ($)", key: "min", placeholder: "e.g. 100", type: "number" },
-                  { label: "Maximum ($)", key: "max", placeholder: "e.g. 5000", type: "number" },
-                  { label: "Profit (%)", key: "profit", placeholder: "e.g. 25", type: "number" },
+                  // CURRENT
+                  { label: "Plan Name", key: "name" },
+                  { label: "Minimum ($)", key: "min" },
+                  { label: "Maximum ($)", key: "max" },
+                  { label: "Profit (%)", key: "profit" },
                   { label: "Duration (days)", key: "duration", placeholder: "e.g. 7", type: "number" },
                 ].map((field) => (
                   <div key={field.key} className="space-y-1.5">
