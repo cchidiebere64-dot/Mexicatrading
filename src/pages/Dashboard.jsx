@@ -1,33 +1,47 @@
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Globe, Calendar, ChevronRight,
-  Activity, DollarSign, BarChart2, Clock,
+  Activity, DollarSign, BarChart2, Clock, RefreshCw,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
-// ── Animated number count-up ──────────────────────────────────────────────────
+const API_URL = "https://mexicatradingbackend.onrender.com";
+const REFRESH_INTERVAL = 30000; // 30 seconds
+
+// ── Animated number count-up ─────────────────────────────────────────────────
 function CountUp({ end, prefix = "", duration = 1200 }) {
   const [value, setValue] = useState(0);
+  const prevEnd = useRef(0);
+
   useEffect(() => {
-    let start = 0;
-    const step = end / (duration / 16);
+    const startVal = prevEnd.current;
+    prevEnd.current = end;
+    let start = startVal;
+    const diff = end - startVal;
+    if (diff === 0) return;
+    const step = diff / (duration / 16);
     const timer = setInterval(() => {
       start += step;
-      if (start >= end) { setValue(end); clearInterval(timer); }
-      else setValue(Math.floor(start));
+      if ((step > 0 && start >= end) || (step < 0 && start <= end)) {
+        setValue(end);
+        clearInterval(timer);
+      } else {
+        setValue(Math.floor(start));
+      }
     }, 16);
     return () => clearInterval(timer);
   }, [end]);
+
   return <span>{prefix}{value.toLocaleString()}</span>;
 }
 
-// ── Flag emoji from country code ──────────────────────────────────────────────
+// ── Flag emoji ────────────────────────────────────────────────────────────────
 function flagEmoji(code) {
   if (!code) return "🌍";
   return code.toUpperCase().replace(/./g, c =>
@@ -35,7 +49,7 @@ function flagEmoji(code) {
   );
 }
 
-// ── Detect country via IP ─────────────────────────────────────────────────────
+// ── Detect country ────────────────────────────────────────────────────────────
 async function detectCountry() {
   try {
     const res = await fetch("https://ipapi.co/json/");
@@ -46,13 +60,15 @@ async function detectCountry() {
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const API_URL = "https://mexicatradingbackend.onrender.com";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [location, setLocation] = useState({ country: "", flag: "" });
+  const [notification, setNotification] = useState(null);
+  const prevBalance = useRef(null);
   const navigate = useNavigate();
 
-  // Greeting based on time of day using translations
   const getGreeting = () => {
     const h = new Date().getHours();
     if (h < 12) return t("dashboard.goodMorning");
@@ -60,26 +76,70 @@ export default function Dashboard() {
     return t("dashboard.goodEvening");
   };
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async (silent = false) => {
     const token = sessionStorage.getItem("token");
     if (!token) return navigate("/login");
+
+    if (!silent) setRefreshing(true);
+
     try {
       const res = await axios.get(`${API_URL}/api/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setData(res.data);
+
+      const newData = res.data;
+
+      // ── Detect balance change and notify user ─────────────────────────────
+      if (prevBalance.current !== null && newData.balance !== prevBalance.current) {
+        const diff = newData.balance - prevBalance.current;
+        if (diff > 0) {
+          setNotification({
+            type: "credit",
+            message: `+$${diff.toLocaleString()} has been credited to your account!`,
+          });
+          setTimeout(() => setNotification(null), 5000);
+        } else if (diff < 0) {
+          setNotification({
+            type: "debit",
+            message: `$${Math.abs(diff).toLocaleString()} has been deducted from your account.`,
+          });
+          setTimeout(() => setNotification(null), 5000);
+        }
+      }
+
+      prevBalance.current = newData.balance;
+      setData(newData);
+      setLastUpdated(new Date());
     } catch {
-      setData(null);
+      if (!silent) setData(null);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [navigate]);
 
+  // ── Initial load ──────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchDashboard();
+    fetchDashboard(false);
     detectCountry().then(setLocation);
-  }, []);
+  }, [fetchDashboard]);
 
+  // ── Auto-refresh every 30 seconds ─────────────────────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDashboard(true);
+    }, REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, [fetchDashboard]);
+
+  // ── Refresh on tab focus ──────────────────────────────────────────────────
+  useEffect(() => {
+    const handleFocus = () => fetchDashboard(true);
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [fetchDashboard]);
+
+  // ── TradingView chart ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!data) return;
     const timeout = setTimeout(() => {
@@ -106,6 +166,7 @@ export default function Dashboard() {
     return () => clearTimeout(timeout);
   }, [data]);
 
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading)
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
@@ -116,11 +177,16 @@ export default function Dashboard() {
 
   if (!data)
     return (
-      <div className="flex justify-center items-center h-screen bg-[#080c18] text-red-400 text-sm">
-        {t("common.error")}
+      <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
+        <p className="text-red-400 text-sm">{t("common.error")}</p>
+        <button onClick={() => fetchDashboard(false)}
+          className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition-all">
+          {t("common.retry")}
+        </button>
       </div>
     );
 
+  // ── Derived data ──────────────────────────────────────────────────────────
   const plans = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "active");
   const completed = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
   const history = data.history || [];
@@ -134,6 +200,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
+      {/* AMBIENT BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
         <div className="absolute w-[400px] h-[400px] bg-teal-400/6 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
@@ -141,19 +208,39 @@ export default function Dashboard() {
       </div>
 
       {/* TOP NAV */}
-      {/* TOP NAV */}
-<header className="fixed w-full top-0 z-20 backdrop-blur-xl bg-[#080c18]/80 border-b border-white/5 px-5 py-3 flex items-center justify-between">
-  <h1 className="text-base font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent tracking-tight">
-    MexicaTrading
-  </h1>
-  <div className="flex items-center gap-3">
-    <LanguageSelector />
-    <div className="flex items-center gap-1.5 text-xs text-white/40">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-      Live
-    </div>
-  </div>
-</header>
+      <header className="fixed w-full top-0 z-20 backdrop-blur-xl bg-[#080c18]/80 border-b border-white/5 px-5 py-3 flex items-center justify-between">
+        <h1 className="text-base font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent tracking-tight">
+          MexicaTrading
+        </h1>
+        <div className="flex items-center gap-3">
+          {/* Manual refresh button */}
+          <button
+            onClick={() => fetchDashboard(false)}
+            disabled={refreshing}
+            className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all"
+            title="Refresh"
+          >
+            <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+          </button>
+          <LanguageSelector />
+          <div className="flex items-center gap-1.5 text-xs text-white/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live
+          </div>
+        </div>
+      </header>
+
+      {/* LIVE NOTIFICATION TOAST */}
+      {notification && (
+        <div className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold flex items-center gap-2 transition-all animate-fade-in ${
+          notification.type === "credit"
+            ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+            : "bg-red-500/20 border-red-500/40 text-red-400"
+        }`}>
+          {notification.type === "credit" ? <ArrowDownCircle size={16} /> : <ArrowUpCircle size={16} />}
+          {notification.message}
+        </div>
+      )}
 
       {/* TICKER */}
       <div className="ticker-fixed">
@@ -165,34 +252,39 @@ export default function Dashboard() {
       <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-6 animate-fade-in">
 
         {/* GREETING */}
-       {/* GREETING */}
-<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
-  <div>
-    <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
-    <h2 className="text-2xl font-bold mt-0.5">
-      {data.name} <span className="text-emerald-400">👋</span>
-    </h2>
-  </div>
-  <div className="flex items-center gap-3">
-    <div className="flex items-center gap-3 text-xs text-white/30">
-      {location.country && (
-        <span className="flex items-center gap-1.5">
-          <Globe size={12} />
-          {flagEmoji(location.flag)} {location.country}
-        </span>
-      )}
-      <span className="flex items-center gap-1.5">
-        <Calendar size={12} />
-        {t("dashboard.memberSince")} {memberSince}
-      </span>
-      <span className="flex items-center gap-1.5 text-emerald-400/70">
-        <BadgeCheck size={12} />
-        {t("dashboard.verified")}
-      </span>
-    </div>
-    <LanguageSelector />
-  </div>
-</div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
+          <div>
+            <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
+            <h2 className="text-2xl font-bold mt-0.5">
+              {data.name} <span className="text-emerald-400">👋</span>
+            </h2>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-3 text-xs text-white/30">
+              {location.country && (
+                <span className="flex items-center gap-1.5">
+                  <Globe size={12} />
+                  {flagEmoji(location.flag)} {location.country}
+                </span>
+              )}
+              <span className="flex items-center gap-1.5">
+                <Calendar size={12} />
+                {t("dashboard.memberSince")} {memberSince}
+              </span>
+              <span className="flex items-center gap-1.5 text-emerald-400/70">
+                <BadgeCheck size={12} />
+                {t("dashboard.verified")}
+              </span>
+            </div>
+            {/* Last updated indicator */}
+            {lastUpdated && (
+              <span className="text-white/20 text-xs flex items-center gap-1">
+                <RefreshCw size={10} />
+                {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* HERO PORTFOLIO CARD */}
         <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-teal-500/5 p-6 sm:p-8">
@@ -212,12 +304,14 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-          <div className="mt-5 pt-5 border-t border-white/8 flex items-center gap-3">
+          <div className="mt-5 pt-5 border-t border-white/8 flex items-center justify-between flex-wrap gap-2">
             <div className={`flex items-center gap-1.5 text-sm font-semibold ${parseFloat(profitPercent) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               <TrendingUp size={14} />
               {profitPercent}% {t("dashboard.overallReturn")}
             </div>
-            <span className="text-white/20 text-xs">· {plans.length} {t("dashboard.activePlans")} · {completed.length} {t("dashboard.completedPlans")}</span>
+            <span className="text-white/20 text-xs">
+              {plans.length} {t("dashboard.activePlans")} · {completed.length} {t("dashboard.completedPlans")}
+            </span>
           </div>
         </div>
 
