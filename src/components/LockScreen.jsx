@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function LockScreen({ onUnlock }) {
+  const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,7 @@ export default function LockScreen({ onUnlock }) {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-[500px] h-[500px] bg-emerald-500/10 blur-[150px] rounded-full top-[-100px] left-[-100px]" />
         <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
       </div>
 
       <motion.div
@@ -66,9 +69,13 @@ export default function LockScreen({ onUnlock }) {
 
           {/* LOCK ICON */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+              className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4"
+            >
               <Lock size={28} className="text-emerald-400" />
-            </div>
+            </motion.div>
             <h2 className="text-2xl font-bold tracking-tight">Session Locked</h2>
             <p className="text-white/40 text-sm mt-1 text-center">
               Enter your password to continue
@@ -91,7 +98,7 @@ export default function LockScreen({ onUnlock }) {
             <Lock size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
+              placeholder={t("auth.password")}
               className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25 text-white"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -125,12 +132,32 @@ export default function LockScreen({ onUnlock }) {
               </>
             )}
           </button>
+
+          {/* DIVIDER */}
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-px bg-white/8" />
+            <span className="text-white/20 text-xs">or</span>
+            <div className="flex-1 h-px bg-white/8" />
+          </div>
+
+          {/* LOGOUT OPTION */}
+          <button
+            onClick={() => {
+              sessionStorage.clear();
+              window.location.href = "/login";
+            }}
+            className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/40 hover:text-white"
+          >
+            {t("nav.logout")} & Sign In Again
+          </button>
         </div>
 
-        {/* BRAND */}
-        <p className="text-center text-white/20 text-xs mt-5">
-          MexicaTrading · Secured Session
-        </p>
+        {/* TRUST BADGES */}
+        <div className="flex items-center justify-center gap-4 mt-5 text-white/20 text-xs">
+          <span>🔒 {t("common.sslSecured")}</span>
+          <span>·</span>
+          <span>MexicaTrading · Secured Session</span>
+        </div>
       </motion.div>
     </div>
   );
