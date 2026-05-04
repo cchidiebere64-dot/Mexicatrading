@@ -44,44 +44,43 @@ function flagEmoji(code) {
 
 // ── Detect country ────────────────────────────────────────────────────────────
 async function detectCountry() {
-  // Try multiple APIs in order — fallback if one fails
-  const apis = [
-    async () => {
-      const res = await fetch("https://ipapi.co/json/");
-      const d = await res.json();
-      if (d.country_name && d.country_name !== "undefined") {
-        return { country: d.country_name, flag: d.country_code };
-      }
-      throw new Error("Invalid response");
-    },
-    async () => {
-      const res = await fetch("https://ipwho.is/");
-      const d = await res.json();
-      if (d.country && d.success) {
-        return { country: d.country, flag: d.country_code };
-      }
-      throw new Error("Invalid response");
-    },
-    async () => {
-      const res = await fetch("https://ip-api.com/json/?fields=country,countryCode,status");
-      const d = await res.json();
-      if (d.country && d.status === "success") {
-        return { country: d.country, flag: d.countryCode };
-      }
-      throw new Error("Invalid response");
-    },
-  ];
-
-  for (const api of apis) {
-    try {
-      const result = await api();
-      return result;
-    } catch {
-      continue;
+  // Method 1 — ipwho.is (most reliable, no rate limit)
+  try {
+    const res = await fetch("https://ipwho.is/");
+    const d = await res.json();
+    if (d.success && d.country) {
+      return { country: d.country, flag: d.country_code };
     }
-  }
+  } catch {}
 
-  return { country: "Unknown", flag: "" };
+  // Method 2 — ip-api.com
+  try {
+    const res = await fetch("https://ip-api.com/json/?fields=status,country,countryCode");
+    const d = await res.json();
+    if (d.status === "success" && d.country) {
+      return { country: d.country, flag: d.countryCode };
+    }
+  } catch {}
+
+  // Method 3 — freeipapi.com
+  try {
+    const res = await fetch("https://freeipapi.com/api/json");
+    const d = await res.json();
+    if (d.countryName) {
+      return { country: d.countryName, flag: d.countryCode };
+    }
+  } catch {}
+
+  // Method 4 — Browser language fallback
+  try {
+    const locale = navigator.language || navigator.languages?.[0] || "en-US";
+    const regionCode = locale.split("-")[1] || "US";
+    const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+    const countryName = regionNames.of(regionCode);
+    return { country: countryName, flag: regionCode };
+  } catch {}
+
+  return { country: "", flag: "" };
 }
 
 export default function Dashboard() {
@@ -520,7 +519,9 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.location")}</p>
-              <p className="font-semibold text-sm mt-0.5">{location.country || "Detecting..."}</p>
+              <p className="font-semibold text-sm mt-0.5">
+  {location.country && location.country !== "Unknown" ? location.country : "Detecting..."}
+</p>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-1 min-w-[180px]">
