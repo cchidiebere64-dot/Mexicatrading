@@ -12,13 +12,12 @@ import {
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
-const REFRESH_INTERVAL = 30000; // 30 seconds
+const REFRESH_INTERVAL = 30000;
 
-// ── Animated number count-up ─────────────────────────────────────────────────
+// ── Animated count-up ─────────────────────────────────────────────────────────
 function CountUp({ end, prefix = "", duration = 1200 }) {
   const [value, setValue] = useState(0);
   const prevEnd = useRef(0);
-
   useEffect(() => {
     const startVal = prevEnd.current;
     prevEnd.current = end;
@@ -29,24 +28,18 @@ function CountUp({ end, prefix = "", duration = 1200 }) {
     const timer = setInterval(() => {
       start += step;
       if ((step > 0 && start >= end) || (step < 0 && start <= end)) {
-        setValue(end);
-        clearInterval(timer);
-      } else {
-        setValue(Math.floor(start));
-      }
+        setValue(end); clearInterval(timer);
+      } else { setValue(Math.floor(start)); }
     }, 16);
     return () => clearInterval(timer);
   }, [end]);
-
   return <span>{prefix}{value.toLocaleString()}</span>;
 }
 
 // ── Flag emoji ────────────────────────────────────────────────────────────────
 function flagEmoji(code) {
   if (!code) return "🌍";
-  return code.toUpperCase().replace(/./g, c =>
-    String.fromCodePoint(127397 + c.charCodeAt())
-  );
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt()));
 }
 
 // ── Detect country ────────────────────────────────────────────────────────────
@@ -79,32 +72,22 @@ export default function Dashboard() {
   const fetchDashboard = useCallback(async (silent = false) => {
     const token = sessionStorage.getItem("token");
     if (!token) return navigate("/login");
-
     if (!silent) setRefreshing(true);
-
     try {
       const res = await axios.get(`${API_URL}/api/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const newData = res.data;
 
-      // ── Detect balance change and notify user ─────────────────────────────
+      // Balance change notification
       if (prevBalance.current !== null && newData.balance !== prevBalance.current) {
         const diff = newData.balance - prevBalance.current;
         if (diff > 0) {
-          setNotification({
-            type: "credit",
-            message: `+$${diff.toLocaleString()} has been credited to your account!`,
-          });
-          setTimeout(() => setNotification(null), 5000);
-        } else if (diff < 0) {
-          setNotification({
-            type: "debit",
-            message: `$${Math.abs(diff).toLocaleString()} has been deducted from your account.`,
-          });
-          setTimeout(() => setNotification(null), 5000);
+          setNotification({ type: "credit", message: `+$${diff.toLocaleString()} has been credited to your account!` });
+        } else {
+          setNotification({ type: "debit", message: `$${Math.abs(diff).toLocaleString()} has been deducted from your account.` });
         }
+        setTimeout(() => setNotification(null), 5000);
       }
 
       prevBalance.current = newData.balance;
@@ -118,28 +101,26 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
-  // ── Initial load ──────────────────────────────────────────────────────────
+  // Initial load
   useEffect(() => {
     fetchDashboard(false);
     detectCountry().then(setLocation);
   }, [fetchDashboard]);
 
-  // ── Auto-refresh every 30 seconds ─────────────────────────────────────────
+  // Auto-refresh every 30s
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchDashboard(true);
-    }, REFRESH_INTERVAL);
+    const interval = setInterval(() => fetchDashboard(true), REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchDashboard]);
 
-  // ── Refresh on tab focus ──────────────────────────────────────────────────
+  // Refresh on tab focus
   useEffect(() => {
     const handleFocus = () => fetchDashboard(true);
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchDashboard]);
 
-  // ── TradingView chart ─────────────────────────────────────────────────────
+  // TradingView chart
   useEffect(() => {
     if (!data) return;
     const timeout = setTimeout(() => {
@@ -150,15 +131,9 @@ export default function Dashboard() {
       script.type = "text/javascript";
       script.async = true;
       script.innerHTML = JSON.stringify({
-        autosize: true,
-        symbol: "BINANCE:BTCUSDT",
-        interval: "15",
-        timezone: "Etc/UTC",
-        theme: "dark",
-        style: "1",
-        locale: "en",
-        allow_symbol_change: true,
-        calendar: false,
+        autosize: true, symbol: "BINANCE:BTCUSDT", interval: "15",
+        timezone: "Etc/UTC", theme: "dark", style: "1", locale: "en",
+        allow_symbol_change: true, calendar: false,
         support_host: "https://www.tradingview.com",
       });
       container.appendChild(script);
@@ -166,7 +141,6 @@ export default function Dashboard() {
     return () => clearTimeout(timeout);
   }, [data]);
 
-  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading)
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
@@ -186,11 +160,9 @@ export default function Dashboard() {
       </div>
     );
 
-  // ── Derived data ──────────────────────────────────────────────────────────
   const plans = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "active");
   const completed = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
   const history = data.history || [];
-
   const totalInvested = [...plans, ...completed].reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
   const totalProfit = [...plans, ...completed].reduce((s, p) => s + (parseFloat(p.profit) || 0), 0);
   const totalWithdrawn = history.filter(h => h.action === "Withdrawal").reduce((s, h) => s + (parseFloat(h.amount) || 0), 0);
@@ -207,32 +179,9 @@ export default function Dashboard() {
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
       </div>
 
-      {/* TOP NAV */}
-      <header className="fixed w-full top-0 z-20 backdrop-blur-xl bg-[#080c18]/80 border-b border-white/5 px-5 py-3 flex items-center justify-between">
-        <h1 className="text-base font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent tracking-tight">
-          MexicaTrading
-        </h1>
-        <div className="flex items-center gap-3">
-          {/* Manual refresh button */}
-          <button
-            onClick={() => fetchDashboard(false)}
-            disabled={refreshing}
-            className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all"
-            title="Refresh"
-          >
-            <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
-          </button>
-          <LanguageSelector />
-          <div className="flex items-center gap-1.5 text-xs text-white/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live
-          </div>
-        </div>
-      </header>
-
-      {/* LIVE NOTIFICATION TOAST */}
+      {/* BALANCE CHANGE NOTIFICATION TOAST */}
       {notification && (
-        <div className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold flex items-center gap-2 transition-all animate-fade-in ${
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[999] px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold flex items-center gap-2 ${
           notification.type === "credit"
             ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
             : "bg-red-500/20 border-red-500/40 text-red-400"
@@ -251,61 +200,52 @@ export default function Dashboard() {
 
       <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-6 animate-fade-in">
 
-        {/* GREETING */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
-        {/* GREETING */}
-<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
-  <div>
-    <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
-    <h2 className="text-2xl font-bold mt-0.5">
-      {data.name} <span className="text-emerald-400">👋</span>
-    </h2>
-  </div>
-  <div className="flex items-center gap-3 flex-wrap">
-    <div className="flex items-center gap-3 text-xs text-white/30">
-      {location.country && (
-        <span className="flex items-center gap-1.5">
-          <Globe size={12} />
-          {flagEmoji(location.flag)} {location.country}
-        </span>
-      )}
-      <span className="flex items-center gap-1.5">
-        <Calendar size={12} />
-        {t("dashboard.memberSince")} {memberSince}
-      </span>
-      <span className="flex items-center gap-1.5 text-emerald-400/70">
-        <BadgeCheck size={12} />
-        {t("dashboard.verified")}
-      </span>
-    </div>
-    {lastUpdated && (
-      <span className="text-white/20 text-xs flex items-center gap-1">
-        <RefreshCw size={10} />
-        {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-      </span>
-    )}
-    {/* Refresh + Language on same line as greeting */}
-    <button
-      onClick={() => fetchDashboard(false)}
-      disabled={refreshing}
-      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all"
-    >
-      <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
-    </button>
-    <LanguageSelector />
-  </div>
-</div>
-            {/* Last updated indicator */}
-            {lastUpdated && (
-              <span className="text-white/20 text-xs flex items-center gap-1">
-                <RefreshCw size={10} />
-                {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+        {/* ── GREETING ─────────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+          <div>
+            <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
+            <h2 className="text-2xl font-bold mt-0.5">
+              {data.name} <span className="text-emerald-400">👋</span>
+            </h2>
+          </div>
+
+          {/* RIGHT SIDE — meta + language + refresh */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-3 text-xs text-white/30 flex-wrap">
+              {location.country && (
+                <span className="flex items-center gap-1.5">
+                  <Globe size={12} />
+                  {flagEmoji(location.flag)} {location.country}
+                </span>
+              )}
+              <span className="flex items-center gap-1.5">
+                <Calendar size={12} />
+                {t("dashboard.memberSince")} {memberSince}
               </span>
-            )}
+              <span className="flex items-center gap-1.5 text-emerald-400/70">
+                <BadgeCheck size={12} />
+                {t("dashboard.verified")}
+              </span>
+              {lastUpdated && (
+                <span className="flex items-center gap-1 text-white/20">
+                  <RefreshCw size={10} />
+                  {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+
+            {/* Refresh button */}
+            <button onClick={() => fetchDashboard(false)} disabled={refreshing}
+              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+              <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+            </button>
+
+            {/* Language selector */}
+            <LanguageSelector />
           </div>
         </div>
 
-        {/* HERO PORTFOLIO CARD */}
+        {/* ── HERO PORTFOLIO CARD ───────────────────────────────────────────── */}
         <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-teal-500/5 p-6 sm:p-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
@@ -334,7 +274,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* STAT CARDS */}
+        {/* ── STAT CARDS ────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: t("dashboard.totalBalance"), value: `$${parseFloat(data.balance || 0).toLocaleString()}`, icon: <Wallet size={18} />, color: "text-white" },
@@ -352,7 +292,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ACTION BUTTONS */}
+        {/* ── ACTION BUTTONS ────────────────────────────────────────────────── */}
         <div className="flex flex-wrap gap-3">
           <button onClick={() => navigate("/deposit")} className="btn-primary">
             <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
@@ -365,7 +305,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* LIVE CHART */}
+        {/* ── LIVE CHART ────────────────────────────────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.liveMarket")}</h3>
@@ -379,7 +319,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ACTIVE PLANS */}
+        {/* ── ACTIVE PLANS ──────────────────────────────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.activePlans")}</h3>
@@ -400,7 +340,6 @@ export default function Dashboard() {
                 const progress = Math.round((daysPassed / totalDays) * 100);
                 const daysLeft = Math.max(0, Math.ceil((new Date(p.endDate) - new Date()) / (1000 * 60 * 60 * 24)));
                 const roi = p.amount > 0 ? ((p.profit / p.amount) * 100).toFixed(1) : "0.0";
-
                 return (
                   <div key={i} className="min-w-[270px] flex-shrink-0 snap-start rounded-2xl border border-white/8 bg-white/[0.03] p-5 flex flex-col gap-4 hover:border-emerald-500/30 transition-all">
                     <div className="flex items-start justify-between">
@@ -412,7 +351,6 @@ export default function Dashboard() {
                         {progress < 100 ? t("dashboard.active") : t("dashboard.done")}
                       </span>
                     </div>
-
                     <div className="flex items-center gap-4">
                       <div className="relative w-16 h-16 shrink-0">
                         <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
@@ -420,13 +358,9 @@ export default function Dashboard() {
                           <circle cx="18" cy="18" r="15" stroke="#10b981" strokeWidth="3" fill="none"
                             strokeDasharray={2 * Math.PI * 15}
                             strokeDashoffset={2 * Math.PI * 15 - (2 * Math.PI * 15 * progress) / 100}
-                            strokeLinecap="round"
-                            style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
-                          />
+                            strokeLinecap="round" style={{ transition: "stroke-dashoffset 1.2s ease-out" }} />
                         </svg>
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-emerald-400">
-                          {progress}%
-                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-emerald-400">{progress}%</div>
                       </div>
                       <div className="flex flex-col gap-1.5 text-sm">
                         <div className="flex justify-between gap-6">
@@ -443,7 +377,6 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-
                     {progress < 100 ? (
                       <div className="flex items-center gap-2 text-xs text-white/40 border-t border-white/5 pt-3">
                         <Clock size={11} />
@@ -473,7 +406,7 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* COMPLETED PLANS */}
+        {/* ── COMPLETED PLANS ───────────────────────────────────────────────── */}
         <section>
           <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">{t("dashboard.completedPlans")}</h3>
           {completed.length ? (
@@ -507,7 +440,7 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* RECENT ACTIVITIES */}
+        {/* ── RECENT ACTIVITIES ─────────────────────────────────────────────── */}
         <section>
           <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">{t("dashboard.recentActivities")}</h3>
           {history.length ? (
@@ -546,7 +479,7 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* ACCOUNT INFO */}
+        {/* ── ACCOUNT INFO ──────────────────────────────────────────────────── */}
         <section className="rounded-2xl border border-white/8 bg-white/[0.02] p-5 flex flex-wrap gap-5">
           <div className="flex items-center gap-3 flex-1 min-w-[180px]">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">
