@@ -3,6 +3,7 @@ import "react-circular-progressbar/dist/styles.css";
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Globe, Calendar, ChevronRight,
@@ -25,12 +26,12 @@ function CountUp({ end, prefix = "", duration = 1200 }) {
   return <span>{prefix}{value.toLocaleString()}</span>;
 }
 
-// ── Greeting based on time of day ────────────────────────────────────────────
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+// ── Flag emoji from country code ──────────────────────────────────────────────
+function flagEmoji(code) {
+  if (!code) return "🌍";
+  return code.toUpperCase().replace(/./g, c =>
+    String.fromCodePoint(127397 + c.charCodeAt())
+  );
 }
 
 // ── Detect country via IP ─────────────────────────────────────────────────────
@@ -42,20 +43,21 @@ async function detectCountry() {
   } catch { return { country: "Unknown", flag: "" }; }
 }
 
-// ── Flag emoji from country code ──────────────────────────────────────────────
-function flagEmoji(code) {
-  if (!code) return "🌍";
-  return code.toUpperCase().replace(/./g, c =>
-    String.fromCodePoint(127397 + c.charCodeAt())
-  );
-}
-
 export default function Dashboard() {
+  const { t } = useTranslation();
   const API_URL = "https://mexicatradingbackend.onrender.com";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState({ country: "", flag: "" });
   const navigate = useNavigate();
+
+  // Greeting based on time of day using translations
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return t("dashboard.goodMorning");
+    if (h < 17) return t("dashboard.goodAfternoon");
+    return t("dashboard.goodEvening");
+  };
 
   const fetchDashboard = async () => {
     const token = sessionStorage.getItem("token");
@@ -77,7 +79,6 @@ export default function Dashboard() {
     detectCountry().then(setLocation);
   }, []);
 
-  // TradingView chart
   useEffect(() => {
     if (!data) return;
     const timeout = setTimeout(() => {
@@ -104,23 +105,21 @@ export default function Dashboard() {
     return () => clearTimeout(timeout);
   }, [data]);
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading)
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
         <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-        <p className="text-white/40 text-sm animate-pulse">Loading your portfolio...</p>
+        <p className="text-white/40 text-sm animate-pulse">{t("common.loading")}</p>
       </div>
     );
 
   if (!data)
     return (
       <div className="flex justify-center items-center h-screen bg-[#080c18] text-red-400 text-sm">
-        Failed to load dashboard. Please refresh.
+        {t("common.error")}
       </div>
     );
 
-  // ── Derived data ──────────────────────────────────────────────────────────
   const plans = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "active");
   const completed = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
   const history = data.history || [];
@@ -134,14 +133,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
-      {/* AMBIENT BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
         <div className="absolute w-[400px] h-[400px] bg-teal-400/6 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.025]" style={{
-          backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }} />
+        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
       </div>
 
       {/* TOP NAV */}
@@ -164,7 +159,7 @@ export default function Dashboard() {
 
       <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-6 animate-fade-in">
 
-        {/* ── GREETING + META ─────────────────────────────────────────────── */}
+        {/* GREETING */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
           <div>
             <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
@@ -181,24 +176,24 @@ export default function Dashboard() {
             )}
             <span className="flex items-center gap-1.5">
               <Calendar size={12} />
-              Member since {memberSince}
+              {t("dashboard.memberSince")} {memberSince}
             </span>
             <span className="flex items-center gap-1.5 text-emerald-400/70">
               <BadgeCheck size={12} />
-              Verified
+              {t("dashboard.verified")}
             </span>
           </div>
         </div>
 
-        {/* ── HERO PORTFOLIO CARD ──────────────────────────────────────────── */}
+        {/* HERO PORTFOLIO CARD */}
         <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-teal-500/5 p-6 sm:p-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {[
-              { label: "Total Balance", value: parseFloat(data.balance) || 0, prefix: "$", color: "text-white" },
-              { label: "Total Invested", value: totalInvested, prefix: "$", color: "text-blue-400" },
-              { label: "Total Profit", value: totalProfit, prefix: "$", color: "text-emerald-400" },
-              { label: "Total Withdrawn", value: totalWithdrawn, prefix: "$", color: "text-purple-400" },
+              { label: t("dashboard.totalBalance"), value: parseFloat(data.balance) || 0, prefix: "$", color: "text-white" },
+              { label: t("dashboard.totalInvested"), value: totalInvested, prefix: "$", color: "text-blue-400" },
+              { label: t("dashboard.totalProfit"), value: totalProfit, prefix: "$", color: "text-emerald-400" },
+              { label: t("dashboard.totalWithdrawn"), value: totalWithdrawn, prefix: "$", color: "text-purple-400" },
             ].map((s, i) => (
               <div key={i} className="flex flex-col gap-1">
                 <p className="text-white/35 text-xs uppercase tracking-widest">{s.label}</p>
@@ -208,24 +203,22 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-
-          {/* Profit % indicator */}
           <div className="mt-5 pt-5 border-t border-white/8 flex items-center gap-3">
             <div className={`flex items-center gap-1.5 text-sm font-semibold ${parseFloat(profitPercent) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               <TrendingUp size={14} />
-              {profitPercent}% overall return
+              {profitPercent}% {t("dashboard.overallReturn")}
             </div>
-            <span className="text-white/20 text-xs">· {plans.length} active plan{plans.length !== 1 ? "s" : ""} · {completed.length} completed</span>
+            <span className="text-white/20 text-xs">· {plans.length} {t("dashboard.activePlans")} · {completed.length} {t("dashboard.completedPlans")}</span>
           </div>
         </div>
 
-        {/* ── STAT CARDS ───────────────────────────────────────────────────── */}
+        {/* STAT CARDS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Balance", value: `$${parseFloat(data.balance || 0).toLocaleString()}`, icon: <Wallet size={18} />, color: "text-white" },
-            { label: "Active Plans", value: plans.length, icon: <Activity size={18} />, color: "text-blue-400" },
+            { label: t("dashboard.totalBalance"), value: `$${parseFloat(data.balance || 0).toLocaleString()}`, icon: <Wallet size={18} />, color: "text-white" },
+            { label: t("dashboard.activePlans"), value: plans.length, icon: <Activity size={18} />, color: "text-blue-400" },
             { label: "Transactions", value: history.length, icon: <BarChart2 size={18} />, color: "text-purple-400" },
-            { label: "Total Profit", value: `$${totalProfit.toLocaleString()}`, icon: <DollarSign size={18} />, color: "text-emerald-400" },
+            { label: t("dashboard.totalProfit"), value: `$${totalProfit.toLocaleString()}`, icon: <DollarSign size={18} />, color: "text-emerald-400" },
           ].map((stat, i) => (
             <div key={i} className="p-4 rounded-2xl border border-white/8 bg-white/[0.03] flex flex-col gap-3 hover:border-white/15 transition-all">
               <div className="flex justify-between items-start">
@@ -237,23 +230,23 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── ACTION BUTTONS ───────────────────────────────────────────────── */}
+        {/* ACTION BUTTONS */}
         <div className="flex flex-wrap gap-3">
           <button onClick={() => navigate("/deposit")} className="btn-primary">
-            <ArrowDownCircle size={16} /> Deposit
+            <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
           </button>
           <button onClick={() => navigate("/plans")} className="btn-primary">
-            <TrendingUp size={16} /> Plans
+            <TrendingUp size={16} /> {t("dashboard.plans")}
           </button>
           <button onClick={() => navigate("/withdraw")} className="btn-primary">
-            <ArrowUpCircle size={16} /> Withdraw
+            <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
           </button>
         </div>
 
-        {/* ── LIVE CHART ───────────────────────────────────────────────────── */}
+        {/* LIVE CHART */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">Live Market</h3>
+            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.liveMarket")}</h3>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               LIVE
@@ -264,10 +257,10 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ── ACTIVE PLANS ─────────────────────────────────────────────────── */}
+        {/* ACTIVE PLANS */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">Active Plans</h3>
+            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.activePlans")}</h3>
             {plans.length > 0 && (
               <button onClick={() => navigate("/plans")} className="text-xs text-emerald-400 flex items-center gap-1 hover:gap-2 transition-all">
                 Add Plan <ChevronRight size={12} />
@@ -288,26 +281,21 @@ export default function Dashboard() {
 
                 return (
                   <div key={i} className="min-w-[270px] flex-shrink-0 snap-start rounded-2xl border border-white/8 bg-white/[0.03] p-5 flex flex-col gap-4 hover:border-emerald-500/30 transition-all">
-
-                    {/* Top row */}
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="font-bold text-white">{p.plan}</h4>
                         <p className="text-white/30 text-xs mt-0.5">Ends {end.toDateString()}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-semibold ${progress < 100 ? "bg-emerald-500/15 text-emerald-400" : "bg-green-500/15 text-green-400"}`}>
-                        {progress < 100 ? "Active" : "Done"}
+                        {progress < 100 ? t("dashboard.active") : t("dashboard.done")}
                       </span>
                     </div>
 
-                    {/* Progress ring + stats */}
                     <div className="flex items-center gap-4">
                       <div className="relative w-16 h-16 shrink-0">
                         <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
                           <circle cx="18" cy="18" r="15" stroke="#ffffff08" strokeWidth="3" fill="none" />
-                          <circle
-                            cx="18" cy="18" r="15"
-                            stroke="#10b981" strokeWidth="3" fill="none"
+                          <circle cx="18" cy="18" r="15" stroke="#10b981" strokeWidth="3" fill="none"
                             strokeDasharray={2 * Math.PI * 15}
                             strokeDashoffset={2 * Math.PI * 15 - (2 * Math.PI * 15 * progress) / 100}
                             strokeLinecap="round"
@@ -320,30 +308,29 @@ export default function Dashboard() {
                       </div>
                       <div className="flex flex-col gap-1.5 text-sm">
                         <div className="flex justify-between gap-6">
-                          <span className="text-white/35 text-xs">Invested</span>
+                          <span className="text-white/35 text-xs">{t("dashboard.invested")}</span>
                           <span className="font-semibold">${parseFloat(p.amount).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between gap-6">
-                          <span className="text-white/35 text-xs">Profit</span>
+                          <span className="text-white/35 text-xs">{t("dashboard.profit")}</span>
                           <span className="font-semibold text-emerald-400">${parseFloat(p.profit).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between gap-6">
-                          <span className="text-white/35 text-xs">ROI</span>
+                          <span className="text-white/35 text-xs">{t("dashboard.roi")}</span>
                           <span className="font-semibold text-teal-400">{roi}%</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Days left */}
                     {progress < 100 ? (
                       <div className="flex items-center gap-2 text-xs text-white/40 border-t border-white/5 pt-3">
                         <Clock size={11} />
-                        <span>{daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining</span>
+                        <span>{daysLeft} {t("dashboard.daysRemaining")}</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-xs text-green-400 border-t border-white/5 pt-3">
                         <BadgeCheck size={11} />
-                        <span>Plan completed</span>
+                        <span>{t("dashboard.planCompleted")}</span>
                       </div>
                     )}
                   </div>
@@ -355,18 +342,18 @@ export default function Dashboard() {
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                 <TrendingUp size={24} className="text-emerald-400 opacity-60" />
               </div>
-              <p className="text-white font-semibold">No Active Plans Yet</p>
-              <p className="text-white/30 text-sm max-w-xs">Start growing your wealth by choosing an investment plan tailored for you.</p>
+              <p className="text-white font-semibold">{t("dashboard.noActivePlans")}</p>
+              <p className="text-white/30 text-sm max-w-xs">{t("dashboard.noActivePlansDesc")}</p>
               <button onClick={() => navigate("/plans")} className="mt-1 px-5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition-all">
-                Browse Plans →
+                {t("dashboard.browsePlans")}
               </button>
             </div>
           )}
         </section>
 
-        {/* ── COMPLETED PLANS ──────────────────────────────────────────────── */}
+        {/* COMPLETED PLANS */}
         <section>
-          <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">Completed Plans</h3>
+          <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">{t("dashboard.completedPlans")}</h3>
           {completed.length ? (
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
               {completed.map((p, i) => (
@@ -377,12 +364,12 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{p.plan}</p>
-                      <p className="text-white/30 text-xs">Invested ${parseFloat(p.amount).toLocaleString()}</p>
+                      <p className="text-white/30 text-xs">{t("dashboard.invested")} ${parseFloat(p.amount).toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-emerald-400 font-bold text-sm">+${parseFloat(p.profit).toLocaleString()}</p>
-                    <p className="text-white/25 text-xs">Profit</p>
+                    <p className="text-white/25 text-xs">{t("dashboard.profit")}</p>
                   </div>
                 </div>
               ))}
@@ -392,15 +379,15 @@ export default function Dashboard() {
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                 <ArrowUpCircle size={24} className="text-emerald-400 opacity-60" />
               </div>
-              <p className="text-white font-semibold">No Completed Plans Yet</p>
-              <p className="text-white/30 text-sm max-w-xs">Your completed investments and earned profits will appear here.</p>
+              <p className="text-white font-semibold">{t("dashboard.noCompletedPlans")}</p>
+              <p className="text-white/30 text-sm max-w-xs">{t("dashboard.noCompletedPlansDesc")}</p>
             </div>
           )}
         </section>
 
-        {/* ── RECENT ACTIVITIES ────────────────────────────────────────────── */}
+        {/* RECENT ACTIVITIES */}
         <section>
-          <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">Recent Activities</h3>
+          <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">{t("dashboard.recentActivities")}</h3>
           {history.length ? (
             <div className="space-y-2">
               {history.map((h, i) => {
@@ -409,10 +396,7 @@ export default function Dashboard() {
                   <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition-all">
                     <div className="flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDeposit ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
-                        {isDeposit
-                          ? <ArrowDownCircle size={16} className="text-emerald-400" />
-                          : <ArrowUpCircle size={16} className="text-red-400" />
-                        }
+                        {isDeposit ? <ArrowDownCircle size={16} className="text-emerald-400" /> : <ArrowUpCircle size={16} className="text-red-400" />}
                       </div>
                       <div>
                         <p className="font-semibold text-sm">{h.action}</p>
@@ -431,23 +415,23 @@ export default function Dashboard() {
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                 <Wallet size={24} className="text-emerald-400 opacity-60" />
               </div>
-              <p className="text-white font-semibold">No Transactions Yet</p>
-              <p className="text-white/30 text-sm max-w-xs">Your deposits, withdrawals and activity history will show up here.</p>
+              <p className="text-white font-semibold">{t("dashboard.noTransactions")}</p>
+              <p className="text-white/30 text-sm max-w-xs">{t("dashboard.noTransactionsDesc")}</p>
               <button onClick={() => navigate("/deposit")} className="mt-1 px-5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition-all">
-                Make First Deposit →
+                {t("dashboard.makeFirstDeposit")}
               </button>
             </div>
           )}
         </section>
 
-        {/* ── ACCOUNT INFO ─────────────────────────────────────────────────── */}
+        {/* ACCOUNT INFO */}
         <section className="rounded-2xl border border-white/8 bg-white/[0.02] p-5 flex flex-wrap gap-5">
           <div className="flex items-center gap-3 flex-1 min-w-[180px]">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">
               {flagEmoji(location.flag)}
             </div>
             <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">Location</p>
+              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.location")}</p>
               <p className="font-semibold text-sm mt-0.5">{location.country || "Detecting..."}</p>
             </div>
           </div>
@@ -456,7 +440,7 @@ export default function Dashboard() {
               <Calendar size={16} className="text-blue-400" />
             </div>
             <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">Member Since</p>
+              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.memberSince")}</p>
               <p className="font-semibold text-sm mt-0.5">{memberSince}</p>
             </div>
           </div>
@@ -465,8 +449,8 @@ export default function Dashboard() {
               <BadgeCheck size={16} className="text-emerald-400" />
             </div>
             <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">Account Status</p>
-              <p className="font-semibold text-sm mt-0.5 text-emerald-400">Verified</p>
+              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.accountStatus")}</p>
+              <p className="font-semibold text-sm mt-0.5 text-emerald-400">{t("dashboard.verified")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-1 min-w-[180px]">
@@ -474,7 +458,7 @@ export default function Dashboard() {
               <BarChart2 size={16} className="text-purple-400" />
             </div>
             <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">Overall ROI</p>
+              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.overallRoi")}</p>
               <p className="font-semibold text-sm mt-0.5 text-purple-400">{profitPercent}%</p>
             </div>
           </div>
