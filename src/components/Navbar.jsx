@@ -3,18 +3,13 @@ import mexicanLogo from "../assets/mexican.png";
 import { useState, useEffect } from "react";
 import { X, Menu, LayoutDashboard, LogOut, ChevronRight } from "lucide-react";
 import LanguageSelector from "./LanguageSelector.jsx";
+import { useTranslation } from "react-i18next";
 
 // Pages considered "outside the app"
 const OUTSIDE_PAGES = ["/", "/login", "/register"];
 
-const navLinks = [
-  { to: "/", label: "Home", protected: false },
-  { to: "/plans", label: "Plans", protected: true },
-  { to: "/deposit", label: "Deposit", protected: true },
-  { to: "/withdraw", label: "Withdraw", protected: true },
-];
-
 export default function Navbar() {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -22,6 +17,13 @@ export default function Navbar() {
 
   const token = sessionStorage.getItem("token");
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+
+  const navLinks = [
+    { to: "/", label: t("nav.home"), protected: false },
+    { to: "/plans", label: t("nav.plans"), protected: true },
+    { to: "/deposit", label: t("nav.deposit"), protected: true },
+    { to: "/withdraw", label: t("nav.withdraw"), protected: true },
+  ];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -114,14 +116,14 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all"
                 >
                   <LayoutDashboard size={15} />
-                  Dashboard
+                  {t("nav.dashboard")}
                 </button>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
                 >
                   <LogOut size={15} />
-                  Logout
+                  {t("nav.logout")}
                 </button>
               </>
             ) : (
@@ -130,13 +132,13 @@ export default function Navbar() {
                   to="/login"
                   className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all"
                 >
-                  Sign In
+                  {t("nav.signIn")}
                 </Link>
                 <Link
                   to="/register"
                   className="px-4 py-2 rounded-lg text-sm bg-emerald-500 hover:bg-emerald-400 text-white font-semibold transition-all shadow-lg shadow-emerald-500/20"
                 >
-                  Get Started
+                  {t("nav.getStarted")}
                 </Link>
               </>
             )}
@@ -175,7 +177,7 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* User info if logged in and inside app */}
+            {/* User info */}
             {token && !OUTSIDE_PAGES.includes(location.pathname) && user?.name && (
               <div className="px-5 py-4 border-b border-white/8">
                 <div className="flex items-center gap-3">
@@ -231,7 +233,7 @@ export default function Navbar() {
                       : "text-white/50 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  Dashboard
+                  {t("nav.dashboard")}
                   <ChevronRight size={14} className="opacity-40" />
                 </button>
               )}
@@ -239,8 +241,6 @@ export default function Navbar() {
 
             {/* Bottom Actions */}
             <div className="px-3 pb-6 space-y-2">
-
-              {/* Language Selector — always visible on mobile */}
               <div className="flex justify-center py-2">
                 <LanguageSelector />
               </div>
@@ -251,7 +251,7 @@ export default function Navbar() {
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all"
                 >
                   <LogOut size={15} />
-                  Logout
+                  {t("nav.logout")}
                 </button>
               ) : (
                 <>
@@ -259,13 +259,13 @@ export default function Navbar() {
                     to="/login"
                     className="block text-center py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-sm font-medium hover:bg-white/10 transition-all"
                   >
-                    Sign In
+                    {t("nav.signIn")}
                   </Link>
                   <Link
                     to="/register"
                     className="block text-center py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20"
                   >
-                    Get Started
+                    {t("nav.getStarted")}
                   </Link>
                 </>
               )}
