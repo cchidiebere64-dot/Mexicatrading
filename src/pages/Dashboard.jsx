@@ -44,11 +44,44 @@ function flagEmoji(code) {
 
 // ── Detect country ────────────────────────────────────────────────────────────
 async function detectCountry() {
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const d = await res.json();
-    return { country: d.country_name, flag: d.country_code };
-  } catch { return { country: "Unknown", flag: "" }; }
+  // Try multiple APIs in order — fallback if one fails
+  const apis = [
+    async () => {
+      const res = await fetch("https://ipapi.co/json/");
+      const d = await res.json();
+      if (d.country_name && d.country_name !== "undefined") {
+        return { country: d.country_name, flag: d.country_code };
+      }
+      throw new Error("Invalid response");
+    },
+    async () => {
+      const res = await fetch("https://ipwho.is/");
+      const d = await res.json();
+      if (d.country && d.success) {
+        return { country: d.country, flag: d.country_code };
+      }
+      throw new Error("Invalid response");
+    },
+    async () => {
+      const res = await fetch("https://ip-api.com/json/?fields=country,countryCode,status");
+      const d = await res.json();
+      if (d.country && d.status === "success") {
+        return { country: d.country, flag: d.countryCode };
+      }
+      throw new Error("Invalid response");
+    },
+  ];
+
+  for (const api of apis) {
+    try {
+      const result = await api();
+      return result;
+    } catch {
+      continue;
+    }
+  }
+
+  return { country: "Unknown", flag: "" };
 }
 
 export default function Dashboard() {
