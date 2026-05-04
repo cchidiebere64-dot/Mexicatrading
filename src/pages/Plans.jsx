@@ -13,9 +13,9 @@ const planIcons = [
 ];
 
 const planColors = [
-  { border: "border-emerald-500/30", bg: "bg-emerald-500/10", icon: "bg-emerald-500/15 border-emerald-500/25", badge: "bg-emerald-500/15 text-emerald-400" },
-  { border: "border-blue-500/30", bg: "bg-blue-500/10", icon: "bg-blue-500/15 border-blue-500/25", badge: "bg-blue-500/15 text-blue-400" },
-  { border: "border-purple-500/30", bg: "bg-purple-500/10", icon: "bg-purple-500/15 border-purple-500/25", badge: "bg-purple-500/15 text-purple-400" },
+  { border: "border-emerald-500/30", icon: "bg-emerald-500/15 border-emerald-500/25", badge: "bg-emerald-500/15 text-emerald-400" },
+  { border: "border-blue-500/30", icon: "bg-blue-500/15 border-blue-500/25", badge: "bg-blue-500/15 text-blue-400" },
+  { border: "border-purple-500/30", icon: "bg-purple-500/15 border-purple-500/25", badge: "bg-purple-500/15 text-purple-400" },
 ];
 
 export default function Plans() {
@@ -30,7 +30,6 @@ export default function Plans() {
   const [balanceCheck, setBalanceCheck] = useState(null);
   const [message, setMessage] = useState("");
 
-  // Fetch plans from backend
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -46,54 +45,29 @@ export default function Plans() {
     fetchPlans();
   }, []);
 
-  const openModal = (plan) => {
-    setActivePlan(plan);
-    setModalOpen(true);
-    setMessage("");
-    setBalanceCheck(null);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setActivePlan(null);
-    setBalanceCheck(null);
-    setMessage("");
-  };
+  const openModal = (plan) => { setActivePlan(plan); setModalOpen(true); setMessage(""); setBalanceCheck(null); };
+  const closeModal = () => { setModalOpen(false); setActivePlan(null); setBalanceCheck(null); setMessage(""); };
 
   const handleConfirm = async () => {
     setConfirming(true);
     try {
       const token = sessionStorage.getItem("token");
-
-      const profileRes = await fetch(`${API_URL}/api/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const profileRes = await fetch(`${API_URL}/api/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
       const profileData = await profileRes.json();
       const balance = profileData.balance || 0;
 
-      if (balance < activePlan.minAmount) {
-        setBalanceCheck("insufficient");
-        setConfirming(false);
-        return;
-      }
+      if (balance < activePlan.minAmount) { setBalanceCheck("insufficient"); setConfirming(false); return; }
 
       const res = await fetch(`${API_URL}/api/investments`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          plan: activePlan.name,
-          amount: activePlan.minAmount,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan: activePlan.name, amount: activePlan.minAmount }),
       });
-
       const data = await res.json();
 
       if (res.ok) {
         setBalanceCheck("success");
-        setMessage("Investment confirmed successfully!");
+        setMessage(t("common.investmentSuccess"));
         setTimeout(() => navigate("/dashboard"), 1500);
       } else {
         setMessage(data.message || "Transaction failed. Please try again.");
@@ -116,7 +90,6 @@ export default function Plans() {
   return (
     <div className="relative min-h-screen bg-[#080c18] text-white overflow-hidden pb-16">
 
-      {/* BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[150px] rounded-full top-[-200px] left-[-200px]" />
         <div className="absolute w-[500px] h-[500px] bg-blue-500/6 blur-[140px] rounded-full bottom-[-200px] right-[-200px]" />
@@ -125,76 +98,58 @@ export default function Plans() {
 
       <main className="relative z-10 px-4 pt-24 pb-16 max-w-6xl mx-auto">
 
-        {/* HEADER */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Investment Plans
+            {t("common.investmentPlans")}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Choose Your <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Plan</span>
+            {t("common.chooseYourPlan")} <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Plan</span>
           </h1>
-          <p className="text-white/40 text-lg max-w-xl mx-auto">
-            Select the investment plan that best fits your financial goals and start growing your wealth today.
-          </p>
+          <p className="text-white/40 text-lg max-w-xl mx-auto">{t("common.choosePlanDesc")}</p>
         </motion.div>
 
-        {/* PLAN CARDS */}
         {plans.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
               <TrendingUp size={24} className="text-white/20" />
             </div>
-            <p className="text-white font-semibold">No Plans Available</p>
-            <p className="text-white/30 text-sm">Investment plans will appear here once they are added.</p>
+            <p className="text-white font-semibold">{t("common.noPlans")}</p>
+            <p className="text-white/30 text-sm">{t("common.noPlansDesc")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan, idx) => {
               const color = planColors[idx % planColors.length];
               const icon = planIcons[idx % planIcons.length];
-
               return (
-                <motion.div
-                  key={plan._id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -4 }}
-                  className={`relative p-6 rounded-3xl border ${color.border} bg-white/[0.03] backdrop-blur-xl flex flex-col gap-5 hover:bg-white/[0.05] transition-all duration-300`}
-                >
-                  {/* Plan Header */}
+                <motion.div key={plan._id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} whileHover={{ y: -4 }}
+                  className={`relative p-6 rounded-3xl border ${color.border} bg-white/[0.03] backdrop-blur-xl flex flex-col gap-5 hover:bg-white/[0.05] transition-all duration-300`}>
+
                   <div className="flex items-start justify-between">
-                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center ${color.icon}`}>
-                      {icon}
-                    </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-semibold ${color.badge}`}>
-                      {plan.profitRate}% ROI
-                    </span>
+                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center ${color.icon}`}>{icon}</div>
+                    <span className={`text-xs px-3 py-1 rounded-full font-semibold ${color.badge}`}>{plan.profitRate}% ROI</span>
                   </div>
 
-                  {/* Plan Name & Duration */}
                   <div>
                     <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                     {plan.description && <p className="text-white/40 text-sm mt-1">{plan.description}</p>}
-                    {plan.duration && <p className="text-white/30 text-xs mt-1">{plan.duration} days duration</p>}
+                    {plan.duration && <p className="text-white/30 text-xs mt-1">{plan.duration} {t("common.durationDays")}</p>}
                   </div>
 
-                  {/* Price */}
                   <div className="py-4 border-t border-b border-white/8">
-                    <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Minimum Investment</p>
+                    <p className="text-white/30 text-xs uppercase tracking-widest mb-1">{t("common.minimumInvestment")}</p>
                     <p className="text-3xl font-bold text-white">${Number(plan.minAmount).toLocaleString()}</p>
-                    <p className="text-white/30 text-xs mt-1">Maximum: ${Number(plan.maxAmount).toLocaleString()}</p>
+                    <p className="text-white/30 text-xs mt-1">{t("common.maximum")}: ${Number(plan.maxAmount).toLocaleString()}</p>
                   </div>
 
-                  {/* Features */}
                   <ul className="space-y-2.5 flex-1">
                     {[
                       `Min: $${Number(plan.minAmount).toLocaleString()} — Max: $${Number(plan.maxAmount).toLocaleString()}`,
-                      `${plan.profitRate}% profit rate`,
-                      `${plan.duration} day${plan.duration !== 1 ? "s" : ""} investment period`,
-                      "Automatic profit credit",
-                      "24/7 dashboard tracking",
+                      `${plan.profitRate}% ${t("common.profitRateLabel")}`,
+                      `${plan.duration} ${t("common.days")} ${t("common.investmentPeriod")}`,
+                      t("common.automaticProfit"),
+                      t("common.dashboardTracking"),
                     ].map((feature, i) => (
                       <li key={i} className="flex items-center gap-2.5 text-sm text-white/60">
                         <Check size={14} className="text-emerald-400 shrink-0" />
@@ -203,12 +158,9 @@ export default function Plans() {
                     ))}
                   </ul>
 
-                  {/* CTA */}
-                  <button
-                    onClick={() => openModal(plan)}
-                    className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                  >
-                    Choose Plan
+                  <button onClick={() => openModal(plan)}
+                    className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+                    {t("common.choosePlan")}
                     <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </motion.div>
@@ -217,13 +169,12 @@ export default function Plans() {
           </div>
         )}
 
-        {/* Trust note */}
         <div className="flex items-center justify-center gap-6 mt-12 text-white/20 text-xs">
-          <span className="flex items-center gap-1.5"><Shield size={12} /> Secured Investment</span>
+          <span className="flex items-center gap-1.5"><Shield size={12} /> {t("common.securedInvestment")}</span>
           <span>·</span>
           <span>🔒 {t("common.sslSecured")}</span>
           <span>·</span>
-          <span>⚡ Instant Activation</span>
+          <span>⚡ {t("common.instantActivation")}</span>
         </div>
       </main>
 
@@ -236,41 +187,38 @@ export default function Plans() {
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
               className="relative w-full max-w-md bg-[#0e1422] border border-white/10 rounded-3xl p-6 z-10 shadow-2xl">
 
-              {/* Modal Header */}
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-white">Confirm Investment</h2>
+                <h2 className="text-lg font-bold text-white">{t("common.confirmInvestment")}</h2>
                 <button onClick={closeModal} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition">
                   <X size={15} />
                 </button>
               </div>
 
-              {/* Plan Summary */}
               <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/8 space-y-3 mb-5">
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Plan</span>
+                  <span className="text-white/40">{t("common.plan")}</span>
                   <span className="text-white font-semibold">{activePlan.name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Amount</span>
+                  <span className="text-white/40">{t("common.amount")}</span>
                   <span className="text-emerald-400 font-bold">${Number(activePlan.minAmount).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Profit Rate</span>
+                  <span className="text-white/40">{t("common.profitRate")}</span>
                   <span className="text-white font-semibold">{activePlan.profitRate}%</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Duration</span>
-                  <span className="text-white font-semibold">{activePlan.duration} days</span>
+                  <span className="text-white/40">{t("common.duration")}</span>
+                  <span className="text-white font-semibold">{activePlan.duration} {t("common.days")}</span>
                 </div>
               </div>
 
-              {/* Status Messages */}
               <AnimatePresence>
                 {balanceCheck === "insufficient" && (
                   <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                     className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
                     <AlertTriangle size={15} />
-                    Insufficient balance. Please deposit funds first.
+                    {t("common.insufficientBalance")}
                   </motion.div>
                 )}
                 {balanceCheck === "success" && (
@@ -288,7 +236,6 @@ export default function Plans() {
                 )}
               </AnimatePresence>
 
-              {/* Buttons */}
               <div className="flex gap-3">
                 <button onClick={closeModal}
                   className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white/50 text-sm font-medium hover:bg-white/10 transition-all">
@@ -297,13 +244,13 @@ export default function Plans() {
                 {balanceCheck === "insufficient" ? (
                   <button onClick={() => navigate("/deposit")}
                     className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all">
-                    Deposit Funds
+                    {t("common.depositFunds")}
                   </button>
                 ) : (
                   <button onClick={handleConfirm} disabled={confirming || balanceCheck === "success"}
                     className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                     {confirming ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
-                    {confirming ? "Processing..." : "Confirm"}
+                    {confirming ? t("common.processing") : t("common.confirm")}
                   </button>
                 )}
               </div>
@@ -313,4 +260,4 @@ export default function Plans() {
       </AnimatePresence>
     </div>
   );
-}
+                      }
