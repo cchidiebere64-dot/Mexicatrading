@@ -264,6 +264,39 @@ export default function Navbar() {
                 </button>
               ) : (
                 <>
+                  {/* Bottom Actions */}
+<div className="px-3 pb-6 space-y-2">
+
+  {/* Language Selector — always visible on mobile */}
+  <div className="flex justify-center py-2">
+    <LanguageSelector />
+  </div>
+
+  {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
+    <button
+      onClick={handleLogout}
+      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all"
+    >
+      <LogOut size={15} />
+      Logout
+    </button>
+  ) : (
+    <>
+      <Link
+        to="/login"
+        className="block text-center py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-sm font-medium hover:bg-white/10 transition-all"
+      >
+        Sign In
+      </Link>
+      <Link
+        to="/register"
+        className="block text-center py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20"
+      >
+        Get Started
+      </Link>
+    </>
+  )}
+</div>
                   <Link
                     to="/login"
                     className="block text-center py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-sm font-medium hover:bg-white/10 transition-all"
