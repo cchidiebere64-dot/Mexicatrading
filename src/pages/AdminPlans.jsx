@@ -45,13 +45,15 @@ export default function AdminPlans() {
 
   const openEdit = (plan) => {
     setEditPlan(plan);
-    setForm({
-      name: plan.name || "",
-      min: plan.min || "",
-      max: plan.max || "",
-      profit: plan.profit || "",
-      duration: plan.duration || "",
-    });
+    
+// CORRECT ✅
+setForm({
+  name: plan.name || "",
+  min: plan.minAmount || "",
+  max: plan.maxAmount || "",
+  profit: plan.profitRate || "",
+  duration: plan.duration || "",
+});
     setShowModal(true);
   };
 
@@ -265,4 +267,4 @@ export default function AdminPlans() {
       </AnimatePresence>
     </div>
   );
-                   }
+              }
