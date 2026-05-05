@@ -22,11 +22,28 @@ export default function LanguageSelector() {
 
   const current = languages.find(l => l.code === i18n.language) || languages[0];
 
-  const handleSelect = (code) => {
-    i18n.changeLanguage(code);
-    localStorage.setItem("mexica_language", code);
-    setOpen(false);
-  };
+  const handleSelect = async (code) => {
+  i18n.changeLanguage(code);
+  localStorage.setItem("mexica_language", code);
+  setOpen(false);
+
+  // ✅ Save language to user account
+  const token = sessionStorage.getItem("token");
+  if (token) {
+    try {
+      await fetch("https://mexicatradingbackend.onrender.com/api/user/language", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ language: code }),
+      });
+    } catch (err) {
+      console.error("Failed to save language:", err);
+    }
+  }
+};
 
   const handleOpen = () => {
     if (!open && buttonRef.current) {
