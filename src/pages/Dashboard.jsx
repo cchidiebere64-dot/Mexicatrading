@@ -329,24 +329,8 @@ export default function Dashboard() {
           <button onClick={() => navigate("/deposit")} className="btn-primary">
             <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
           </button>
-          {/* TEST BUTTON — remove after testing */}
-<button
-  onClick={async () => {
-    const res = await fetch("https://mexicatradingbackend.onrender.com/api/user/language", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionStorage.getItem("token")}`
-      },
-      body: JSON.stringify({ language: "fr" })
-    });
-    const data = await res.json();
-    alert(JSON.stringify(data));
-  }}
-  className="btn-primary"
->
-  Test Language Save
-</button>
+          
+
           <button onClick={() => navigate("/plans")} className="btn-primary">
             <TrendingUp size={16} /> {t("dashboard.plans")}
           </button>
