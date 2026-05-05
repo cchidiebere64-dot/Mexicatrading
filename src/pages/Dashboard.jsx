@@ -8,7 +8,7 @@ import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Globe, Calendar, ChevronRight,
   Activity, DollarSign, BarChart2, Clock, RefreshCw, X,
-  Gift, Copy, Check, Users,
+  Gift, Copy, Check, Users, MessageSquare,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
