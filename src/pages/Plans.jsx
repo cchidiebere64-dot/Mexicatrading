@@ -26,6 +26,8 @@ export default function Plans() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [activePlan, setActivePlan] = useState(null);
+  const [investAmount, setInvestAmount] = useState("");
+  const [amountError, setAmountError] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [balanceCheck, setBalanceCheck] = useState(null);
   const [message, setMessage] = useState("");
@@ -45,10 +47,50 @@ export default function Plans() {
     fetchPlans();
   }, []);
 
-  const openModal = (plan) => { setActivePlan(plan); setModalOpen(true); setMessage(""); setBalanceCheck(null); };
-  const closeModal = () => { setModalOpen(false); setActivePlan(null); setBalanceCheck(null); setMessage(""); };
+  const openModal = (plan) => {
+    setActivePlan(plan);
+    setInvestAmount(String(plan.minAmount)); // prefill with minimum
+    setAmountError("");
+    setModalOpen(true);
+    setMessage("");
+    setBalanceCheck(null);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setActivePlan(null);
+    setInvestAmount("");
+    setAmountError("");
+    setBalanceCheck(null);
+    setMessage("");
+  };
+
+  // ── Validate amount as user types ────────────────────────────────────────
+  const handleAmountChange = (e) => {
+    const val = e.target.value;
+    setInvestAmount(val);
+    setAmountError("");
+    setBalanceCheck(null);
+    setMessage("");
+
+    const num = parseFloat(val);
+    if (!val || isNaN(num)) {
+      setAmountError("Please enter a valid amount.");
+    } else if (num < activePlan.minAmount) {
+      setAmountError(`Minimum investment is $${Number(activePlan.minAmount).toLocaleString()}`);
+    } else if (num > activePlan.maxAmount) {
+      setAmountError(`Maximum investment is $${Number(activePlan.maxAmount).toLocaleString()}`);
+    }
+  };
 
   const handleConfirm = async () => {
+    const amount = parseFloat(investAmount);
+
+    // Final validation before submitting
+    if (!amount || isNaN(amount)) { setAmountError("Please enter a valid amount."); return; }
+    if (amount < activePlan.minAmount) { setAmountError(`Minimum is $${Number(activePlan.minAmount).toLocaleString()}`); return; }
+    if (amount > activePlan.maxAmount) { setAmountError(`Maximum is $${Number(activePlan.maxAmount).toLocaleString()}`); return; }
+
     setConfirming(true);
     try {
       const token = sessionStorage.getItem("token");
@@ -56,12 +98,12 @@ export default function Plans() {
       const profileData = await profileRes.json();
       const balance = profileData.balance || 0;
 
-      if (balance < activePlan.minAmount) { setBalanceCheck("insufficient"); setConfirming(false); return; }
+      if (balance < amount) { setBalanceCheck("insufficient"); setConfirming(false); return; }
 
       const res = await fetch(`${API_URL}/api/investments`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plan: activePlan.name, amount: activePlan.minAmount }),
+        body: JSON.stringify({ plan: activePlan.name, amount }),
       });
       const data = await res.json();
 
@@ -77,6 +119,13 @@ export default function Plans() {
     } finally {
       setConfirming(false);
     }
+  };
+
+  // ── Estimated profit ──────────────────────────────────────────────────────
+  const estimatedProfit = () => {
+    const amt = parseFloat(investAmount);
+    if (!amt || isNaN(amt) || !activePlan) return null;
+    return ((amt * activePlan.profitRate) / 100).toFixed(2);
   };
 
   if (loading)
@@ -178,7 +227,7 @@ export default function Plans() {
         </div>
       </main>
 
-      {/* CONFIRM MODAL */}
+      {/* ── CONFIRM MODAL ─────────────────────────────────────────────────── */}
       <AnimatePresence>
         {modalOpen && activePlan && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -194,25 +243,84 @@ export default function Plans() {
                 </button>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/8 space-y-3 mb-5">
+              {/* Plan details */}
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/8 space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-white/40">{t("common.plan")}</span>
                   <span className="text-white font-semibold">{activePlan.name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/40">{t("common.amount")}</span>
-                  <span className="text-emerald-400 font-bold">${Number(activePlan.minAmount).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
                   <span className="text-white/40">{t("common.profitRate")}</span>
-                  <span className="text-white font-semibold">{activePlan.profitRate}%</span>
+                  <span className="text-emerald-400 font-semibold">{activePlan.profitRate}%</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/40">{t("common.duration")}</span>
                   <span className="text-white font-semibold">{activePlan.duration} {t("common.days")}</span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/40">Range</span>
+                  <span className="text-white/60 font-medium">
+                    ${Number(activePlan.minAmount).toLocaleString()} — ${Number(activePlan.maxAmount).toLocaleString()}
+                  </span>
+                </div>
               </div>
 
+              {/* ── AMOUNT INPUT ─────────────────────────────────────────── */}
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-2">
+                  Amount to Invest (USD)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold text-sm">$</span>
+                  <input
+                    type="number"
+                    value={investAmount}
+                    onChange={handleAmountChange}
+                    min={activePlan.minAmount}
+                    max={activePlan.maxAmount}
+                    placeholder={`${activePlan.minAmount}`}
+                    className="w-full pl-8 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm text-white placeholder:text-white/25"
+                  />
+                </div>
+
+                {/* Range hint */}
+                <div className="flex justify-between mt-1.5">
+                  <span className="text-white/25 text-xs">Min: ${Number(activePlan.minAmount).toLocaleString()}</span>
+                  <span className="text-white/25 text-xs">Max: ${Number(activePlan.maxAmount).toLocaleString()}</span>
+                </div>
+
+                {/* Error */}
+                {amountError && (
+                  <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertTriangle size={11} /> {amountError}
+                  </p>
+                )}
+
+                {/* Estimated profit — shows when valid amount entered */}
+                {estimatedProfit() && !amountError && (
+                  <div className="mt-3 p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20 flex justify-between items-center">
+                    <span className="text-emerald-400/70 text-xs">Estimated Profit</span>
+                    <span className="text-emerald-400 font-bold text-sm">+${estimatedProfit()}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick amount buttons */}
+              <div className="flex gap-2 mb-4 flex-wrap">
+                {[activePlan.minAmount, Math.round((activePlan.minAmount + activePlan.maxAmount) / 2), activePlan.maxAmount].map((amt, i) => (
+                  <button key={i}
+                    onClick={() => { setInvestAmount(String(amt)); setAmountError(""); setBalanceCheck(null); setMessage(""); }}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                      parseFloat(investAmount) === amt
+                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                        : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+                    }`}>
+                    ${Number(amt).toLocaleString()}
+                  </button>
+                ))}
+              </div>
+
+              {/* Status messages */}
               <AnimatePresence>
                 {balanceCheck === "insufficient" && (
                   <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
@@ -247,17 +355,20 @@ export default function Plans() {
                     {t("common.depositFunds")}
                   </button>
                 ) : (
-                  <button onClick={handleConfirm} disabled={confirming || balanceCheck === "success"}
+                  <button
+                    onClick={handleConfirm}
+                    disabled={confirming || balanceCheck === "success" || !!amountError || !investAmount}
                     className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                     {confirming ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
                     {confirming ? t("common.processing") : t("common.confirm")}
                   </button>
                 )}
               </div>
+
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-                      }
+}
