@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function Login() {
@@ -14,7 +14,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const API_URL = "https://mexicatradingbackend.onrender.com";
+
+  // ── Check if user just verified their email ───────────────────────────────
+  const verified = new URLSearchParams(location.search).get("verified");
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -60,6 +64,7 @@ export default function Login() {
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4">
 
+      {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
         <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
@@ -82,6 +87,18 @@ export default function Login() {
             <p className="text-white/40 text-sm">{t("auth.signInDesc")}</p>
           </div>
 
+          {/* ── Email verified success banner ─────────────────────────────── */}
+          {verified === "true" && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
+              <CheckCircle size={16} className="shrink-0" />
+              <span>Email verified successfully! You can now log in to your account.</span>
+            </motion.div>
+          )}
+
+          {/* ── Error message ─────────────────────────────────────────────── */}
           {error && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               className="mb-6 text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
