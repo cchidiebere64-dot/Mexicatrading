@@ -294,7 +294,7 @@ export default function Dashboard() {
   const history = data.history || [];
   const totalInvested = [...plans, ...completed].reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
   const totalProfit = [...plans, ...completed].reduce((s, p) => s + (parseFloat(p.profit) || 0), 0);
-  const totalWithdrawn = history.filter(h => h.action === "Withdrawal").reduce((s, h) => s + (parseFloat(h.amount) || 0), 0);
+  const totalWithdrawn = data.totalWithdrawn || 0;
   const profitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : "0.0";
   const memberSince = data.createdAt ? new Date(data.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "N/A";
 
