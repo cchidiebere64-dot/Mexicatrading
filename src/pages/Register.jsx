@@ -1,20 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Lock, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { User, Mail, Lock, ArrowRight, Eye, EyeOff, CheckCircle, Gift } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function Register() {
   const { t } = useTranslation();
   const API_URL = "https://mexicatradingbackend.onrender.com";
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [success, setSuccess] = useState(false); // ✅ NEW
+  const [success, setSuccess] = useState(false);
+  const [referralCode, setReferralCode] = useState(""); // ✅ referral code state
+
+  // ✅ Detect referral code from URL — e.g. /register?ref=ABC123
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+    }
+  }, [location.search]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,17 +36,15 @@ export default function Register() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, form);
+      // ✅ Include referral code in registration payload
+      const payload = { ...form };
+      if (referralCode) payload.referralCode = referralCode;
+
+      const res = await axios.post(`${API_URL}/api/auth/register`, payload);
       if (res.data.token) {
         sessionStorage.setItem("token", res.data.token);
-
-        // ✅ Show success message instead of redirecting immediately
         setSuccess(true);
-
-        // ✅ Redirect to login after 4 seconds
-        setTimeout(() => {
-          navigate("/login");
-        }, 4000);
+        setTimeout(() => navigate("/login"), 4000);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
@@ -61,9 +70,9 @@ export default function Register() {
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative w-full max-w-md">
         <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl">
 
-          {/* ── SUCCESS STATE — shown after registration ─────────────────── */}
           <AnimatePresence>
             {success ? (
+              // ── SUCCESS STATE ───────────────────────────────────────────
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -101,9 +110,8 @@ export default function Register() {
                 </button>
               </motion.div>
             ) : (
-              <motion.div
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0 }}>
+              // ── REGISTER FORM ───────────────────────────────────────────
+              <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }}>
 
                 <div className="text-center mb-8">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-5">
@@ -113,6 +121,22 @@ export default function Register() {
                   <h2 className="text-3xl font-bold tracking-tight mb-2">{t("auth.createAccountTitle")}</h2>
                   <p className="text-white/40 text-sm">{t("auth.joinDesc")}</p>
                 </div>
+
+                {/* ✅ Referral code banner — shows only if ref code in URL */}
+                {referralCode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-5 flex items-center gap-3 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+                    <Gift size={15} className="text-emerald-400 shrink-0" />
+                    <div>
+                      <p className="text-emerald-400 text-xs font-semibold">Referral Code Applied</p>
+                      <p className="text-white/50 text-xs mt-0.5">
+                        You were referred by a friend — code: <span className="text-white font-mono font-bold">{referralCode}</span>
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Error */}
                 {error && (
@@ -156,11 +180,26 @@ export default function Register() {
                     </button>
                   </div>
 
+                  {/* ✅ Manual referral code input — only shows if no ref in URL */}
+                  {!referralCode && (
+                    <div className="relative group">
+                      <Gift size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
+                      <input
+                        type="text"
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                        placeholder="Referral code (optional)"
+                        maxLength={8}
+                        className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25 font-mono tracking-widest"
+                      />
+                    </div>
+                  )}
+
                   <p className="text-white/25 text-xs text-center px-2">
                     By registering, you agree to our{" "}
-                 <Link to="/terms" className="text-emerald-400 hover:underline">Terms of Service</Link>
-                {" "}and{" "}
-                <Link to="/privacy" className="text-emerald-400 hover:underline">Privacy Policy</Link>.
+                    <Link to="/terms" className="text-emerald-400 hover:underline">Terms of Service</Link>
+                    {" "}and{" "}
+                    <Link to="/privacy" className="text-emerald-400 hover:underline">Privacy Policy</Link>.
                   </p>
 
                   <button type="submit" disabled={loading}
