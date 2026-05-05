@@ -168,16 +168,25 @@ export default function Dashboard() {
 
   // ── Resend verification email ─────────────────────────────────────────────
   const handleResendVerification = async () => {
-    const token = sessionStorage.getItem("token");
-    try {
-      await axios.post(`${API_URL}/api/auth/resend-verification`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert("✅ Verification email sent! Please check your inbox.");
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to resend. Please try again.");
-    }
-  };
+  const token = sessionStorage.getItem("token");
+  try {
+    await axios.post(`${API_URL}/api/auth/resend-verification`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    // ✅ Use the existing notification system instead of alert
+    setNotification({ 
+      type: "credit", 
+      message: "✅ Verification email sent! Please check your inbox." 
+    });
+    setTimeout(() => setNotification(null), 5000);
+  } catch (err) {
+    setNotification({ 
+      type: "debit", 
+      message: err.response?.data?.message || "Failed to resend. Please try again." 
+    });
+    setTimeout(() => setNotification(null), 5000);
+  }
+};
 
   // ── Show reinvest popup if user has completed plans ───────────────────────
   const triggerReinvestPopup = useCallback((completedPlans) => {
