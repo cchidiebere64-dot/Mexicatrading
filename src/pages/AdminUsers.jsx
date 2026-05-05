@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Search, X, DollarSign, ShieldOff, Shield,
   KeyRound, Trash2, RefreshCw, ChevronRight, AlertTriangle,
+  MessageSquare, Send,
 } from "lucide-react";
 
 const API_URL = "https://mexicatradingbackend.onrender.com/api";
@@ -20,6 +21,11 @@ export default function AdminUsers() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
+
+  // ── Message to user state ─────────────────────────────────────────────────
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [msgSubject, setMsgSubject] = useState("");
+  const [msgBody, setMsgBody] = useState("");
 
   const token = sessionStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}` };
@@ -111,6 +117,29 @@ export default function AdminUsers() {
     }
   };
 
+  // ── Send message to user ──────────────────────────────────────────────────
+  const sendMessage = async () => {
+    if (!msgSubject.trim() || !msgBody.trim()) {
+      return showMessage("Please enter both subject and message.", "error");
+    }
+    setActionLoading(true);
+    try {
+      await axios.post(
+        `${API_URL}/admin/users/${selectedUser._id}/message`,
+        { subject: msgSubject, message: msgBody },
+        { headers }
+      );
+      showMessage("Message sent successfully!");
+      setMsgSubject("");
+      setMsgBody("");
+      setShowMessageForm(false);
+    } catch {
+      showMessage("Failed to send message.", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -175,7 +204,15 @@ export default function AdminUsers() {
                 </div>
                 <p className="text-white/50 text-sm truncate pr-4">{u.email}</p>
                 <p className="text-emerald-400 font-bold text-sm">${parseFloat(u.balance || 0).toLocaleString()}</p>
-                <button onClick={() => { setSelectedUser(u); setConfirmDelete(false); setShowPasswordField(false); setAmount(""); }}
+                <button onClick={() => {
+                  setSelectedUser(u);
+                  setConfirmDelete(false);
+                  setShowPasswordField(false);
+                  setShowMessageForm(false);
+                  setAmount("");
+                  setMsgSubject("");
+                  setMsgBody("");
+                }}
                   className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-all w-fit">
                   Manage <ChevronRight size={12} />
                 </button>
@@ -256,6 +293,47 @@ export default function AdminUsers() {
                   {selectedUser.freezeWithdrawals ? <Shield size={15} /> : <ShieldOff size={15} />}
                   {selectedUser.freezeWithdrawals ? "Unfreeze Withdrawals" : "Freeze Withdrawals"}
                 </button>
+
+                {/* ── Send Message ─────────────────────────────────────────── */}
+                {!showMessageForm ? (
+                  <button onClick={() => setShowMessageForm(true)}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500/15 border border-blue-500/25 text-blue-400 text-sm font-semibold hover:bg-blue-500/25 transition-all">
+                    <MessageSquare size={15} /> Send Message to User
+                  </button>
+                ) : (
+                  <div className="space-y-2 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
+                    <p className="text-blue-400 text-xs font-semibold uppercase tracking-widest mb-3">
+                      Send Message to {selectedUser.name}
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="Subject..."
+                      value={msgSubject}
+                      onChange={(e) => setMsgSubject(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500/60 text-sm placeholder:text-white/25 text-white"
+                    />
+                    <textarea
+                      placeholder="Type your message here..."
+                      value={msgBody}
+                      onChange={(e) => setMsgBody(e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500/60 text-sm placeholder:text-white/25 text-white resize-none"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={sendMessage} disabled={actionLoading}
+                        className="py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                        {actionLoading
+                          ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          : <Send size={14} />}
+                        Send
+                      </button>
+                      <button onClick={() => { setShowMessageForm(false); setMsgSubject(""); setMsgBody(""); }}
+                        className="py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm font-semibold hover:bg-white/10 transition-all">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Reset Password */}
                 {!showPasswordField ? (
