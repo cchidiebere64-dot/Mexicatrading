@@ -7,6 +7,9 @@ import LockScreen from "./components/LockScreen.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx"; // ✅ NEW
+import Terms from "./pages/Terms.jsx";
+import Privacy from "./pages/Privacy.jsx";
+
 
 // User pages
 import Home from "./pages/Home.jsx";
@@ -235,8 +238,9 @@ function AppInner() {
             <Route path="/plans" element={<Plans />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/verify-email" element={<VerifyEmail />} /> {/* ✅ NEW */}
-
+            <Route path="/verify-email" element={<VerifyEmail />} /> {/* ✅ 
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             {/* Protected user routes */}
             <Route
               path="/dashboard"
