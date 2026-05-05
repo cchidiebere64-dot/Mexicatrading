@@ -6,7 +6,7 @@ import PageLoader from "./components/PageLoader.jsx";
 import LockScreen from "./components/LockScreen.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
-
+import VerifyEmail from "./pages/VerifyEmail.jsx"; // ✅ NEW
 
 // User pages
 import Home from "./pages/Home.jsx";
@@ -32,7 +32,7 @@ import AdminWallets from "./pages/AdminWallets.jsx";
 const LOCK_TIMEOUT_MS = 30000; // 30 seconds
 
 // Pages where lock screen must NEVER appear
-const EXEMPT_PATHS = ["/login", "/register", "/admin/login", "/"];
+const EXEMPT_PATHS = ["/login", "/register", "/admin/login", "/", "/verify-email"];
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -235,7 +235,7 @@ function AppInner() {
             <Route path="/plans" element={<Plans />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-
+            <Route path="/verify-email" element={<VerifyEmail />} /> {/* ✅ NEW */}
 
             {/* Protected user routes */}
             <Route
