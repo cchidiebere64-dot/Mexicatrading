@@ -22,28 +22,28 @@ export default function LanguageSelector() {
 
   const current = languages.find(l => l.code === i18n.language) || languages[0];
 
+  // ✅ Updated handleSelect — saves to backend
   const handleSelect = async (code) => {
-  i18n.changeLanguage(code);
-  localStorage.setItem("mexica_language", code);
-  setOpen(false);
+    i18n.changeLanguage(code);
+    localStorage.setItem("mexica_language", code);
+    setOpen(false);
 
-  // ✅ Save language to user account
-  const token = sessionStorage.getItem("token");
-  if (token) {
-    try {
-      await fetch("https://mexicatradingbackend.onrender.com/api/user/language", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ language: code }),
-      });
-    } catch (err) {
-      console.error("Failed to save language:", err);
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      try {
+        await fetch("https://mexicatradingbackend.onrender.com/api/user/language", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ language: code }),
+        });
+      } catch (err) {
+        console.error("Failed to save language:", err);
+      }
     }
-  }
-};
+  };
 
   const handleOpen = () => {
     if (!open && buttonRef.current) {
@@ -53,22 +53,17 @@ export default function LanguageSelector() {
       const dropW = 210;
       const dropH = 340;
 
-      // Horizontal — open left if not enough space on right
       const spaceRight = screenW - rect.right;
       const spaceLeft = rect.left;
       let left;
       if (spaceRight >= dropW) {
-        // Enough space on the right
         left = rect.left;
       } else if (spaceLeft >= dropW) {
-        // Open to the left
         left = rect.right - dropW;
       } else {
-        // Center it on screen
         left = Math.max(8, (screenW - dropW) / 2);
       }
 
-      // Vertical — open up if not enough space below
       const spaceBelow = screenH - rect.bottom;
       let top;
       if (spaceBelow >= dropH) {
@@ -88,7 +83,6 @@ export default function LanguageSelector() {
     setOpen(!open);
   };
 
-  // Close on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (buttonRef.current && !buttonRef.current.contains(e.target)) {
@@ -99,14 +93,12 @@ export default function LanguageSelector() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // RTL support for Arabic
   useEffect(() => {
     document.documentElement.dir = i18n.language === "ar" ? "rtl" : "ltr";
   }, [i18n.language]);
 
   return (
     <div ref={buttonRef} className="relative">
-      {/* Trigger Button */}
       <button
         onClick={handleOpen}
         className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm text-white/60 hover:text-white"
@@ -116,7 +108,6 @@ export default function LanguageSelector() {
         <ChevronDown size={12} className={`text-white/30 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {/* Full screen backdrop */}
       {open && (
         <div
           className="fixed inset-0"
@@ -125,7 +116,6 @@ export default function LanguageSelector() {
         />
       )}
 
-      {/* Smart dropdown — opens in available space */}
       {open && (
         <div
           style={dropdownStyle}
