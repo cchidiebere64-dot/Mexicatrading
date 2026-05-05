@@ -175,6 +175,8 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="relative z-10 border-t border-white/5 py-8 px-6 text-center text-white/20 text-sm">
+        <Link to="/terms" className="text-white/30 hover:text-white text-xs transition">Terms & Conditions</Link>
+<Link to="/privacy" className="text-white/30 hover:text-white text-xs transition">Privacy Policy</Link>
         © {new Date().getFullYear()} MexicaTrading. All rights reserved.
       </footer>
     </div>
