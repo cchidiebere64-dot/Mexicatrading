@@ -452,6 +452,10 @@ export default function Dashboard() {
           <button onClick={() => navigate("/deposit")} className="btn-primary">
             <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
           </button>
+          <button onClick={() => navigate("/messages")} className="btn-primary">
+      <MessageSquare size={16} /> Messages
+       {/* show unread count badge if needed */}
+       </button>
           <button onClick={() => navigate("/plans")} className="btn-primary">
             <TrendingUp size={16} /> {t("dashboard.plans")}
           </button>
