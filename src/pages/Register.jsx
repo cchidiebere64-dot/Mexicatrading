@@ -157,7 +157,10 @@ export default function Register() {
                   </div>
 
                   <p className="text-white/25 text-xs text-center px-2">
-                    By registering, you agree to our Terms of Service and Privacy Policy.
+                    By registering, you agree to our{" "}
+                 <Link to="/terms" className="text-emerald-400 hover:underline">Terms of Service</Link>
+                {" "}and{" "}
+                <Link to="/privacy" className="text-emerald-400 hover:underline">Privacy Policy</Link>.
                   </p>
 
                   <button type="submit" disabled={loading}
