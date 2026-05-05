@@ -8,6 +8,7 @@ import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Globe, Calendar, ChevronRight,
   Activity, DollarSign, BarChart2, Clock, RefreshCw, X,
+  Gift, Copy, Check, Users,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
@@ -70,8 +71,8 @@ async function detectCountry() {
   return { country: "", flag: "" };
 }
 
-// ── Reinvest Popup Component ──────────────────────────────────────────────────
-function ReinvestPopup({ completedPlans, onReinvest, onDismiss }) {
+// ── Reinvest Popup ────────────────────────────────────────────────────────────
+function ReinvestPopup({ completedPlans, onDismiss }) {
   const navigate = useNavigate();
   const totalProfit = completedPlans.reduce((s, p) => s + (parseFloat(p.profit) || 0), 0);
   const totalAmount = completedPlans.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
@@ -82,14 +83,10 @@ function ReinvestPopup({ completedPlans, onReinvest, onDismiss }) {
       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
       <div className="relative w-full max-w-sm bg-[#0d1221] border border-emerald-500/30 rounded-3xl p-6 shadow-2xl"
         style={{ animation: "scale-in 0.4s ease forwards" }}>
-
-        {/* Close button */}
         <button onClick={onDismiss}
           className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
           <X size={14} />
         </button>
-
-        {/* Trophy icon */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-4xl mb-4"
             style={{ animation: "float 3s ease-in-out infinite" }}>
@@ -100,8 +97,6 @@ function ReinvestPopup({ completedPlans, onReinvest, onDismiss }) {
             Your <strong className="text-white">{latestPlan?.plan}</strong> plan has completed
           </p>
         </div>
-
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-white/[0.04] border border-white/8 rounded-2xl p-4 text-center">
             <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Invested</p>
@@ -112,34 +107,24 @@ function ReinvestPopup({ completedPlans, onReinvest, onDismiss }) {
             <p className="text-emerald-400 font-bold text-lg">+${totalProfit.toLocaleString()}</p>
           </div>
         </div>
-
-        {/* Message */}
         <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 mb-5 text-center">
           <p className="text-white/60 text-sm leading-relaxed">
             💡 Your funds are ready! Reinvest now to keep growing your wealth or withdraw your profits.
           </p>
         </div>
-
-        {/* Buttons */}
         <div className="flex flex-col gap-2">
-          <button
-            onClick={() => { onDismiss(); navigate("/plans"); }}
+          <button onClick={() => { onDismiss(); navigate("/plans"); }}
             className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-bold text-sm text-white shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
-            <TrendingUp size={16} />
-            Reinvest Now
+            <TrendingUp size={16} /> Reinvest Now
           </button>
-          <button
-            onClick={() => { onDismiss(); navigate("/withdraw"); }}
+          <button onClick={() => { onDismiss(); navigate("/withdraw"); }}
             className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
             Withdraw Profits
           </button>
-          <button onClick={onDismiss}
-            className="w-full py-2.5 text-white/25 hover:text-white/50 transition text-xs">
+          <button onClick={onDismiss} className="w-full py-2.5 text-white/25 hover:text-white/50 transition text-xs">
             Remind me later
           </button>
         </div>
-
-        {/* Pulsing dot */}
         <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
       </div>
     </div>
@@ -155,6 +140,7 @@ export default function Dashboard() {
   const [location, setLocation] = useState({ country: "", flag: "" });
   const [notification, setNotification] = useState(null);
   const [showReinvest, setShowReinvest] = useState(false);
+  const [copied, setCopied] = useState(false);
   const prevBalance = useRef(null);
   const reinvestTimerRef = useRef(null);
   const navigate = useNavigate();
@@ -166,42 +152,39 @@ export default function Dashboard() {
     return t("dashboard.goodEvening");
   };
 
+  // ── Copy referral link ────────────────────────────────────────────────────
+  const handleCopyReferral = () => {
+    if (!data?.referralCode) return;
+    const link = `https://mexicatrading.com/register?ref=${data.referralCode}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
   // ── Resend verification email ─────────────────────────────────────────────
   const handleResendVerification = async () => {
-  const token = sessionStorage.getItem("token");
-  try {
-    await axios.post(`${API_URL}/api/auth/resend-verification`, {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    // ✅ Use the existing notification system instead of alert
-    setNotification({ 
-      type: "credit", 
-      message: "✅ Verification email sent! Please check your inbox." 
-    });
-    setTimeout(() => setNotification(null), 5000);
-  } catch (err) {
-    setNotification({ 
-      type: "debit", 
-      message: err.response?.data?.message || "Failed to resend. Please try again." 
-    });
-    setTimeout(() => setNotification(null), 5000);
-  }
-};
-
-  // ── Show reinvest popup if user has completed plans ───────────────────────
-  const triggerReinvestPopup = useCallback((completedPlans) => {
-    if (completedPlans.length > 0) {
-      setShowReinvest(true);
+    const token = sessionStorage.getItem("token");
+    try {
+      await axios.post(`${API_URL}/api/auth/resend-verification`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotification({ type: "credit", message: "✅ Verification email sent! Please check your inbox." });
+      setTimeout(() => setNotification(null), 5000);
+    } catch (err) {
+      setNotification({ type: "debit", message: err.response?.data?.message || "Failed to resend. Please try again." });
+      setTimeout(() => setNotification(null), 5000);
     }
+  };
+
+  const triggerReinvestPopup = useCallback((completedPlans) => {
+    if (completedPlans.length > 0) setShowReinvest(true);
   }, []);
 
-  // ── Setup recurring reminder every 5 minutes ─────────────────────────────
   const setupReinvestReminder = useCallback((completedPlans) => {
     if (reinvestTimerRef.current) clearInterval(reinvestTimerRef.current);
     if (completedPlans.length > 0) {
-      reinvestTimerRef.current = setInterval(() => {
-        setShowReinvest(true);
-      }, REINVEST_REMINDER_INTERVAL);
+      reinvestTimerRef.current = setInterval(() => setShowReinvest(true), REINVEST_REMINDER_INTERVAL);
     }
   }, []);
 
@@ -214,29 +197,24 @@ export default function Dashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const newData = res.data;
-
-      // Balance change notification
       if (prevBalance.current !== null && newData.balance !== prevBalance.current) {
         const diff = newData.balance - prevBalance.current;
-        if (diff > 0) {
-          setNotification({ type: "credit", message: `+$${diff.toLocaleString()} has been credited to your account!` });
-        } else {
-          setNotification({ type: "debit", message: `$${Math.abs(diff).toLocaleString()} has been deducted from your account.` });
-        }
+        setNotification({
+          type: diff > 0 ? "credit" : "debit",
+          message: diff > 0
+            ? `+$${diff.toLocaleString()} has been credited to your account!`
+            : `$${Math.abs(diff).toLocaleString()} has been deducted from your account.`
+        });
         setTimeout(() => setNotification(null), 5000);
       }
-
       prevBalance.current = newData.balance;
       setData(newData);
       setLastUpdated(new Date());
-
-      // ── Check for completed plans and trigger reinvest popup ─────────────
       const completedPlans = (newData.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
       if (completedPlans.length > 0) {
         setTimeout(() => triggerReinvestPopup(completedPlans), 1500);
         setupReinvestReminder(completedPlans);
       }
-
     } catch {
       if (!silent) setData(null);
     } finally {
@@ -245,31 +223,17 @@ export default function Dashboard() {
     }
   }, [navigate, triggerReinvestPopup, setupReinvestReminder]);
 
-  // Initial load
-  useEffect(() => {
-    fetchDashboard(false);
-    detectCountry().then(setLocation);
-  }, [fetchDashboard]);
-
-  // Auto-refresh every 30s
+  useEffect(() => { fetchDashboard(false); detectCountry().then(setLocation); }, [fetchDashboard]);
   useEffect(() => {
     const interval = setInterval(() => fetchDashboard(true), REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchDashboard]);
-
-  // Refresh on tab focus
   useEffect(() => {
     const handleFocus = () => fetchDashboard(true);
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchDashboard]);
-
-  // Cleanup reminder on unmount
-  useEffect(() => {
-    return () => {
-      if (reinvestTimerRef.current) clearInterval(reinvestTimerRef.current);
-    };
-  }, []);
+  useEffect(() => { return () => { if (reinvestTimerRef.current) clearInterval(reinvestTimerRef.current); }; }, []);
 
   // TradingView chart
   useEffect(() => {
@@ -319,16 +283,15 @@ export default function Dashboard() {
   const totalWithdrawn = data.totalWithdrawn || 0;
   const profitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : "0.0";
   const memberSince = data.createdAt ? new Date(data.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "N/A";
+  const referralLink = data.referralCode ? `mexicatrading.com/register?ref=${data.referralCode}` : "";
+  const referralEarnings = data.referralEarnings || 0;
+  const totalReferrals = (data.referrals || []).length;
 
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
-      {/* ── REINVEST POPUP ────────────────────────────────────────────────── */}
       {showReinvest && completed.length > 0 && (
-        <ReinvestPopup
-          completedPlans={completed}
-          onDismiss={() => setShowReinvest(false)}
-        />
+        <ReinvestPopup completedPlans={completed} onDismiss={() => setShowReinvest(false)} />
       )}
 
       {/* AMBIENT BACKGROUND */}
@@ -338,7 +301,7 @@ export default function Dashboard() {
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
       </div>
 
-      {/* BALANCE CHANGE NOTIFICATION TOAST */}
+      {/* NOTIFICATION TOAST */}
       {notification && (
         <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[999] px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold flex items-center gap-2 ${
           notification.type === "credit"
@@ -406,38 +369,28 @@ export default function Dashboard() {
                 📧
               </div>
               <div>
-                <p className="font-bold text-sm text-white">
-                  Please verify your email address
-                </p>
-                <p className="text-yellow-400/70 text-xs mt-0.5">
-                  Check your inbox for the verification link we sent you
-                </p>
+                <p className="font-bold text-sm text-white">Please verify your email address</p>
+                <p className="text-yellow-400/70 text-xs mt-0.5">Check your inbox for the verification link we sent you</p>
               </div>
             </div>
-            <button
-              onClick={handleResendVerification}
+            <button onClick={handleResendVerification}
               className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition-all font-semibold whitespace-nowrap">
               Resend Email
             </button>
           </div>
         )}
 
-        {/* ── REINVEST BANNER — shows when completed plans exist ───────────── */}
+        {/* ── REINVEST BANNER ───────────────────────────────────────────────── */}
         {completed.length > 0 && (
-          <div
-            onClick={() => setShowReinvest(true)}
+          <div onClick={() => setShowReinvest(true)}
             className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 hover:bg-emerald-500/12 transition-all">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-xl">
-                🏆
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-xl">🏆</div>
               <div>
                 <p className="font-bold text-sm text-white">
                   {completed.length} plan{completed.length > 1 ? "s" : ""} completed — Ready to reinvest?
                 </p>
-                <p className="text-emerald-400/70 text-xs mt-0.5">
-                  Tap to see your earnings and reinvest options
-                </p>
+                <p className="text-emerald-400/70 text-xs mt-0.5">Tap to see your earnings and reinvest options</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -507,6 +460,60 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* ── REFERRAL SECTION ──────────────────────────────────────────────── */}
+        {data.referralCode && (
+          <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 via-white/[0.02] to-teal-500/5 p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+                <Gift size={18} className="text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">Referral Program</h3>
+                <p className="text-emerald-400/70 text-xs mt-0.5">Earn 5% commission on every friend you refer</p>
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
+                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">Referrals</p>
+                <p className="text-white font-bold text-lg">{totalReferrals}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">Earned</p>
+                <p className="text-emerald-400 font-bold text-lg">${referralEarnings.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
+                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">Rate</p>
+                <p className="text-white font-bold text-lg">5%</p>
+              </div>
+            </div>
+
+            {/* Referral link */}
+            <div>
+              <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Your Referral Link</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white/60 font-mono truncate">
+                  {referralLink}
+                </div>
+                <button
+                  onClick={handleCopyReferral}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
+                    copied
+                      ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
+                      : "bg-emerald-500 hover:bg-emerald-400 text-white"
+                  }`}>
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <p className="text-white/25 text-xs mt-2">
+                Share this link — when your friend makes their first deposit, you earn 5% automatically.
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* ── LIVE CHART ────────────────────────────────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -531,7 +538,6 @@ export default function Dashboard() {
               </button>
             )}
           </div>
-
           {plans.length ? (
             <div className="flex gap-4 overflow-x-auto py-1 scroll-smooth snap-x snap-mandatory scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
               {plans.map((p, i) => {
@@ -614,8 +620,7 @@ export default function Dashboard() {
           {completed.length ? (
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
               {completed.map((p, i) => (
-                <div key={i}
-                  onClick={() => setShowReinvest(true)}
+                <div key={i} onClick={() => setShowReinvest(true)}
                   className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
@@ -646,9 +651,15 @@ export default function Dashboard() {
 
         {/* ── RECENT ACTIVITIES ─────────────────────────────────────────────── */}
         <section>
-          <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">{t("dashboard.recentActivities")}</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.recentActivities")}</h3>
+            {history.length > 4 && (
+              <span className="text-xs text-white/30">{history.length} total</span>
+            )}
+          </div>
           {history.length ? (
-            <div className="space-y-2">
+            // ✅ Fixed height showing 4 rows — scrollable inside
+            <div className="space-y-2 max-h-[272px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               {history.map((h, i) => {
                 const isDeposit = h.action === "Deposit";
                 return (
