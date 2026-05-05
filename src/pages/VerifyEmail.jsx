@@ -22,19 +22,27 @@ export default function VerifyEmail() {
     }
 
     const verify = async () => {
-      try {
-        await axios.get(`${API_URL}/api/auth/verify-email?token=${token}`);
-        setStatus("success");
-        // Redirect to login with verified flag after 3 seconds
-        setTimeout(() => navigate("/login?verified=true"), 3000);
-      } catch (err) {
-        setStatus("error");
-        setMessage(
-          err.response?.data?.message ||
-          "This verification link has expired or is invalid. Please request a new one."
-        );
-      }
-    };
+  try {
+    const res = await axios.get(`${API_URL}/api/auth/verify-email?token=${token}`);
+    if (res.status === 200) {
+      setStatus("success");
+      setTimeout(() => navigate("/login?verified=true"), 3000);
+    }
+  } catch (err) {
+    // ✅ If error is 400 but account was already verified — still show success
+    if (err.response?.status === 400 &&
+        err.response?.data?.message?.includes("Invalid or expired")) {
+      setStatus("error");
+      setMessage("This verification link has expired or already been used. Please log in or request a new link.");
+    } else {
+      setStatus("error");
+      setMessage(
+        err.response?.data?.message ||
+        "This verification link has expired or is invalid. Please request a new one."
+      );
+    }
+  }
+};
 
     verify();
   }, [location.search, navigate]);
