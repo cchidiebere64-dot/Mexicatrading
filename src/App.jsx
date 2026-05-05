@@ -6,10 +6,9 @@ import PageLoader from "./components/PageLoader.jsx";
 import LockScreen from "./components/LockScreen.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
-import VerifyEmail from "./pages/VerifyEmail.jsx"; // ✅ NEW
+import VerifyEmail from "./pages/VerifyEmail.jsx";
 import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";
-
 
 // User pages
 import Home from "./pages/Home.jsx";
@@ -32,10 +31,19 @@ import AdminWithdrawals from "./pages/AdminWithdrawals.jsx";
 import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
 
-const LOCK_TIMEOUT_MS = 30000; // 30 seconds
+const LOCK_TIMEOUT_MS = 30000;
 
-// Pages where lock screen must NEVER appear
-const EXEMPT_PATHS = ["/login", "/register", "/admin/login", "/", "/verify-email"];
+const EXEMPT_PATHS = [
+  "/",
+  "/login",
+  "/register",
+  "/admin/login",
+  "/verify-email",
+  "/terms",
+  "/privacy",
+  "/forgot-password",
+  "/reset-password",
+];
 
 function PageWrapper({ children }) {
   const location = useLocation();
@@ -60,7 +68,6 @@ function AppInner() {
   const token = sessionStorage.getItem("token");
   const adminToken = sessionStorage.getItem("adminToken");
 
-  // ── Lock state — initialized from sessionStorage so it survives refresh ──
   const [locked, setLocked] = useState(
     sessionStorage.getItem("locked") === "true"
   );
@@ -129,13 +136,13 @@ function AppInner() {
     }
   }, [location.pathname]);
 
-  // ── Lock app helper — saves to sessionStorage so refresh keeps it locked ──
+  // ── Lock app helper ───────────────────────────────────────────────────────
   const lockApp = () => {
     sessionStorage.setItem("locked", "true");
     setLocked(true);
   };
 
-  // ── Unlock helper — removes from sessionStorage ───────────────────────────
+  // ── Unlock helper ─────────────────────────────────────────────────────────
   const handleUnlock = () => {
     sessionStorage.removeItem("locked");
     setLocked(false);
@@ -160,16 +167,12 @@ function AppInner() {
 
     const handleFocus = () => {
       if (!blurTimeRef.current) return;
-
       const awayMs = Date.now() - blurTimeRef.current;
       blurTimeRef.current = null;
-
       const hasToken =
         sessionStorage.getItem("token") ||
         sessionStorage.getItem("adminToken");
-      const visited =
-        sessionStorage.getItem("hasVisitedDashboard") === "true";
-
+      const visited = sessionStorage.getItem("hasVisitedDashboard") === "true";
       if (hasToken && visited && awayMs >= LOCK_TIMEOUT_MS && !isExempt) {
         lockApp();
       }
@@ -177,7 +180,6 @@ function AppInner() {
 
     window.addEventListener("blur", handleBlur);
     window.addEventListener("focus", handleFocus);
-
     return () => {
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("focus", handleFocus);
@@ -193,16 +195,13 @@ function AppInner() {
         blurTimeRef.current = Date.now();
       } else {
         if (!blurTimeRef.current) return;
-
         const awayMs = Date.now() - blurTimeRef.current;
         blurTimeRef.current = null;
-
         const hasToken =
           sessionStorage.getItem("token") ||
           sessionStorage.getItem("adminToken");
         const visited =
           sessionStorage.getItem("hasVisitedDashboard") === "true";
-
         if (hasToken && visited && awayMs >= LOCK_TIMEOUT_MS && !isExempt) {
           lockApp();
         }
@@ -216,32 +215,30 @@ function AppInner() {
 
   const isExemptPage = EXEMPT_PATHS.includes(location.pathname);
   const shouldShowLock =
-    locked &&
-    !isExemptPage &&
-    (token || adminToken) &&
-    hasVisitedDashboard;
+    locked && !isExemptPage && (token || adminToken) && hasVisitedDashboard;
 
   return (
     <>
       {!location.pathname.startsWith("/admin") && <Navbar />}
 
-      {/* LOCK SCREEN */}
       {shouldShowLock && <LockScreen onUnlock={handleUnlock} />}
 
       <PageWrapper>
         <div className="pt-16">
           <Routes>
-            {/* USER ROUTES */}
+
+            {/* ── PUBLIC ROUTES ─────────────────────────────────────────── */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/plans" element={<Plans />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/verify-email" element={<VerifyEmail />} /> {/* ✅ 
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
-            {/* Protected user routes */}
+
+            {/* ── PROTECTED USER ROUTES ─────────────────────────────────── */}
             <Route
               path="/dashboard"
               element={token ? <Dashboard /> : <Navigate to="/login" />}
@@ -255,16 +252,12 @@ function AppInner() {
               element={token ? <Withdraw /> : <Navigate to="/login" />}
             />
 
-            {/* ADMIN ROUTES */}
+            {/* ── ADMIN ROUTES ──────────────────────────────────────────── */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin"
               element={
-                adminToken ? (
-                  <AdminLayout />
-                ) : (
-                  <Navigate to="/admin/login" />
-                )
+                adminToken ? <AdminLayout /> : <Navigate to="/admin/login" />
               }
             >
               <Route index element={<AdminDashboardHome />} />
@@ -277,8 +270,9 @@ function AppInner() {
               <Route path="wallets" element={<AdminWallets />} />
             </Route>
 
-            {/* DEFAULT */}
+            {/* ── DEFAULT ───────────────────────────────────────────────── */}
             <Route path="*" element={<Navigate to="/" replace />} />
+
           </Routes>
         </div>
       </PageWrapper>
