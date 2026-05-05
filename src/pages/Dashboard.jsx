@@ -7,12 +7,13 @@ import { useTranslation } from "react-i18next";
 import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Globe, Calendar, ChevronRight,
-  Activity, DollarSign, BarChart2, Clock, RefreshCw,
+  Activity, DollarSign, BarChart2, Clock, RefreshCw, X,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const REFRESH_INTERVAL = 30000;
+const REINVEST_REMINDER_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 // ── Animated count-up ─────────────────────────────────────────────────────────
 function CountUp({ end, prefix = "", duration = 1200 }) {
@@ -44,34 +45,21 @@ function flagEmoji(code) {
 
 // ── Detect country ────────────────────────────────────────────────────────────
 async function detectCountry() {
-  // Method 1 — ipwho.is (most reliable, no rate limit)
   try {
     const res = await fetch("https://ipwho.is/");
     const d = await res.json();
-    if (d.success && d.country) {
-      return { country: d.country, flag: d.country_code };
-    }
+    if (d.success && d.country) return { country: d.country, flag: d.country_code };
   } catch {}
-
-  // Method 2 — ip-api.com
   try {
     const res = await fetch("https://ip-api.com/json/?fields=status,country,countryCode");
     const d = await res.json();
-    if (d.status === "success" && d.country) {
-      return { country: d.country, flag: d.countryCode };
-    }
+    if (d.status === "success" && d.country) return { country: d.country, flag: d.countryCode };
   } catch {}
-
-  // Method 3 — freeipapi.com
   try {
     const res = await fetch("https://freeipapi.com/api/json");
     const d = await res.json();
-    if (d.countryName) {
-      return { country: d.countryName, flag: d.countryCode };
-    }
+    if (d.countryName) return { country: d.countryName, flag: d.countryCode };
   } catch {}
-
-  // Method 4 — Browser language fallback
   try {
     const locale = navigator.language || navigator.languages?.[0] || "en-US";
     const regionCode = locale.split("-")[1] || "US";
@@ -79,8 +67,83 @@ async function detectCountry() {
     const countryName = regionNames.of(regionCode);
     return { country: countryName, flag: regionCode };
   } catch {}
-
   return { country: "", flag: "" };
+}
+
+// ── Reinvest Popup Component ──────────────────────────────────────────────────
+function ReinvestPopup({ completedPlans, onReinvest, onDismiss }) {
+  const navigate = useNavigate();
+  const totalProfit = completedPlans.reduce((s, p) => s + (parseFloat(p.profit) || 0), 0);
+  const totalAmount = completedPlans.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+  const latestPlan = completedPlans[completedPlans.length - 1];
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
+      <div className="relative w-full max-w-sm bg-[#0d1221] border border-emerald-500/30 rounded-3xl p-6 shadow-2xl"
+        style={{ animation: "scale-in 0.4s ease forwards" }}>
+
+        {/* Close button */}
+        <button onClick={onDismiss}
+          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+          <X size={14} />
+        </button>
+
+        {/* Trophy icon */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-4xl mb-4"
+            style={{ animation: "float 3s ease-in-out infinite" }}>
+            🏆
+          </div>
+          <h2 className="text-xl font-bold text-white mb-1">Investment Matured!</h2>
+          <p className="text-white/50 text-sm">
+            Your <strong className="text-white">{latestPlan?.plan}</strong> plan has completed
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-white/[0.04] border border-white/8 rounded-2xl p-4 text-center">
+            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Invested</p>
+            <p className="text-white font-bold text-lg">${totalAmount.toLocaleString()}</p>
+          </div>
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
+            <p className="text-emerald-400/70 text-xs uppercase tracking-widest mb-1">Profit Earned</p>
+            <p className="text-emerald-400 font-bold text-lg">+${totalProfit.toLocaleString()}</p>
+          </div>
+        </div>
+
+        {/* Message */}
+        <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 mb-5 text-center">
+          <p className="text-white/60 text-sm leading-relaxed">
+            💡 Your funds are ready! Reinvest now to keep growing your wealth or withdraw your profits.
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => { onDismiss(); navigate("/plans"); }}
+            className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-bold text-sm text-white shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
+            <TrendingUp size={16} />
+            Reinvest Now
+          </button>
+          <button
+            onClick={() => { onDismiss(); navigate("/withdraw"); }}
+            className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
+            Withdraw Profits
+          </button>
+          <button onClick={onDismiss}
+            className="w-full py-2.5 text-white/25 hover:text-white/50 transition text-xs">
+            Remind me later
+          </button>
+        </div>
+
+        {/* Pulsing dot */}
+        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+      </div>
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -91,7 +154,9 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [location, setLocation] = useState({ country: "", flag: "" });
   const [notification, setNotification] = useState(null);
+  const [showReinvest, setShowReinvest] = useState(false);
   const prevBalance = useRef(null);
+  const reinvestTimerRef = useRef(null);
   const navigate = useNavigate();
 
   const getGreeting = () => {
@@ -100,6 +165,23 @@ export default function Dashboard() {
     if (h < 17) return t("dashboard.goodAfternoon");
     return t("dashboard.goodEvening");
   };
+
+  // ── Show reinvest popup if user has completed plans ───────────────────────
+  const triggerReinvestPopup = useCallback((completedPlans) => {
+    if (completedPlans.length > 0) {
+      setShowReinvest(true);
+    }
+  }, []);
+
+  // ── Setup recurring reminder every 5 minutes ─────────────────────────────
+  const setupReinvestReminder = useCallback((completedPlans) => {
+    if (reinvestTimerRef.current) clearInterval(reinvestTimerRef.current);
+    if (completedPlans.length > 0) {
+      reinvestTimerRef.current = setInterval(() => {
+        setShowReinvest(true);
+      }, REINVEST_REMINDER_INTERVAL);
+    }
+  }, []);
 
   const fetchDashboard = useCallback(async (silent = false) => {
     const token = sessionStorage.getItem("token");
@@ -125,13 +207,21 @@ export default function Dashboard() {
       prevBalance.current = newData.balance;
       setData(newData);
       setLastUpdated(new Date());
+
+      // ── Check for completed plans and trigger reinvest popup ─────────────
+      const completedPlans = (newData.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
+      if (completedPlans.length > 0) {
+        setTimeout(() => triggerReinvestPopup(completedPlans), 1500);
+        setupReinvestReminder(completedPlans);
+      }
+
     } catch {
       if (!silent) setData(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [navigate]);
+  }, [navigate, triggerReinvestPopup, setupReinvestReminder]);
 
   // Initial load
   useEffect(() => {
@@ -145,12 +235,19 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [fetchDashboard]);
 
-  // Refresh on tab focus
+  // Refresh on tab focus — also re-triggers reinvest popup
   useEffect(() => {
     const handleFocus = () => fetchDashboard(true);
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchDashboard]);
+
+  // Cleanup reminder on unmount
+  useEffect(() => {
+    return () => {
+      if (reinvestTimerRef.current) clearInterval(reinvestTimerRef.current);
+    };
+  }, []);
 
   // TradingView chart
   useEffect(() => {
@@ -204,6 +301,14 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
+      {/* ── REINVEST POPUP ────────────────────────────────────────────────── */}
+      {showReinvest && completed.length > 0 && (
+        <ReinvestPopup
+          completedPlans={completed}
+          onDismiss={() => setShowReinvest(false)}
+        />
+      )}
+
       {/* AMBIENT BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
@@ -240,8 +345,6 @@ export default function Dashboard() {
               {data.name} <span className="text-emerald-400">👋</span>
             </h2>
           </div>
-
-          {/* RIGHT SIDE — meta + language + refresh */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-3 text-xs text-white/30 flex-wrap">
               {location.country && (
@@ -265,17 +368,38 @@ export default function Dashboard() {
                 </span>
               )}
             </div>
-
-            {/* Refresh button */}
             <button onClick={() => fetchDashboard(false)} disabled={refreshing}
               className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
               <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
             </button>
-
-            {/* Language selector */}
             <LanguageSelector />
           </div>
         </div>
+
+        {/* ── REINVEST BANNER — shows when completed plans exist ───────────── */}
+        {completed.length > 0 && (
+          <div
+            onClick={() => setShowReinvest(true)}
+            className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 hover:bg-emerald-500/12 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-xl">
+                🏆
+              </div>
+              <div>
+                <p className="font-bold text-sm text-white">
+                  {completed.length} plan{completed.length > 1 ? "s" : ""} completed — Ready to reinvest?
+                </p>
+                <p className="text-emerald-400/70 text-xs mt-0.5">
+                  Tap to see your earnings and reinvest options
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <ChevronRight size={16} className="text-emerald-400" />
+            </div>
+          </div>
+        )}
 
         {/* ── HERO PORTFOLIO CARD ───────────────────────────────────────────── */}
         <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-teal-500/5 p-6 sm:p-8">
@@ -329,8 +453,6 @@ export default function Dashboard() {
           <button onClick={() => navigate("/deposit")} className="btn-primary">
             <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
           </button>
-          
-
           <button onClick={() => navigate("/plans")} className="btn-primary">
             <TrendingUp size={16} /> {t("dashboard.plans")}
           </button>
@@ -446,7 +568,9 @@ export default function Dashboard() {
           {completed.length ? (
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
               {completed.map((p, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition-all">
+                <div key={i}
+                  onClick={() => setShowReinvest(true)}
+                  className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
                       <BadgeCheck size={16} className="text-green-400" />
@@ -458,7 +582,7 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-emerald-400 font-bold text-sm">+${parseFloat(p.profit).toLocaleString()}</p>
-                    <p className="text-white/25 text-xs">{t("dashboard.profit")}</p>
+                    <p className="text-emerald-400/50 text-xs font-medium">Tap to reinvest →</p>
                   </div>
                 </div>
               ))}
@@ -522,8 +646,8 @@ export default function Dashboard() {
             <div>
               <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.location")}</p>
               <p className="font-semibold text-sm mt-0.5">
-  {location.country && location.country !== "Unknown" ? location.country : "Detecting..."}
-</p>
+                {location.country && location.country !== "Unknown" ? location.country : "Detecting..."}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-1 min-w-[180px]">
