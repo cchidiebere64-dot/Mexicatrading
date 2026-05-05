@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Deposit from "./pages/Deposit.jsx";
 import Plans from "./pages/Plans.jsx";
 import Withdraw from "./pages/Withdraw.jsx";
+import Messages from "./pages/Messages.jsx";
 
 // Admin pages
 import AdminLayout from "./pages/AdminLayout.jsx";
@@ -237,7 +238,8 @@ function AppInner() {
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
-
+            <Route path="/messages" element={token ? <Messages /> : <Navigate to="/login" />} />
+            
             {/* ── PROTECTED USER ROUTES ─────────────────────────────────── */}
             <Route
               path="/dashboard"
