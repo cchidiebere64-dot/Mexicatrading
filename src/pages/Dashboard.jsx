@@ -13,7 +13,7 @@ import LanguageSelector from "../components/LanguageSelector.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const REFRESH_INTERVAL = 30000;
-const REINVEST_REMINDER_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REINVEST_REMINDER_INTERVAL = 5 * 60 * 1000;
 
 // ── Animated count-up ─────────────────────────────────────────────────────────
 function CountUp({ end, prefix = "", duration = 1200 }) {
@@ -166,6 +166,19 @@ export default function Dashboard() {
     return t("dashboard.goodEvening");
   };
 
+  // ── Resend verification email ─────────────────────────────────────────────
+  const handleResendVerification = async () => {
+    const token = sessionStorage.getItem("token");
+    try {
+      await axios.post(`${API_URL}/api/auth/resend-verification`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("✅ Verification email sent! Please check your inbox.");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to resend. Please try again.");
+    }
+  };
+
   // ── Show reinvest popup if user has completed plans ───────────────────────
   const triggerReinvestPopup = useCallback((completedPlans) => {
     if (completedPlans.length > 0) {
@@ -235,7 +248,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [fetchDashboard]);
 
-  // Refresh on tab focus — also re-triggers reinvest popup
+  // Refresh on tab focus
   useEffect(() => {
     const handleFocus = () => fetchDashboard(true);
     window.addEventListener("focus", handleFocus);
@@ -375,6 +388,30 @@ export default function Dashboard() {
             <LanguageSelector />
           </div>
         </div>
+
+        {/* ── EMAIL VERIFICATION BANNER ─────────────────────────────────────── */}
+        {data && !data.isVerified && (
+          <div className="flex items-center justify-between p-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center text-xl">
+                📧
+              </div>
+              <div>
+                <p className="font-bold text-sm text-white">
+                  Please verify your email address
+                </p>
+                <p className="text-yellow-400/70 text-xs mt-0.5">
+                  Check your inbox for the verification link we sent you
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleResendVerification}
+              className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition-all font-semibold whitespace-nowrap">
+              Resend Email
+            </button>
+          </div>
+        )}
 
         {/* ── REINVEST BANNER — shows when completed plans exist ───────────── */}
         {completed.length > 0 && (
