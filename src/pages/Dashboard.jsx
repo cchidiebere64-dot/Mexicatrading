@@ -286,7 +286,7 @@ export default function Dashboard() {
   const referralLink = data.referralCode ? `mexicatrading.com/register?ref=${data.referralCode}` : "";
   const referralEarnings = data.referralEarnings || 0;
   const totalReferrals = (data.referrals || []).length;
-
+  const unreadMessages = data.unreadMessages || 0;
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
@@ -458,10 +458,14 @@ export default function Dashboard() {
           <button onClick={() => navigate("/withdraw")} className="btn-primary">
             <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
           </button>
-          <button onClick={() => navigate("/messages")} className="btn-primary">
-      <MessageSquare size={16} /> Messages
-       {/* show unread count badge if needed */}
-       </button>
+          <button onClick={() => navigate("/messages")} className="btn-primary relative">
+        <MessageSquare size={16} /> Messages
+       {unreadMessages > 0 && (
+    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+      {unreadMessages > 9 ? "9+" : unreadMessages}
+    </span>
+  )}
+</button>
         </div>
 
         {/* ── REFERRAL SECTION ──────────────────────────────────────────────── */}
