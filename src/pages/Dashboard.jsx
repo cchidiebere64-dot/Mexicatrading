@@ -404,7 +404,7 @@ export default function Dashboard() {
 
   const kycBadgeConfig = {
     pending:  { label: "KYC ⏳", cls: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400" },
-    approved: { label: "KYC ", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
+    approved: { label: "KYC ✅️", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
     rejected: { label: "KYC ❌", cls: "bg-red-500/15 border-red-500/25 text-red-400" },
   };
 
@@ -452,7 +452,7 @@ export default function Dashboard() {
           <div>
             <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
             <h2 className="text-2xl font-bold mt-0.5 flex items-center gap-2">
-              {data.name} <span className="text-emerald-400">👋</span>
+              {data.name} <span className="text-emerald-400"></span>
               {/* ── Small KYC badge next to name ── */}
               {showKYCBadge && (
   <button
