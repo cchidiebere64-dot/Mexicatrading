@@ -452,16 +452,16 @@ export default function Dashboard() {
           <button onClick={() => navigate("/deposit")} className="btn-primary">
             <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
           </button>
-          <button onClick={() => navigate("/messages")} className="btn-primary">
-      <MessageSquare size={16} /> Messages
-       {/* show unread count badge if needed */}
-       </button>
           <button onClick={() => navigate("/plans")} className="btn-primary">
             <TrendingUp size={16} /> {t("dashboard.plans")}
           </button>
           <button onClick={() => navigate("/withdraw")} className="btn-primary">
             <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
           </button>
+          <button onClick={() => navigate("/messages")} className="btn-primary">
+      <MessageSquare size={16} /> Messages
+       {/* show unread count badge if needed */}
+       </button>
         </div>
 
         {/* ── REFERRAL SECTION ──────────────────────────────────────────────── */}
