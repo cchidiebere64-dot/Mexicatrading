@@ -458,14 +458,7 @@ export default function Dashboard() {
           <button onClick={() => navigate("/withdraw")} className="btn-primary">
             <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
           </button>
-          <button onClick={() => navigate("/messages")} className="btn-primary relative overflow-visible">
-        <MessageSquare size={16} /> Messages
-       {unreadMessages > 0 && (
-    <span className="absolute -top-2.5 -right-2.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center z-10">
-  {unreadMessages > 9 ? "9+" : unreadMessages}
-</span>
-  )}
-</button>
+           <button onClick={() => navigate("/messages")} className="btn-primary relative">
         </div>
 
         {/* ── REFERRAL SECTION ──────────────────────────────────────────────── */}
