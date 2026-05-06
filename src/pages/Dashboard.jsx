@@ -8,7 +8,7 @@ import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Globe, Calendar, ChevronRight,
   Activity, DollarSign, BarChart2, Clock, RefreshCw, X,
-  Gift, Copy, Check, Users, MessageSquare,
+  Gift, Copy, Check, Users, MessageSquare, ShieldCheck,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
@@ -131,6 +131,92 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
   );
 }
 
+// ── KYC Detail Modal ──────────────────────────────────────────────────────────
+function KYCModal({ kyc, onClose }) {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
+      <div className="relative w-full max-w-sm bg-[#0d1221] border border-white/10 rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+        <button onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+          <X size={14} />
+        </button>
+
+        <div className="flex flex-col items-center text-center mb-5">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-3xl mb-3">
+            {kyc?.status === "approved" ? "✅" : kyc?.status === "pending" ? "⏳" : "❌"}
+          </div>
+          <h2 className="text-lg font-bold text-white">KYC Verification</h2>
+          <span className={`mt-1 text-xs px-3 py-1 rounded-full font-semibold capitalize ${
+            kyc?.status === "approved"
+              ? "bg-emerald-500/15 text-emerald-400"
+              : kyc?.status === "pending"
+              ? "bg-yellow-500/15 text-yellow-400"
+              : "bg-red-500/15 text-red-400"
+          }`}>
+            {kyc?.status === "approved" ? "✅ Verified" : kyc?.status === "pending" ? "⏳ Under Review" : "❌ Rejected"}
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Document Type</p>
+            <p className="text-white text-sm font-semibold capitalize">{kyc?.idType?.replace("_", " ") || "—"}</p>
+          </div>
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Submitted</p>
+            <p className="text-white text-sm font-semibold">
+              {kyc?.submittedAt ? new Date(kyc.submittedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"}
+            </p>
+          </div>
+          {kyc?.status === "approved" && kyc?.reviewedAt && (
+            <div className="p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
+              <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">Approved On</p>
+              <p className="text-emerald-400 text-sm font-semibold">
+                {new Date(kyc.reviewedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </p>
+            </div>
+          )}
+          {kyc?.status === "rejected" && kyc?.rejectionReason && (
+            <div className="p-3 rounded-xl bg-red-500/8 border border-red-500/20">
+              <p className="text-red-400/60 text-xs uppercase tracking-widest mb-1">Rejection Reason</p>
+              <p className="text-red-400 text-sm">{kyc.rejectionReason}</p>
+            </div>
+          )}
+          {kyc?.status === "pending" && (
+            <div className="p-3 rounded-xl bg-yellow-500/8 border border-yellow-500/20">
+              <p className="text-yellow-400/80 text-xs leading-relaxed">
+                ⏳ Your documents are being reviewed by our team. This usually takes less than 24 hours.
+              </p>
+            </div>
+          )}
+
+          {/* ID image */}
+          {kyc?.idFrontImage && (
+            <div>
+              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">ID Document</p>
+              <img src={kyc.idFrontImage} alt="ID" className="w-full rounded-xl border border-white/10 object-cover max-h-40" />
+            </div>
+          )}
+
+          {/* Selfie */}
+          {kyc?.selfieImage && (
+            <div>
+              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Selfie with ID</p>
+              <img src={kyc.selfieImage} alt="Selfie" className="w-full rounded-xl border border-white/10 object-cover max-h-40" />
+            </div>
+          )}
+        </div>
+
+        <button onClick={onClose}
+          className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition-all mt-4">
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { t } = useTranslation();
   const [data, setData] = useState(null);
@@ -141,6 +227,8 @@ export default function Dashboard() {
   const [notification, setNotification] = useState(null);
   const [showReinvest, setShowReinvest] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showKYCModal, setShowKYCModal] = useState(false);
+  const [kycData, setKycData] = useState(null);
   const prevBalance = useRef(null);
   const reinvestTimerRef = useRef(null);
   const navigate = useNavigate();
@@ -174,6 +262,26 @@ export default function Dashboard() {
     } catch (err) {
       setNotification({ type: "debit", message: err.response?.data?.message || "Failed to resend. Please try again." });
       setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
+  // ── Open KYC modal ────────────────────────────────────────────────────────
+  const handleKYCClick = async () => {
+    const kycStatus = data?.kyc?.status;
+    if (!kycStatus || kycStatus === "none") {
+      navigate("/kyc");
+      return;
+    }
+    // Fetch full KYC data with images
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/api/user/kyc-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setKycData(res.data.kyc);
+      setShowKYCModal(true);
+    } catch {
+      navigate("/kyc");
     }
   };
 
@@ -287,11 +395,28 @@ export default function Dashboard() {
   const referralEarnings = data.referralEarnings || 0;
   const totalReferrals = (data.referrals || []).length;
   const unreadMessages = data.unreadMessages || 0;
+
+  // ── KYC status helpers ────────────────────────────────────────────────────
+  const kycStatus = data?.kyc?.status || "none";
+  const kycInvited = data?.kycInvited || false;
+  const showKYCBadge = kycStatus === "pending" || kycStatus === "approved" || kycStatus === "rejected";
+  const showKYCInvite = kycInvited && kycStatus === "none";
+
+  const kycBadgeConfig = {
+    pending:  { label: "KYC ⏳", cls: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400" },
+    approved: { label: "KYC ✅", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
+    rejected: { label: "KYC ❌", cls: "bg-red-500/15 border-red-500/25 text-red-400" },
+  };
+
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
+      {/* ── MODALS ───────────────────────────────────────────────────────────── */}
       {showReinvest && completed.length > 0 && (
         <ReinvestPopup completedPlans={completed} onDismiss={() => setShowReinvest(false)} />
+      )}
+      {showKYCModal && kycData && (
+        <KYCModal kyc={kycData} onClose={() => setShowKYCModal(false)} />
       )}
 
       {/* AMBIENT BACKGROUND */}
@@ -326,8 +451,16 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
           <div>
             <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
-            <h2 className="text-2xl font-bold mt-0.5">
+            <h2 className="text-2xl font-bold mt-0.5 flex items-center gap-2">
               {data.name} <span className="text-emerald-400">👋</span>
+              {/* ── Small KYC badge next to name ── */}
+              {showKYCBadge && (
+                <button
+                  onClick={handleKYCClick}
+                  className={`text-xs px-2 py-0.5 rounded-full border font-semibold transition-all hover:opacity-80 ${kycBadgeConfig[kycStatus]?.cls}`}>
+                  {kycBadgeConfig[kycStatus]?.label}
+                </button>
+              )}
             </h2>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -365,9 +498,7 @@ export default function Dashboard() {
         {data && !data.isVerified && (
           <div className="flex items-center justify-between p-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center text-xl">
-                📧
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center text-xl">📧</div>
               <div>
                 <p className="font-bold text-sm text-white">Please verify your email address</p>
                 <p className="text-yellow-400/70 text-xs mt-0.5">Check your inbox for the verification link we sent you</p>
@@ -377,6 +508,57 @@ export default function Dashboard() {
               className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition-all font-semibold whitespace-nowrap">
               Resend Email
             </button>
+          </div>
+        )}
+
+        {/* ── KYC INVITE BANNER — only if admin invited and not yet submitted ── */}
+        {showKYCInvite && (
+          <div
+            onClick={() => navigate("/kyc")}
+            className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-purple-500/30 bg-purple-500/8 hover:bg-purple-500/12 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-xl">🪪</div>
+              <div>
+                <p className="font-bold text-sm text-white">You've been invited to verify your identity</p>
+                <p className="text-purple-400/70 text-xs mt-0.5">Complete KYC verification for a better and more secure experience</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              <ChevronRight size={16} className="text-purple-400" />
+            </div>
+          </div>
+        )}
+
+        {/* ── KYC STATUS BANNER — pending or rejected ───────────────────────── */}
+        {(kycStatus === "pending" || kycStatus === "rejected") && (
+          <div
+            onClick={handleKYCClick}
+            className={`cursor-pointer flex items-center justify-between p-4 rounded-2xl border transition-all ${
+              kycStatus === "pending"
+                ? "border-yellow-500/30 bg-yellow-500/8 hover:bg-yellow-500/12"
+                : "border-red-500/30 bg-red-500/8 hover:bg-red-500/12"
+            }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
+                kycStatus === "pending"
+                  ? "bg-yellow-500/15 border border-yellow-500/25"
+                  : "bg-red-500/15 border border-red-500/25"
+              }`}>
+                {kycStatus === "pending" ? "⏳" : "❌"}
+              </div>
+              <div>
+                <p className="font-bold text-sm text-white">
+                  {kycStatus === "pending" ? "KYC Under Review" : "KYC Verification Rejected"}
+                </p>
+                <p className={`text-xs mt-0.5 ${kycStatus === "pending" ? "text-yellow-400/70" : "text-red-400/70"}`}>
+                  {kycStatus === "pending"
+                    ? "Your documents are being reviewed — tap to track progress"
+                    : "Your documents were rejected — tap to resubmit"}
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={16} className={kycStatus === "pending" ? "text-yellow-400" : "text-red-400"} />
           </div>
         )}
 
@@ -458,14 +640,14 @@ export default function Dashboard() {
           <button onClick={() => navigate("/withdraw")} className="btn-primary">
             <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
           </button>
-           <button onClick={() => navigate("/messages")} className="btn-primary relative">
-         <MessageSquare size={16} /> Messages
-      {unreadMessages > 0 && (
-       <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center z-50">
-      {unreadMessages > 9 ? "9+" : unreadMessages}
-    </span>
-    )}
-   </button>
+          <button onClick={() => navigate("/messages")} className="btn-primary relative">
+            <MessageSquare size={16} /> Messages
+            {unreadMessages > 0 && (
+              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center z-50">
+                {unreadMessages > 9 ? "9+" : unreadMessages}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* ── REFERRAL SECTION ──────────────────────────────────────────────── */}
@@ -480,8 +662,6 @@ export default function Dashboard() {
                 <p className="text-emerald-400/70 text-xs mt-0.5">Earn 5% commission on every friend you refer</p>
               </div>
             </div>
-
-            {/* Stats row */}
             <div className="grid grid-cols-3 gap-3 mb-5">
               <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
                 <p className="text-white/35 text-xs uppercase tracking-widest mb-1">Referrals</p>
@@ -496,16 +676,13 @@ export default function Dashboard() {
                 <p className="text-white font-bold text-lg">5%</p>
               </div>
             </div>
-
-            {/* Referral link */}
             <div>
               <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Your Referral Link</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white/60 font-mono truncate">
                   {referralLink}
                 </div>
-                <button
-                  onClick={handleCopyReferral}
+                <button onClick={handleCopyReferral}
                   className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
                     copied
                       ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
@@ -666,7 +843,6 @@ export default function Dashboard() {
             )}
           </div>
           {history.length ? (
-            // ✅ Fixed height showing 4 rows — scrollable inside
             <div className="space-y-2 max-h-[272px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               {history.map((h, i) => {
                 const isDeposit = h.action === "Deposit";
