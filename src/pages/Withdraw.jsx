@@ -60,6 +60,8 @@ export default function Withdraw() {
   };
 
   const renderSpecialMessage = () => {
+
+    // ── No balance ────────────────────────────────────────────────────────────
     if (message.code === "NO_BALANCE") {
       return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -79,6 +81,7 @@ export default function Withdraw() {
       );
     }
 
+    // ── No investment ─────────────────────────────────────────────────────────
     if (message.code === "NO_INVESTMENT") {
       return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -106,6 +109,47 @@ export default function Withdraw() {
       );
     }
 
+    // ── Insufficient balance ──────────────────────────────────────────────────
+    if (message.code === "INSUFFICIENT_BALANCE") {
+      return (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center text-center gap-5 py-4">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-3xl">💸</div>
+          <div>
+            <p className="text-white font-bold text-lg mb-2">Insufficient Balance</p>
+            <p className="text-white/50 text-sm leading-relaxed">{message.text}</p>
+          </div>
+          <button onClick={() => navigate("/deposit")}
+            className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-semibold text-sm text-white flex items-center justify-center gap-2">
+            <DollarSign size={16} /> Make a Deposit
+          </button>
+          <button onClick={() => setMessage({ text: "", type: "", code: "" })}
+            className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/40 hover:text-white">
+            Try a Different Amount
+          </button>
+        </motion.div>
+      );
+    }
+
+    // ── Account frozen ────────────────────────────────────────────────────────
+    if (message.code === "FROZEN") {
+      return (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center text-center gap-5 py-4">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-3xl">🔒</div>
+          <div>
+            <p className="text-white font-bold text-lg mb-2">Withdrawals Suspended</p>
+            <p className="text-white/50 text-sm leading-relaxed">{message.text}</p>
+          </div>
+          <a href="mailto:support@mexicatrading.com"
+            className="w-full py-3.5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 hover:bg-red-500/25 transition-all font-semibold text-sm flex items-center justify-center gap-2">
+            📧 Contact Support
+          </a>
+        </motion.div>
+      );
+    }
+
+    // ── KYC required ──────────────────────────────────────────────────────────
     if (message.code === "KYC_REQUIRED") {
       return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -135,6 +179,7 @@ export default function Withdraw() {
       );
     }
 
+    // ── KYC pending ───────────────────────────────────────────────────────────
     if (message.code === "KYC_PENDING") {
       return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -154,6 +199,7 @@ export default function Withdraw() {
       );
     }
 
+    // ── KYC rejected ──────────────────────────────────────────────────────────
     if (message.code === "KYC_REJECTED") {
       return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -173,7 +219,21 @@ export default function Withdraw() {
       );
     }
 
-    return null;
+    // ── Fallback — show error message and reset button ────────────────────────
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center text-center gap-5 py-4">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-3xl">⚠️</div>
+        <div>
+          <p className="text-white font-bold text-lg mb-2">Withdrawal Failed</p>
+          <p className="text-white/50 text-sm leading-relaxed">{message.text}</p>
+        </div>
+        <button onClick={() => setMessage({ text: "", type: "", code: "" })}
+          className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-semibold text-sm text-white">
+          Try Again
+        </button>
+      </motion.div>
+    );
   };
 
   return (
@@ -198,10 +258,10 @@ export default function Withdraw() {
 
         <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl">
 
-          {/* Special state screens */}
+          {/* Special state screens — always renders something when code exists */}
           {message.code && renderSpecialMessage()}
 
-          {/* Normal messages */}
+          {/* Normal success/error messages — only when no code */}
           {!message.code && (
             <AnimatePresence>
               {message.text && (
@@ -217,7 +277,7 @@ export default function Withdraw() {
             </AnimatePresence>
           )}
 
-          {/* Withdrawal form */}
+          {/* Withdrawal form — only when no code */}
           {!message.code && (
             <form onSubmit={handleSubmit} className="space-y-5">
 
