@@ -14,6 +14,7 @@ const navItems = [
   { path: "/admin/deposits", label: "Deposits", icon: <ArrowDownCircle size={18} /> },
   { path: "/admin/withdrawals", label: "Withdrawals", icon: <ArrowUpCircle size={18} /> },
   { path: "/admin/wallets", label: "Manage Wallets", icon: <Wallet size={18} /> },
+  { path: "/admin/kyc", label: "KYC Reviews", icon: <ShieldCheck size={18} /> },
 ];
 
 export default function AdminLayout() {
@@ -111,34 +112,23 @@ export default function AdminLayout() {
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[500px] h-[500px] bg-emerald-500/5 blur-[150px] rounded-full top-0 left-0" />
         <div className="absolute w-[400px] h-[400px] bg-blue-500/5 blur-[120px] rounded-full bottom-0 right-0" />
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`,
+          backgroundSize: "60px 60px",
+        }} />
       </div>
 
       {/* MOBILE SIDEBAR OVERLAY */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-[#0e1422] border-r border-white/8 z-50 shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
               <span className="text-white font-bold text-sm">Admin Panel</span>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition"
-              >
+              <button onClick={() => setSidebarOpen(false)}
+                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition">
                 <X size={16} />
               </button>
-              
-              { path: "kyc", label: "KYC Reviews", icon: <ShieldCheck size={18} /> }
-              
             </div>
             <SidebarContent />
           </aside>
@@ -158,8 +148,7 @@ export default function AdminLayout() {
           <div className="flex items-center gap-4">
             <button
               className="md:hidden w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition"
-              onClick={() => setSidebarOpen(true)}
-            >
+              onClick={() => setSidebarOpen(true)}>
               <Menu size={18} />
             </button>
             <div>
@@ -171,17 +160,12 @@ export default function AdminLayout() {
               <p className="text-white/30 text-xs">MexicaTrading Operations Center</p>
             </div>
           </div>
-          
-         { path: "kyc", label: "KYC Reviews", icon: <ShieldCheck size={18} /> }
-          
+
           <div className="flex items-center gap-3">
-            {/* Live indicator */}
             <div className="flex items-center gap-2 text-xs text-white/40 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Live
             </div>
-
-            {/* Admin badge */}
             <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
               <ShieldCheck size={13} className="text-emerald-400" />
               <span className="text-emerald-400 text-xs font-semibold">
