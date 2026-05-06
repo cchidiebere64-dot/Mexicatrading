@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, TrendingUp, Globe, ArrowRight, ChevronDown } from "lucide-react";
+import { Shield, TrendingUp, Globe, ArrowRight, ChevronDown, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function Home() {
@@ -36,6 +36,63 @@ export default function Home() {
     { step: "01", title: t("home.steps.step1Title"), desc: t("home.steps.step1Desc") },
     { step: "02", title: t("home.steps.step2Title"), desc: t("home.steps.step2Desc") },
     { step: "03", title: t("home.steps.step3Title"), desc: t("home.steps.step3Desc") },
+  ];
+
+  const testimonials = [
+    {
+      name: "James Okafor",
+      country: "🇳🇬 Nigeria",
+      plan: "Elite Plan",
+      profit: "+$6,000",
+      avatar: "JO",
+      color: "from-emerald-500 to-teal-400",
+      text: "I was skeptical at first but MexicaTrading delivered exactly what they promised. I invested $10,000 in the Elite plan and received my full profit of $6,000 after 30 days. Withdrawal was instant. This platform is the real deal.",
+    },
+    {
+      name: "Fatima Al-Rashid",
+      country: "🇦🇪 UAE",
+      plan: "Premium Plan",
+      profit: "+$2,000",
+      avatar: "FA",
+      color: "from-blue-500 to-indigo-400",
+      text: "MexicaTrading changed my financial life. I started with the Premium plan and earned $2,000 profit in just 21 days. The dashboard is very easy to use and customer support is always available. Highly recommended!",
+    },
+    {
+      name: "Carlos Mendez",
+      country: "🇲🇽 Mexico",
+      plan: "Basic Plan",
+      profit: "+$250",
+      avatar: "CM",
+      color: "from-purple-500 to-violet-400",
+      text: "As a beginner I started with the Basic plan to test the platform. Everything worked perfectly — my profit was credited on time and I withdrew the same day with no issues. Now I am upgrading to the Premium plan!",
+    },
+    {
+      name: "Amara Diallo",
+      country: "🇸🇳 Senegal",
+      plan: "Starter Plan",
+      profit: "+$75",
+      avatar: "AD",
+      color: "from-amber-500 to-orange-400",
+      text: "I started with just $500 on the Starter plan and made $75 profit in 7 days. For someone who never invested before this was amazing. The platform is secure, the team is professional and payments are always on time.",
+    },
+    {
+      name: "Sophie Nguyen",
+      country: "🇻🇳 Vietnam",
+      plan: "VIP Plan",
+      profit: "+$50,000",
+      avatar: "SN",
+      color: "from-rose-500 to-pink-400",
+      text: "I invested $50,000 in the VIP plan and received $50,000 profit after 45 days — 100% return! I never believed this was possible until I tried MexicaTrading. The team was professional throughout the entire process.",
+    },
+    {
+      name: "David Mensah",
+      country: "🇬🇭 Ghana",
+      plan: "Elite Plan",
+      profit: "+$6,000",
+      avatar: "DM",
+      color: "from-cyan-500 to-teal-400",
+      text: "I have been using MexicaTrading for 3 months now and I have made over $12,000 in profit across multiple plans. The referral system is also great — I earned extra commission just by sharing my link with friends.",
+    },
   ];
 
   return (
@@ -159,6 +216,83 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── TESTIMONIALS ─────────────────────────────────────────────────── */}
+      <section className="relative z-10 py-28 px-6 border-t border-white/5">
+        <div className="max-w-6xl mx-auto">
+
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+            <p className="text-emerald-400 text-xs font-semibold tracking-widest uppercase mb-3">Investor Reviews</p>
+            <h2 className="text-4xl font-bold mb-4">What Our Investors Say</h2>
+            <p className="text-white/40 text-lg max-w-xl mx-auto">
+              Thousands of investors worldwide trust MexicaTrading to grow their wealth every day.
+            </p>
+          </motion.div>
+
+          {/* Testimonials Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -4 }}
+                className="group p-6 rounded-2xl bg-white/[0.03] border border-white/8 hover:border-emerald-500/20 hover:bg-white/[0.05] transition-all duration-300 flex flex-col gap-4">
+
+                {/* Stars */}
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} size={13} className="text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+
+                {/* Quote */}
+                <p className="text-white/60 text-sm leading-relaxed flex-1">
+                  "{t.text}"
+                </p>
+
+                {/* Profit badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-fit">
+                  <TrendingUp size={12} className="text-emerald-400" />
+                  <span className="text-emerald-400 text-xs font-bold">{t.profit} profit</span>
+                  <span className="text-white/30 text-xs">· {t.plan}</span>
+                </div>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-2 border-t border-white/8">
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">{t.name}</p>
+                    <p className="text-white/30 text-xs">{t.country}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Bottom trust line */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-12 text-center">
+            <p className="text-white/25 text-sm">
+              Join <span className="text-emerald-400 font-semibold">10,000+</span> investors already growing their wealth with MexicaTrading
+            </p>
+            <Link to="/register"
+              className="inline-flex items-center gap-2 mt-5 px-8 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/25 font-semibold text-sm">
+              Start Investing Today
+              <ArrowRight size={16} />
+            </Link>
+          </motion.div>
+
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="relative z-10 py-28 px-6">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
@@ -175,10 +309,12 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="relative z-10 border-t border-white/5 py-8 px-6 text-center text-white/20 text-sm">
-        <Link to="/terms" className="text-white/30 hover:text-white text-xs transition">Terms & Conditions</Link>
-<Link to="/privacy" className="text-white/30 hover:text-white text-xs transition">Privacy Policy</Link>
+        <div className="flex items-center justify-center gap-6 mb-3">
+          <Link to="/terms" className="text-white/30 hover:text-white text-xs transition">Terms & Conditions</Link>
+          <Link to="/privacy" className="text-white/30 hover:text-white text-xs transition">Privacy Policy</Link>
+        </div>
         © {new Date().getFullYear()} MexicaTrading. All rights reserved.
       </footer>
     </div>
   );
-              }
+}
