@@ -9,6 +9,8 @@ import ResetPassword from "./pages/ResetPassword.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";
+import KYC from "./pages/KYC.jsx";
+
 
 // User pages
 import Home from "./pages/Home.jsx";
@@ -31,6 +33,7 @@ import AdminDeposits from "./pages/AdminDeposits.jsx";
 import AdminWithdrawals from "./pages/AdminWithdrawals.jsx";
 import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
+import AdminKYC from "./pages/AdminKYC.jsx";
 
 const LOCK_TIMEOUT_MS = 30000;
 
@@ -239,7 +242,9 @@ function AppInner() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/messages" element={token ? <Messages /> : <Navigate to="/login" />} />
-            
+            <Route path="/kyc" element={token ? <KYC /> : <Navigate to="/login" />} />
+
+
             {/* ── PROTECTED USER ROUTES ─────────────────────────────────── */}
             <Route
               path="/dashboard"
@@ -270,6 +275,7 @@ function AppInner() {
               <Route path="withdrawals" element={<AdminWithdrawals />} />
               <Route path="credit-user" element={<AdminCreditUser />} />
               <Route path="wallets" element={<AdminWallets />} />
+              <Route path="kyc" element={<AdminKYC />} />
             </Route>
 
             {/* ── DEFAULT ───────────────────────────────────────────────── */}
