@@ -200,7 +200,7 @@ input, textarea, [contenteditable] {
   backdrop-filter: blur(8px);
   cursor: pointer;
   position: relative;
-  overflow: hidden;
+  overflow: visible;  /* ✅ FIXED */
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   animation: borderPulse 4s ease-in-out infinite;
 }
