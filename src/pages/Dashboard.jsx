@@ -459,6 +459,13 @@ export default function Dashboard() {
             <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
           </button>
            <button onClick={() => navigate("/messages")} className="btn-primary relative">
+         <MessageSquare size={16} /> Messages
+      {unreadMessages > 0 && (
+       <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center z-50">
+      {unreadMessages > 9 ? "9+" : unreadMessages}
+    </span>
+    )}
+   </button>
         </div>
 
         {/* ── REFERRAL SECTION ──────────────────────────────────────────────── */}
