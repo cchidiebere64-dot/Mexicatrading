@@ -462,7 +462,7 @@ export default function Dashboard() {
     {kycBadgeConfig[kycStatus]?.label}
   </button>
 )}
-              )}
+              
             </h2>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -477,10 +477,10 @@ export default function Dashboard() {
                 <Calendar size={12} />
                 {t("dashboard.memberSince")} {memberSince}
               </span>
-              <span className="flex items-center gap-1.5 text-emerald-400/70">
+              {/*<span className="flex items-center gap-1.5 text-emerald-400/70">
                 <BadgeCheck size={12} />
                 {t("dashboard.verified")}
-              </span>
+              </span>*/}
               {lastUpdated && (
                 <span className="flex items-center gap-1 text-white/20">
                   <RefreshCw size={10} />
