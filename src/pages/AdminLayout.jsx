@@ -136,6 +136,9 @@ export default function AdminLayout() {
               >
                 <X size={16} />
               </button>
+              
+              { path: "kyc", label: "KYC Reviews", icon: <ShieldCheck size={18} /> }
+              
             </div>
             <SidebarContent />
           </aside>
@@ -168,7 +171,9 @@ export default function AdminLayout() {
               <p className="text-white/30 text-xs">MexicaTrading Operations Center</p>
             </div>
           </div>
-
+          
+         { path: "kyc", label: "KYC Reviews", icon: <ShieldCheck size={18} /> }
+          
           <div className="flex items-center gap-3">
             {/* Live indicator */}
             <div className="flex items-center gap-2 text-xs text-white/40 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
