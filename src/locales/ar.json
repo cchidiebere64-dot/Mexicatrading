@@ -165,7 +165,15 @@
     "markAllRead": "تحديد الكل كمقروء",
     "close": "إغلاق",
     "unread": "غير مقروء",
-    "contactSupport": "هل تحتاج مساعدة؟ تواصل معنا على support@mexicatrading.com"
+    "contactSupport": "هل تحتاج مساعدة؟ تواصل معنا على support@mexicatrading.com",
+    "backToDashboard": "العودة إلى لوحة التحكم",
+    "unreadSingle": "رسالة غير مقروءة",
+    "unreadPlural": "رسائل غير مقروءة",
+    "from": "من دعم MexicaTrading",
+    "subject": "الموضوع",
+    "messageLabel": "الرسالة",
+    "contactUs": "هل تحتاج مساعدة؟ تواصل معنا على support@mexicatrading.com",
+    "close": "إغلاق"
   },
   "kyc": {
     "title": "التحقق من الهوية KYC",
