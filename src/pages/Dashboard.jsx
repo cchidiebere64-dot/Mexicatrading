@@ -64,36 +64,25 @@ async function detectCountry() {
     const locale = navigator.language || navigator.languages?.[0] || "en-US";
     const regionCode = locale.split("-")[1] || "US";
     const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
-    const countryName = regionNames.of(regionCode);
-    return { country: countryName, flag: regionCode };
+    return { country: regionNames.of(regionCode), flag: regionCode };
   } catch {}
   return { country: "", flag: "" };
 }
 
-// ── Get unique key for a completed plan ───────────────────────────────────────
-function getPlanKey(plan) {
-  return `reinvest_shown_${plan.plan}_${plan.endDate}`;
-}
-
-// ── Check if popup was already shown for this plan ────────────────────────────
-function wasPopupShown(plan) {
-  return sessionStorage.getItem(getPlanKey(plan)) === "true";
-}
-
-// ── Mark popup as shown for this plan ────────────────────────────────────────
-function markPopupShown(plan) {
-  sessionStorage.setItem(getPlanKey(plan), "true");
-}
+// ── One-time popup helpers ────────────────────────────────────────────────────
+function getPlanKey(plan) { return `reinvest_shown_${plan.plan}_${plan.endDate}`; }
+function wasPopupShown(plan) { return sessionStorage.getItem(getPlanKey(plan)) === "true"; }
+function markPopupShown(plan) { sessionStorage.setItem(getPlanKey(plan), "true"); }
 
 // ── Reinvest Popup ────────────────────────────────────────────────────────────
 function ReinvestPopup({ completedPlans, onDismiss }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const totalProfit = completedPlans.reduce((s, p) => s + (parseFloat(p.profit) || 0), 0);
   const totalAmount = completedPlans.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
   const latestPlan = completedPlans[completedPlans.length - 1];
 
   const handleAction = (action) => {
-    // Mark ALL currently completed plans as shown so popup never appears again for them
     completedPlans.forEach(p => markPopupShown(p));
     onDismiss();
     if (action === "reinvest") navigate("/plans");
@@ -111,41 +100,37 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
         </button>
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-4xl mb-4"
-            style={{ animation: "float 3s ease-in-out infinite" }}>
-            🏆
-          </div>
-          <h2 className="text-xl font-bold text-white mb-1">Investment Matured!</h2>
+            style={{ animation: "float 3s ease-in-out infinite" }}>🏆</div>
+          <h2 className="text-xl font-bold text-white mb-1">{t("dashboard.investmentMatured")}</h2>
           <p className="text-white/50 text-sm">
-            Your <strong className="text-white">{latestPlan?.plan}</strong> plan has completed
+            {t("dashboard.yourPlan")} <strong className="text-white">{latestPlan?.plan}</strong> {t("dashboard.planHasCompleted")}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-white/[0.04] border border-white/8 rounded-2xl p-4 text-center">
-            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Invested</p>
+            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">{t("dashboard.invested")}</p>
             <p className="text-white font-bold text-lg">${totalAmount.toLocaleString()}</p>
           </div>
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
-            <p className="text-emerald-400/70 text-xs uppercase tracking-widest mb-1">Profit Earned</p>
+            <p className="text-emerald-400/70 text-xs uppercase tracking-widest mb-1">{t("dashboard.profitEarned")}</p>
             <p className="text-emerald-400 font-bold text-lg">+${totalProfit.toLocaleString()}</p>
           </div>
         </div>
         <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 mb-5 text-center">
-          <p className="text-white/60 text-sm leading-relaxed">
-            💡 Your funds are ready! Reinvest now to keep growing your wealth or withdraw your profits.
-          </p>
+          <p className="text-white/60 text-sm leading-relaxed">💡 {t("dashboard.fundsReady")}</p>
         </div>
         <div className="flex flex-col gap-2">
           <button onClick={() => handleAction("reinvest")}
             className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-bold text-sm text-white shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
-            <TrendingUp size={16} /> Reinvest Now
+            <TrendingUp size={16} /> {t("dashboard.reinvestNow")}
           </button>
           <button onClick={() => handleAction("withdraw")}
             className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
-            Withdraw Profits
+            {t("dashboard.withdrawProfits")}
           </button>
           <button onClick={() => handleAction("dismiss")}
             className="w-full py-2.5 text-white/25 hover:text-white/50 transition text-xs">
-            Remind me later
+            {t("dashboard.remindLater")}
           </button>
         </div>
         <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
@@ -154,8 +139,9 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
   );
 }
 
-// ── KYC Detail Modal ──────────────────────────────────────────────────────────
+// ── KYC Modal ─────────────────────────────────────────────────────────────────
 function KYCModal({ kyc, onClose }) {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
@@ -168,74 +154,76 @@ function KYCModal({ kyc, onClose }) {
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-3xl mb-3">
             {kyc?.status === "approved" ? "✅" : kyc?.status === "pending" ? "⏳" : "❌"}
           </div>
-          <h2 className="text-lg font-bold text-white">KYC Verification</h2>
+          <h2 className="text-lg font-bold text-white">{t("kyc.title")}</h2>
           <span className={`mt-1 text-xs px-3 py-1 rounded-full font-semibold capitalize ${
             kyc?.status === "approved" ? "bg-emerald-500/15 text-emerald-400"
             : kyc?.status === "pending" ? "bg-yellow-500/15 text-yellow-400"
             : "bg-red-500/15 text-red-400"
           }`}>
-            {kyc?.status === "approved" ? "✅ Verified" : kyc?.status === "pending" ? "⏳ Under Review" : "❌ Rejected"}
+            {kyc?.status === "approved" ? t("dashboard.kycVerified")
+             : kyc?.status === "pending" ? t("dashboard.kycUnderReview")
+             : t("dashboard.kycRejected2")}
           </span>
         </div>
         <div className="space-y-3">
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Document Type</p>
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">{t("kyc.documentType")}</p>
             <p className="text-white text-sm font-semibold capitalize">{kyc?.idType?.replace("_", " ") || "—"}</p>
           </div>
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Submitted</p>
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">{t("kyc.submittedOn") || t("kyc.submittedAt")}</p>
             <p className="text-white text-sm font-semibold">
-              {kyc?.submittedAt ? new Date(kyc.submittedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"}
+              {kyc?.submittedAt ? new Date(kyc.submittedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "—"}
             </p>
           </div>
           {kyc?.status === "approved" && kyc?.reviewedAt && (
             <div className="p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
-              <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">Approved On</p>
+              <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">{t("dashboard.approvedOn")}</p>
               <p className="text-emerald-400 text-sm font-semibold">
-                {new Date(kyc.reviewedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                {new Date(kyc.reviewedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
               </p>
             </div>
           )}
           {kyc?.status === "rejected" && kyc?.rejectionReason && (
             <div className="p-3 rounded-xl bg-red-500/8 border border-red-500/20">
-              <p className="text-red-400/60 text-xs uppercase tracking-widest mb-1">Rejection Reason</p>
+              <p className="text-red-400/60 text-xs uppercase tracking-widest mb-1">{t("dashboard.rejectionReason")}</p>
               <p className="text-red-400 text-sm">{kyc.rejectionReason}</p>
             </div>
           )}
           {kyc?.status === "pending" && (
             <div className="p-3 rounded-xl bg-yellow-500/8 border border-yellow-500/20">
-              <p className="text-yellow-400/80 text-xs leading-relaxed">
-                ⏳ Your documents are being reviewed. This usually takes less than 24 hours.
-              </p>
+              <p className="text-yellow-400/80 text-xs leading-relaxed">⏳ {t("dashboard.docsBeingReviewed")}</p>
             </div>
           )}
           {kyc?.idFrontImage && (
             <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">ID Document</p>
+              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">{t("dashboard.idDocument")}</p>
               <img src={kyc.idFrontImage} alt="ID" className="w-full rounded-xl border border-white/10 object-cover max-h-40" />
             </div>
           )}
           {kyc?.selfieImage && (
             <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Selfie with ID</p>
+              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">{t("dashboard.selfieWithId")}</p>
               <img src={kyc.selfieImage} alt="Selfie" className="w-full rounded-xl border border-white/10 object-cover max-h-40" />
             </div>
           )}
         </div>
         <button onClick={onClose}
           className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition-all mt-4">
-          Close
+          {t("dashboard.close")}
         </button>
       </div>
     </div>
   );
 }
 
+// ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [resending, setResending] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [location, setLocation] = useState({ country: "", flag: "" });
   const [notification, setNotification] = useState(null);
@@ -264,16 +252,20 @@ export default function Dashboard() {
   };
 
   const handleResendVerification = async () => {
+    if (resending) return;
     const token = sessionStorage.getItem("token");
+    setResending(true);
     try {
       await axios.post(`${API_URL}/api/auth/resend-verification`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotification({ type: "credit", message: "✅ Verification email sent! Please check your inbox." });
+      setNotification({ type: "credit", message: `✅ ${t("dashboard.verificationEmailSent")}` });
       setTimeout(() => setNotification(null), 5000);
     } catch (err) {
-      setNotification({ type: "debit", message: err.response?.data?.message || "Failed to resend. Please try again." });
+      setNotification({ type: "debit", message: err.response?.data?.message || t("dashboard.failedToResend") });
       setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -300,14 +292,13 @@ export default function Dashboard() {
       });
       const newData = res.data;
 
-      // Balance change notification
       if (prevBalance.current !== null && newData.balance !== prevBalance.current) {
         const diff = newData.balance - prevBalance.current;
         setNotification({
           type: diff > 0 ? "credit" : "debit",
           message: diff > 0
-            ? `+$${diff.toLocaleString()} has been credited to your account!`
-            : `$${Math.abs(diff).toLocaleString()} has been deducted from your account.`
+            ? `+$${diff.toLocaleString()} ${t("dashboard.balanceCredited")}`
+            : `$${Math.abs(diff).toLocaleString()} ${t("dashboard.balanceDeducted")}`
         });
         setTimeout(() => setNotification(null), 5000);
       }
@@ -315,24 +306,18 @@ export default function Dashboard() {
       setData(newData);
       setLastUpdated(new Date());
 
-      // ── ONE-TIME reinvest popup per completed plan ────────────────────────
       const completedPlans = (newData.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
       const newlyCompleted = completedPlans.filter(p => !wasPopupShown(p));
-
       if (newlyCompleted.length > 0) {
-        setTimeout(() => {
-          setReinvestPlans(newlyCompleted);
-          setShowReinvest(true);
-        }, 1500);
+        setTimeout(() => { setReinvestPlans(newlyCompleted); setShowReinvest(true); }, 1500);
       }
-
     } catch {
       if (!silent) setData(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [navigate]);
+  }, [navigate, t]);
 
   useEffect(() => { fetchDashboard(false); detectCountry().then(setLocation); }, [fetchDashboard]);
   useEffect(() => {
@@ -345,7 +330,6 @@ export default function Dashboard() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchDashboard]);
 
-  // TradingView chart
   useEffect(() => {
     if (!data) return;
     const timeout = setTimeout(() => {
@@ -390,38 +374,34 @@ export default function Dashboard() {
   const totalProfit = [...plans, ...completed].reduce((s, p) => s + (parseFloat(p.profit) || 0), 0);
   const totalWithdrawn = data.totalWithdrawn || 0;
   const profitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : "0.0";
-  const memberSince = data.createdAt ? new Date(data.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "N/A";
+  const memberSince = data.createdAt ? new Date(data.createdAt).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "N/A";
   const referralLink = data.referralCode ? `mexicatrading.com/register?ref=${data.referralCode}` : "";
   const referralEarnings = data.referralEarnings || 0;
   const totalReferrals = (data.referrals || []).length;
   const unreadMessages = data.unreadMessages || 0;
-
   const kycStatus = data?.kyc?.status || "none";
   const kycInvited = data?.kycInvited || false;
   const showKYCBadge = kycStatus === "pending" || kycStatus === "approved" || kycStatus === "rejected";
   const showKYCInvite = kycInvited && kycStatus === "none";
 
   const kycBadgeConfig = {
-    pending:  { label: "KYC ⏳", cls: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400" },
-    approved: { label: "KYC ", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
-    rejected: { label: "KYC ❌", cls: "bg-red-500/15 border-red-500/25 text-red-400" },
+    pending:  { label: `KYC ⏳`, cls: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400" },
+    approved: { label: `KYC ✅`, cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
+    rejected: { label: `KYC ❌`, cls: "bg-red-500/15 border-red-500/25 text-red-400" },
   };
 
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
-      {/* ── MODALS ─────────────────────────────────────────────────────────── */}
+      {/* MODALS */}
       {showReinvest && reinvestPlans.length > 0 && (
-        <ReinvestPopup
-          completedPlans={reinvestPlans}
-          onDismiss={() => setShowReinvest(false)}
-        />
+        <ReinvestPopup completedPlans={reinvestPlans} onDismiss={() => setShowReinvest(false)} />
       )}
       {showKYCModal && kycData && (
         <KYCModal kyc={kycData} onClose={() => setShowKYCModal(false)} />
       )}
 
-      {/* AMBIENT BACKGROUND */}
+      {/* BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
         <div className="absolute w-[400px] h-[400px] bg-teal-400/6 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
@@ -443,13 +423,13 @@ export default function Dashboard() {
       {/* TICKER */}
       <div className="ticker-fixed">
         <div className="ticker-text">
-          Welcome {data.name}! — Invest and grow your wealth today. — Start by choosing a plan. — Withdraw profits anytime — MexicaTrading is here for your financial success.
+          {t("dashboard.welcomeBack")} {data.name}! — {t("home.heroSub")} — MexicaTrading
         </div>
       </div>
 
       <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-6 animate-fade-in">
 
-        {/* ── GREETING ─────────────────────────────────────────────────────── */}
+        {/* GREETING */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
           <div>
             <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
@@ -458,8 +438,7 @@ export default function Dashboard() {
               {showKYCBadge && (
                 <button onClick={handleKYCClick}
                   className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-semibold transition-all hover:opacity-80 ${kycBadgeConfig[kycStatus]?.cls}`}>
-                  <BadgeCheck size={11} />
-                  {kycBadgeConfig[kycStatus]?.label}
+                  <BadgeCheck size={11} /> {kycBadgeConfig[kycStatus]?.label}
                 </button>
               )}
             </h2>
@@ -468,22 +447,19 @@ export default function Dashboard() {
             <div className="flex items-center gap-3 text-xs text-white/30 flex-wrap">
               {location.country && (
                 <span className="flex items-center gap-1.5">
-                  <Globe size={12} />
-                  {flagEmoji(location.flag)} {location.country}
+                  <Globe size={12} /> {flagEmoji(location.flag)} {location.country}
                 </span>
               )}
               <span className="flex items-center gap-1.5">
-                <Calendar size={12} />
-                {t("dashboard.memberSince")} {memberSince}
+                <Calendar size={12} /> {t("dashboard.memberSince")} {memberSince}
               </span>
               <span className="flex items-center gap-1.5 text-emerald-400/70">
-                <BadgeCheck size={12} />
-                {t("dashboard.verified")}
+                <BadgeCheck size={12} /> {t("dashboard.verified")}
               </span>
               {lastUpdated && (
                 <span className="flex items-center gap-1 text-white/20">
                   <RefreshCw size={10} />
-                  {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                  {lastUpdated.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
             </div>
@@ -495,32 +471,34 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── EMAIL VERIFICATION BANNER ─────────────────────────────────────── */}
+        {/* EMAIL VERIFICATION BANNER */}
         {data && !data.isVerified && (
           <div className="flex items-center justify-between p-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center text-xl">📧</div>
               <div>
-                <p className="font-bold text-sm text-white">Please verify your email address</p>
-                <p className="text-yellow-400/70 text-xs mt-0.5">Check your inbox for the verification link we sent you</p>
+                <p className="font-bold text-sm text-white">{t("dashboard.emailVerifyTitle")}</p>
+                <p className="text-yellow-400/70 text-xs mt-0.5">{t("dashboard.emailVerifyDesc")}</p>
               </div>
             </div>
-            <button onClick={handleResendVerification}
-              className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition-all font-semibold whitespace-nowrap">
-              Resend Email
+            <button onClick={handleResendVerification} disabled={resending}
+              className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition-all font-semibold whitespace-nowrap flex items-center gap-1.5 disabled:opacity-70">
+              {resending
+                ? <><span className="w-3 h-3 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" /> {t("dashboard.sending")}</>
+                : t("dashboard.resendEmail")}
             </button>
           </div>
         )}
 
-        {/* ── KYC INVITE BANNER ────────────────────────────────────────────── */}
+        {/* KYC INVITE BANNER */}
         {showKYCInvite && (
           <div onClick={() => navigate("/kyc")}
             className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-purple-500/30 bg-purple-500/8 hover:bg-purple-500/12 transition-all">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-xl">🪪</div>
               <div>
-                <p className="font-bold text-sm text-white">You've been invited to verify your identity</p>
-                <p className="text-purple-400/70 text-xs mt-0.5">Complete KYC verification for a better and more secure experience</p>
+                <p className="font-bold text-sm text-white">{t("dashboard.kycInviteTitle")}</p>
+                <p className="text-purple-400/70 text-xs mt-0.5">{t("dashboard.kycInviteDesc")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -530,7 +508,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── KYC STATUS BANNER ────────────────────────────────────────────── */}
+        {/* KYC STATUS BANNER */}
         {(kycStatus === "pending" || kycStatus === "rejected") && (
           <div onClick={handleKYCClick}
             className={`cursor-pointer flex items-center justify-between p-4 rounded-2xl border transition-all ${
@@ -540,20 +518,16 @@ export default function Dashboard() {
             }`}>
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
-                kycStatus === "pending"
-                  ? "bg-yellow-500/15 border border-yellow-500/25"
-                  : "bg-red-500/15 border border-red-500/25"
+                kycStatus === "pending" ? "bg-yellow-500/15 border border-yellow-500/25" : "bg-red-500/15 border border-red-500/25"
               }`}>
                 {kycStatus === "pending" ? "⏳" : "❌"}
               </div>
               <div>
                 <p className="font-bold text-sm text-white">
-                  {kycStatus === "pending" ? "KYC Under Review" : "KYC Verification Rejected"}
+                  {kycStatus === "pending" ? t("dashboard.kycPendingTitle") : t("dashboard.kycRejectedTitle")}
                 </p>
                 <p className={`text-xs mt-0.5 ${kycStatus === "pending" ? "text-yellow-400/70" : "text-red-400/70"}`}>
-                  {kycStatus === "pending"
-                    ? "Your documents are being reviewed — tap to track progress"
-                    : "Your documents were rejected — tap to resubmit"}
+                  {kycStatus === "pending" ? t("dashboard.kycPendingDesc") : t("dashboard.kycRejectedDesc")}
                 </p>
               </div>
             </div>
@@ -561,7 +535,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── REINVEST BANNER — only if plans completed and popup already shown ── */}
+        {/* REINVEST BANNER */}
         {completed.length > 0 && completed.every(p => wasPopupShown(p)) && (
           <div onClick={() => { setReinvestPlans(completed); setShowReinvest(true); }}
             className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 hover:bg-emerald-500/12 transition-all">
@@ -569,9 +543,9 @@ export default function Dashboard() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-xl">🏆</div>
               <div>
                 <p className="font-bold text-sm text-white">
-                  {completed.length} plan{completed.length > 1 ? "s" : ""} completed — Ready to reinvest?
+                  {completed.length} {completed.length > 1 ? t("dashboard.plansCompleted") : t("dashboard.planCompleted1")}
                 </p>
-                <p className="text-emerald-400/70 text-xs mt-0.5">Tap to see your earnings and reinvest options</p>
+                <p className="text-emerald-400/70 text-xs mt-0.5">{t("dashboard.tapToSeeEarnings")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -581,7 +555,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── HERO PORTFOLIO CARD ───────────────────────────────────────────── */}
+        {/* HERO PORTFOLIO CARD */}
         <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-teal-500/5 p-6 sm:p-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
@@ -593,16 +567,13 @@ export default function Dashboard() {
             ].map((s, i) => (
               <div key={i} className="flex flex-col gap-1">
                 <p className="text-white/35 text-xs uppercase tracking-widest">{s.label}</p>
-                <p className={`text-2xl font-bold ${s.color}`}>
-                  <CountUp end={s.value} prefix={s.prefix} />
-                </p>
+                <p className={`text-2xl font-bold ${s.color}`}><CountUp end={s.value} prefix={s.prefix} /></p>
               </div>
             ))}
           </div>
           <div className="mt-5 pt-5 border-t border-white/8 flex items-center justify-between flex-wrap gap-2">
             <div className={`flex items-center gap-1.5 text-sm font-semibold ${parseFloat(profitPercent) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              <TrendingUp size={14} />
-              {profitPercent}% {t("dashboard.overallReturn")}
+              <TrendingUp size={14} /> {profitPercent}% {t("dashboard.overallReturn")}
             </div>
             <span className="text-white/20 text-xs">
               {plans.length} {t("dashboard.activePlans")} · {completed.length} {t("dashboard.completedPlans")}
@@ -610,12 +581,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── STAT CARDS ────────────────────────────────────────────────────── */}
+        {/* STAT CARDS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: t("dashboard.totalBalance"), value: `$${parseFloat(data.balance || 0).toLocaleString()}`, icon: <Wallet size={18} />, color: "text-white" },
             { label: t("dashboard.activePlans"), value: plans.length, icon: <Activity size={18} />, color: "text-blue-400" },
-            { label: "Transactions", value: history.length, icon: <BarChart2 size={18} />, color: "text-purple-400" },
+            { label: t("dashboard.transactions"), value: history.length, icon: <BarChart2 size={18} />, color: "text-purple-400" },
             { label: t("dashboard.totalProfit"), value: `$${totalProfit.toLocaleString()}`, icon: <DollarSign size={18} />, color: "text-emerald-400" },
           ].map((stat, i) => (
             <div key={i} className="p-4 rounded-2xl border border-white/8 bg-white/[0.03] flex flex-col gap-3 hover:border-white/15 transition-all">
@@ -628,7 +599,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── ACTION BUTTONS ────────────────────────────────────────────────── */}
+        {/* ACTION BUTTONS */}
         <div className="flex flex-wrap gap-3">
           <button onClick={() => navigate("/deposit")} className="btn-primary">
             <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
@@ -640,7 +611,7 @@ export default function Dashboard() {
             <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
           </button>
           <button onClick={() => navigate("/messages")} className="btn-primary relative">
-            <MessageSquare size={16} /> Messages
+            <MessageSquare size={16} /> {t("dashboard.messages")}
             {unreadMessages > 0 && (
               <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center z-50">
                 {unreadMessages > 9 ? "9+" : unreadMessages}
@@ -649,7 +620,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* ── REFERRAL SECTION ──────────────────────────────────────────────── */}
+        {/* REFERRAL SECTION */}
         {data.referralCode && (
           <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 via-white/[0.02] to-teal-500/5 p-6">
             <div className="flex items-center gap-3 mb-5">
@@ -657,54 +628,51 @@ export default function Dashboard() {
                 <Gift size={18} className="text-emerald-400" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-sm">Referral Program</h3>
-                <p className="text-emerald-400/70 text-xs mt-0.5">Earn 5% commission on every friend you refer</p>
+                <h3 className="font-bold text-white text-sm">{t("dashboard.referralProgram")}</h3>
+                <p className="text-emerald-400/70 text-xs mt-0.5">{t("dashboard.referralProgramDesc")}</p>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3 mb-5">
               <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
-                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">Referrals</p>
+                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">{t("dashboard.referrals")}</p>
                 <p className="text-white font-bold text-lg">{totalReferrals}</p>
               </div>
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">Earned</p>
+                <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">{t("dashboard.earned")}</p>
                 <p className="text-emerald-400 font-bold text-lg">${referralEarnings.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
-                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">Rate</p>
+                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">{t("dashboard.rate")}</p>
                 <p className="text-white font-bold text-lg">5%</p>
               </div>
             </div>
             <div>
-              <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Your Referral Link</p>
+              <p className="text-white/40 text-xs uppercase tracking-widest mb-2">{t("dashboard.yourReferralLink")}</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white/60 font-mono truncate">
                   {referralLink}
                 </div>
                 <button onClick={handleCopyReferral}
                   className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
-                    copied
-                      ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
-                      : "bg-emerald-500 hover:bg-emerald-400 text-white"
+                    copied ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
+                    : "bg-emerald-500 hover:bg-emerald-400 text-white"
                   }`}>
                   {copied ? <Check size={14} /> : <Copy size={14} />}
-                  {copied ? "Copied!" : "Copy"}
+                  {copied ? t("dashboard.copied") : t("dashboard.copy")}
                 </button>
               </div>
-              <p className="text-white/25 text-xs mt-2">
-                Share this link — when your friend makes their first deposit, you earn 5% automatically.
-              </p>
+              <p className="text-white/25 text-xs mt-2">{t("dashboard.shareReferralNote")}</p>
             </div>
           </section>
         )}
 
-        {/* ── LIVE CHART ────────────────────────────────────────────────────── */}
+        {/* LIVE CHART */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.liveMarket")}</h3>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              LIVE
+              {t("dashboard.live")}
             </div>
           </div>
           <div className="rounded-2xl border border-white/8 overflow-hidden h-[420px]">
@@ -712,13 +680,13 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ── ACTIVE PLANS ──────────────────────────────────────────────────── */}
+        {/* ACTIVE PLANS */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.activePlans")}</h3>
             {plans.length > 0 && (
               <button onClick={() => navigate("/plans")} className="text-xs text-emerald-400 flex items-center gap-1 hover:gap-2 transition-all">
-                Add Plan <ChevronRight size={12} />
+                {t("dashboard.addPlan")} <ChevronRight size={12} />
               </button>
             )}
           </div>
@@ -737,7 +705,7 @@ export default function Dashboard() {
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="font-bold text-white">{p.plan}</h4>
-                        <p className="text-white/30 text-xs mt-0.5">Ends {end.toDateString()}</p>
+                        <p className="text-white/30 text-xs mt-0.5">{t("dashboard.endsOn")} {end.toDateString()}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-semibold ${progress < 100 ? "bg-emerald-500/15 text-emerald-400" : "bg-green-500/15 text-green-400"}`}>
                         {progress < 100 ? t("dashboard.active") : t("dashboard.done")}
@@ -771,13 +739,11 @@ export default function Dashboard() {
                     </div>
                     {progress < 100 ? (
                       <div className="flex items-center gap-2 text-xs text-white/40 border-t border-white/5 pt-3">
-                        <Clock size={11} />
-                        <span>{daysLeft} {t("dashboard.daysRemaining")}</span>
+                        <Clock size={11} /> <span>{daysLeft} {t("dashboard.daysRemaining")}</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-xs text-green-400 border-t border-white/5 pt-3">
-                        <BadgeCheck size={11} />
-                        <span>{t("dashboard.planCompleted")}</span>
+                        <BadgeCheck size={11} /> <span>{t("dashboard.planCompleted")}</span>
                       </div>
                     )}
                   </div>
@@ -798,14 +764,13 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* ── COMPLETED PLANS ───────────────────────────────────────────────── */}
+        {/* COMPLETED PLANS */}
         <section>
           <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">{t("dashboard.completedPlans")}</h3>
           {completed.length ? (
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
               {completed.map((p, i) => (
-                <div key={i}
-                  onClick={() => { setReinvestPlans([p]); setShowReinvest(true); }}
+                <div key={i} onClick={() => { setReinvestPlans([p]); setShowReinvest(true); }}
                   className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
@@ -818,7 +783,7 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-emerald-400 font-bold text-sm">+${parseFloat(p.profit).toLocaleString()}</p>
-                    <p className="text-emerald-400/50 text-xs font-medium">Tap to reinvest →</p>
+                    <p className="text-emerald-400/50 text-xs font-medium">{t("dashboard.tapToReinvest")}</p>
                   </div>
                 </div>
               ))}
@@ -834,13 +799,11 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* ── RECENT ACTIVITIES ─────────────────────────────────────────────── */}
+        {/* RECENT ACTIVITIES */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.recentActivities")}</h3>
-            {history.length > 4 && (
-              <span className="text-xs text-white/30">{history.length} total</span>
-            )}
+            {history.length > 4 && <span className="text-xs text-white/30">{history.length} {t("dashboard.transactions")}</span>}
           </div>
           {history.length ? (
             <div className="space-y-2 max-h-[272px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
@@ -853,8 +816,8 @@ export default function Dashboard() {
                         {isDeposit ? <ArrowDownCircle size={16} className="text-emerald-400" /> : <ArrowUpCircle size={16} className="text-red-400" />}
                       </div>
                       <div>
-                        <p className="font-semibold text-sm">{h.action}</p>
-                        <p className="text-white/30 text-xs">{new Date(h.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                        <p className="font-semibold text-sm">{t(`dashboard.${isDeposit ? "deposit" : "withdraw"}`)}</p>
+                        <p className="text-white/30 text-xs">{new Date(h.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</p>
                       </div>
                     </div>
                     <p className={`font-bold text-sm ${isDeposit ? "text-emerald-400" : "text-red-400"}`}>
@@ -878,7 +841,7 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* ── ACCOUNT INFO ──────────────────────────────────────────────────── */}
+        {/* ACCOUNT INFO */}
         <section className="rounded-2xl border border-white/8 bg-white/[0.02] p-5 flex flex-wrap gap-5">
           <div className="flex items-center gap-3 flex-1 min-w-[180px]">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">
@@ -887,7 +850,7 @@ export default function Dashboard() {
             <div>
               <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.location")}</p>
               <p className="font-semibold text-sm mt-0.5">
-                {location.country && location.country !== "Unknown" ? location.country : "Detecting..."}
+                {location.country && location.country !== "Unknown" ? location.country : t("dashboard.detecting")}
               </p>
             </div>
           </div>
