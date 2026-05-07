@@ -165,7 +165,15 @@
     "markAllRead": "Отметить все как прочитанные",
     "close": "Закрыть",
     "unread": "непрочитанное",
-    "contactSupport": "Нужна помощь? Напишите нам на support@mexicatrading.com"
+    "contactSupport": "Нужна помощь? Напишите нам на support@mexicatrading.com",
+    "backToDashboard": "Назад на Dashboard",
+    "unreadSingle": "непрочитанное сообщение",
+    "unreadPlural": "непрочитанных сообщения",
+    "from": "От службы поддержки MexicaTrading",
+    "subject": "Тема",
+    "messageLabel": "Сообщение",
+    "contactUs": "Нужна помощь? Напишите нам на support@mexicatrading.com",
+    "close": "Закрыть"
   },
   "kyc": {
     "title": "KYC Верификация",
