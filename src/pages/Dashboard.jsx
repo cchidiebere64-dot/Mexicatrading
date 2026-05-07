@@ -403,7 +403,7 @@ export default function Dashboard() {
 
   const kycBadgeConfig = {
     pending:  { label: "KYC ⏳", cls: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400" },
-    approved: { label: "KYC ✅", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
+    approved: { label: "KYC ", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
     rejected: { label: "KYC ❌", cls: "bg-red-500/15 border-red-500/25 text-red-400" },
   };
 
