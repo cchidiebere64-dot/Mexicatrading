@@ -8,65 +8,26 @@ export default function Terms() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const sections = [
-    {
-      title: t("terms.s1Title"),
-      content: t("terms.s1Content"),
-    },
-    {
-      title: t("terms.s2Title"),
-      content: t("terms.s2Content"),
-    },
-    {
-      title: t("terms.s3Title"),
-      content: t("terms.s3Content"),
-    },
-    {
-      title: t("terms.s4Title"),
-      content: t("terms.s4Content"),
-    },
-    {
-      title: t("terms.s5Title"),
-      content: t("terms.s5Content"),
-    },
-    {
-      title: t("terms.s6Title"),
-      content: t("terms.s6Content"),
-    },
-    {
-      title: t("terms.s7Title"),
-      content: t("terms.s7Content"),
-    },
-    {
-      title: t("terms.s8Title"),
-      content: t("terms.s8Content"),
-    },
-    {
-      title: t("terms.s9Title"),
-      content: t("terms.s9Content"),
-    },
-    {
-      title: t("terms.s10Title"),
-      content: t("terms.s10Content"),
-    },
-    {
-      title: t("terms.s11Title"),
-      content: t("terms.s11Content"),
-    },
-    {
-      title: t("terms.s12Title"),
-      content: t("terms.s12Content"),
-    },
+    { title: t("terms.s1Title"), content: t("terms.s1Content") },
+    { title: t("terms.s2Title"), content: t("terms.s2Content") },
+    { title: t("terms.s3Title"), content: t("terms.s3Content") },
+    { title: t("terms.s4Title"), content: t("terms.s4Content") },
+    { title: t("terms.s5Title"), content: t("terms.s5Content") },
+    { title: t("terms.s6Title"), content: t("terms.s6Content") },
+    { title: t("terms.s7Title"), content: t("terms.s7Content") },
+    { title: t("terms.s8Title"), content: t("terms.s8Content") },
+    { title: t("terms.s9Title"), content: t("terms.s9Content") },
+    { title: t("terms.s10Title"), content: t("terms.s10Content") },
+    { title: t("terms.s11Title"), content: t("terms.s11Content") },
+    { title: t("terms.s12Title"), content: t("terms.s12Content") },
   ];
 
   return (
     <div className="min-h-screen bg-[#080c18] text-white pb-20">
 
-      {/* Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/6 blur-[150px] rounded-full top-[-200px] left-[-200px]" />
         <div className="absolute w-[500px] h-[500px] bg-blue-500/4 blur-[140px] rounded-full bottom-[-200px] right-[-200px]" />
@@ -78,8 +39,7 @@ export default function Terms() {
         {/* Back button */}
         <button onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition mb-8">
-          <ArrowLeft size={14} />
-          {t("common.back")}
+          <ArrowLeft size={14} /> {t("common.back")}
         </button>
 
         {/* Header */}
@@ -89,14 +49,15 @@ export default function Terms() {
               <Shield size={22} className="text-emerald-400" />
             </div>
             <div>
-              <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest">Legal</p>
+              <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest">{t("common.legal")}</p>
               <h1 className="text-2xl font-bold text-white">{t("terms.title")}</h1>
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/8">
             <p className="text-white/50 text-sm leading-relaxed">
-              {t("terms.lastUpdated")}: <span className="text-white/70">January 1, 2026</span> &nbsp;·&nbsp;
-              {t("terms.effectiveDate")}: <span className="text-white/70">January 1, 2026</span>
+              {t("terms.lastUpdated")}: <span className="text-white/70">{t("common.updatedDate")}</span>
+              &nbsp;·&nbsp;
+              {t("terms.effectiveDate")}: <span className="text-white/70">{t("common.updatedDate")}</span>
             </p>
             <p className="text-white/40 text-sm mt-2 leading-relaxed">{t("terms.subtitle")}</p>
           </div>
@@ -128,7 +89,7 @@ export default function Terms() {
             </Link>
             <span className="text-white/20">·</span>
             <a href="mailto:support@mexicatrading.com" className="text-emerald-400 hover:text-emerald-300 transition">
-              {t("terms.contactEmail")}
+              support@mexicatrading.com
             </a>
           </div>
           <p className="text-white/25 text-xs mt-4">
