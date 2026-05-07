@@ -14,7 +14,6 @@ import LanguageSelector from "../components/LanguageSelector.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const REFRESH_INTERVAL = 30000;
-const REINVEST_REMINDER_INTERVAL = 5 * 60 * 1000;
 
 // ── Animated count-up ─────────────────────────────────────────────────────────
 function CountUp({ end, prefix = "", duration = 1200 }) {
@@ -71,6 +70,21 @@ async function detectCountry() {
   return { country: "", flag: "" };
 }
 
+// ── Get unique key for a completed plan ───────────────────────────────────────
+function getPlanKey(plan) {
+  return `reinvest_shown_${plan.plan}_${plan.endDate}`;
+}
+
+// ── Check if popup was already shown for this plan ────────────────────────────
+function wasPopupShown(plan) {
+  return sessionStorage.getItem(getPlanKey(plan)) === "true";
+}
+
+// ── Mark popup as shown for this plan ────────────────────────────────────────
+function markPopupShown(plan) {
+  sessionStorage.setItem(getPlanKey(plan), "true");
+}
+
 // ── Reinvest Popup ────────────────────────────────────────────────────────────
 function ReinvestPopup({ completedPlans, onDismiss }) {
   const navigate = useNavigate();
@@ -78,12 +92,20 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
   const totalAmount = completedPlans.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
   const latestPlan = completedPlans[completedPlans.length - 1];
 
+  const handleAction = (action) => {
+    // Mark ALL currently completed plans as shown so popup never appears again for them
+    completedPlans.forEach(p => markPopupShown(p));
+    onDismiss();
+    if (action === "reinvest") navigate("/plans");
+    if (action === "withdraw") navigate("/withdraw");
+  };
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
       <div className="relative w-full max-w-sm bg-[#0d1221] border border-emerald-500/30 rounded-3xl p-6 shadow-2xl"
         style={{ animation: "scale-in 0.4s ease forwards" }}>
-        <button onClick={onDismiss}
+        <button onClick={() => handleAction("dismiss")}
           className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
           <X size={14} />
         </button>
@@ -113,15 +135,16 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <button onClick={() => { onDismiss(); navigate("/plans"); }}
+          <button onClick={() => handleAction("reinvest")}
             className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-bold text-sm text-white shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
             <TrendingUp size={16} /> Reinvest Now
           </button>
-          <button onClick={() => { onDismiss(); navigate("/withdraw"); }}
+          <button onClick={() => handleAction("withdraw")}
             className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
             Withdraw Profits
           </button>
-          <button onClick={onDismiss} className="w-full py-2.5 text-white/25 hover:text-white/50 transition text-xs">
+          <button onClick={() => handleAction("dismiss")}
+            className="w-full py-2.5 text-white/25 hover:text-white/50 transition text-xs">
             Remind me later
           </button>
         </div>
@@ -141,23 +164,19 @@ function KYCModal({ kyc, onClose }) {
           className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
           <X size={14} />
         </button>
-
         <div className="flex flex-col items-center text-center mb-5">
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-3xl mb-3">
             {kyc?.status === "approved" ? "✅" : kyc?.status === "pending" ? "⏳" : "❌"}
           </div>
           <h2 className="text-lg font-bold text-white">KYC Verification</h2>
           <span className={`mt-1 text-xs px-3 py-1 rounded-full font-semibold capitalize ${
-            kyc?.status === "approved"
-              ? "bg-emerald-500/15 text-emerald-400"
-              : kyc?.status === "pending"
-              ? "bg-yellow-500/15 text-yellow-400"
-              : "bg-red-500/15 text-red-400"
+            kyc?.status === "approved" ? "bg-emerald-500/15 text-emerald-400"
+            : kyc?.status === "pending" ? "bg-yellow-500/15 text-yellow-400"
+            : "bg-red-500/15 text-red-400"
           }`}>
             {kyc?.status === "approved" ? "✅ Verified" : kyc?.status === "pending" ? "⏳ Under Review" : "❌ Rejected"}
           </span>
         </div>
-
         <div className="space-y-3">
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
             <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Document Type</p>
@@ -186,20 +205,16 @@ function KYCModal({ kyc, onClose }) {
           {kyc?.status === "pending" && (
             <div className="p-3 rounded-xl bg-yellow-500/8 border border-yellow-500/20">
               <p className="text-yellow-400/80 text-xs leading-relaxed">
-                ⏳ Your documents are being reviewed by our team. This usually takes less than 24 hours.
+                ⏳ Your documents are being reviewed. This usually takes less than 24 hours.
               </p>
             </div>
           )}
-
-          {/* ID image */}
           {kyc?.idFrontImage && (
             <div>
               <p className="text-white/30 text-xs uppercase tracking-widest mb-2">ID Document</p>
               <img src={kyc.idFrontImage} alt="ID" className="w-full rounded-xl border border-white/10 object-cover max-h-40" />
             </div>
           )}
-
-          {/* Selfie */}
           {kyc?.selfieImage && (
             <div>
               <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Selfie with ID</p>
@@ -207,7 +222,6 @@ function KYCModal({ kyc, onClose }) {
             </div>
           )}
         </div>
-
         <button onClick={onClose}
           className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition-all mt-4">
           Close
@@ -226,11 +240,11 @@ export default function Dashboard() {
   const [location, setLocation] = useState({ country: "", flag: "" });
   const [notification, setNotification] = useState(null);
   const [showReinvest, setShowReinvest] = useState(false);
+  const [reinvestPlans, setReinvestPlans] = useState([]);
   const [copied, setCopied] = useState(false);
   const [showKYCModal, setShowKYCModal] = useState(false);
   const [kycData, setKycData] = useState(null);
   const prevBalance = useRef(null);
-  const reinvestTimerRef = useRef(null);
   const navigate = useNavigate();
 
   const getGreeting = () => {
@@ -240,7 +254,6 @@ export default function Dashboard() {
     return t("dashboard.goodEvening");
   };
 
-  // ── Copy referral link ────────────────────────────────────────────────────
   const handleCopyReferral = () => {
     if (!data?.referralCode) return;
     const link = `https://mexicatrading.com/register?ref=${data.referralCode}`;
@@ -250,7 +263,6 @@ export default function Dashboard() {
     });
   };
 
-  // ── Resend verification email ─────────────────────────────────────────────
   const handleResendVerification = async () => {
     const token = sessionStorage.getItem("token");
     try {
@@ -265,14 +277,9 @@ export default function Dashboard() {
     }
   };
 
-  // ── Open KYC modal ────────────────────────────────────────────────────────
   const handleKYCClick = async () => {
     const kycStatus = data?.kyc?.status;
-    if (!kycStatus || kycStatus === "none") {
-      navigate("/kyc");
-      return;
-    }
-    // Fetch full KYC data with images
+    if (!kycStatus || kycStatus === "none") { navigate("/kyc"); return; }
     try {
       const token = sessionStorage.getItem("token");
       const res = await axios.get(`${API_URL}/api/user/kyc-status`, {
@@ -280,21 +287,8 @@ export default function Dashboard() {
       });
       setKycData(res.data.kyc);
       setShowKYCModal(true);
-    } catch {
-      navigate("/kyc");
-    }
+    } catch { navigate("/kyc"); }
   };
-
-  const triggerReinvestPopup = useCallback((completedPlans) => {
-    if (completedPlans.length > 0) setShowReinvest(true);
-  }, []);
-
-  const setupReinvestReminder = useCallback((completedPlans) => {
-    if (reinvestTimerRef.current) clearInterval(reinvestTimerRef.current);
-    if (completedPlans.length > 0) {
-      reinvestTimerRef.current = setInterval(() => setShowReinvest(true), REINVEST_REMINDER_INTERVAL);
-    }
-  }, []);
 
   const fetchDashboard = useCallback(async (silent = false) => {
     const token = sessionStorage.getItem("token");
@@ -305,6 +299,8 @@ export default function Dashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const newData = res.data;
+
+      // Balance change notification
       if (prevBalance.current !== null && newData.balance !== prevBalance.current) {
         const diff = newData.balance - prevBalance.current;
         setNotification({
@@ -318,18 +314,25 @@ export default function Dashboard() {
       prevBalance.current = newData.balance;
       setData(newData);
       setLastUpdated(new Date());
+
+      // ── ONE-TIME reinvest popup per completed plan ────────────────────────
       const completedPlans = (newData.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
-      if (completedPlans.length > 0) {
-        setTimeout(() => triggerReinvestPopup(completedPlans), 1500);
-        setupReinvestReminder(completedPlans);
+      const newlyCompleted = completedPlans.filter(p => !wasPopupShown(p));
+
+      if (newlyCompleted.length > 0) {
+        setTimeout(() => {
+          setReinvestPlans(newlyCompleted);
+          setShowReinvest(true);
+        }, 1500);
       }
+
     } catch {
       if (!silent) setData(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [navigate, triggerReinvestPopup, setupReinvestReminder]);
+  }, [navigate]);
 
   useEffect(() => { fetchDashboard(false); detectCountry().then(setLocation); }, [fetchDashboard]);
   useEffect(() => {
@@ -341,7 +344,6 @@ export default function Dashboard() {
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchDashboard]);
-  useEffect(() => { return () => { if (reinvestTimerRef.current) clearInterval(reinvestTimerRef.current); }; }, []);
 
   // TradingView chart
   useEffect(() => {
@@ -364,24 +366,22 @@ export default function Dashboard() {
     return () => clearTimeout(timeout);
   }, [data]);
 
-  if (loading)
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
-        <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-        <p className="text-white/40 text-sm animate-pulse">{t("common.loading")}</p>
-      </div>
-    );
+  if (loading) return (
+    <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
+      <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
+      <p className="text-white/40 text-sm animate-pulse">{t("common.loading")}</p>
+    </div>
+  );
 
-  if (!data)
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
-        <p className="text-red-400 text-sm">{t("common.error")}</p>
-        <button onClick={() => fetchDashboard(false)}
-          className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition-all">
-          {t("common.retry")}
-        </button>
-      </div>
-    );
+  if (!data) return (
+    <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
+      <p className="text-red-400 text-sm">{t("common.error")}</p>
+      <button onClick={() => fetchDashboard(false)}
+        className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition-all">
+        {t("common.retry")}
+      </button>
+    </div>
+  );
 
   const plans = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "active");
   const completed = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
@@ -396,7 +396,6 @@ export default function Dashboard() {
   const totalReferrals = (data.referrals || []).length;
   const unreadMessages = data.unreadMessages || 0;
 
-  // ── KYC status helpers ────────────────────────────────────────────────────
   const kycStatus = data?.kyc?.status || "none";
   const kycInvited = data?.kycInvited || false;
   const showKYCBadge = kycStatus === "pending" || kycStatus === "approved" || kycStatus === "rejected";
@@ -404,16 +403,19 @@ export default function Dashboard() {
 
   const kycBadgeConfig = {
     pending:  { label: "KYC ⏳", cls: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400" },
-    approved: { label: "KYC ", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
+    approved: { label: "KYC ✅", cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
     rejected: { label: "KYC ❌", cls: "bg-red-500/15 border-red-500/25 text-red-400" },
   };
 
   return (
     <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
 
-      {/* ── MODALS ───────────────────────────────────────────────────────────── */}
-      {showReinvest && completed.length > 0 && (
-        <ReinvestPopup completedPlans={completed} onDismiss={() => setShowReinvest(false)} />
+      {/* ── MODALS ─────────────────────────────────────────────────────────── */}
+      {showReinvest && reinvestPlans.length > 0 && (
+        <ReinvestPopup
+          completedPlans={reinvestPlans}
+          onDismiss={() => setShowReinvest(false)}
+        />
       )}
       {showKYCModal && kycData && (
         <KYCModal kyc={kycData} onClose={() => setShowKYCModal(false)} />
@@ -452,17 +454,14 @@ export default function Dashboard() {
           <div>
             <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
             <h2 className="text-2xl font-bold mt-0.5 flex items-center gap-2">
-              {data.name} <span className="text-emerald-400"></span>
-              {/* ── Small KYC badge next to name ── */}
+              {data.name} <span className="text-emerald-400">👋</span>
               {showKYCBadge && (
-  <button
-    onClick={handleKYCClick}
-    className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-semibold transition-all hover:opacity-80 ${kycBadgeConfig[kycStatus]?.cls}`}>
-    <BadgeCheck size={11} />
-    {kycBadgeConfig[kycStatus]?.label}
-  </button>
-)}
-              
+                <button onClick={handleKYCClick}
+                  className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-semibold transition-all hover:opacity-80 ${kycBadgeConfig[kycStatus]?.cls}`}>
+                  <BadgeCheck size={11} />
+                  {kycBadgeConfig[kycStatus]?.label}
+                </button>
+              )}
             </h2>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -477,10 +476,10 @@ export default function Dashboard() {
                 <Calendar size={12} />
                 {t("dashboard.memberSince")} {memberSince}
               </span>
-              {/*<span className="flex items-center gap-1.5 text-emerald-400/70">
+              <span className="flex items-center gap-1.5 text-emerald-400/70">
                 <BadgeCheck size={12} />
                 {t("dashboard.verified")}
-              </span>*/}
+              </span>
               {lastUpdated && (
                 <span className="flex items-center gap-1 text-white/20">
                   <RefreshCw size={10} />
@@ -513,10 +512,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── KYC INVITE BANNER — only if admin invited and not yet submitted ── */}
+        {/* ── KYC INVITE BANNER ────────────────────────────────────────────── */}
         {showKYCInvite && (
-          <div
-            onClick={() => navigate("/kyc")}
+          <div onClick={() => navigate("/kyc")}
             className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-purple-500/30 bg-purple-500/8 hover:bg-purple-500/12 transition-all">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-xl">🪪</div>
@@ -532,10 +530,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── KYC STATUS BANNER — pending or rejected ───────────────────────── */}
+        {/* ── KYC STATUS BANNER ────────────────────────────────────────────── */}
         {(kycStatus === "pending" || kycStatus === "rejected") && (
-          <div
-            onClick={handleKYCClick}
+          <div onClick={handleKYCClick}
             className={`cursor-pointer flex items-center justify-between p-4 rounded-2xl border transition-all ${
               kycStatus === "pending"
                 ? "border-yellow-500/30 bg-yellow-500/8 hover:bg-yellow-500/12"
@@ -564,9 +561,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── REINVEST BANNER ───────────────────────────────────────────────── */}
-        {completed.length > 0 && (
-          <div onClick={() => setShowReinvest(true)}
+        {/* ── REINVEST BANNER — only if plans completed and popup already shown ── */}
+        {completed.length > 0 && completed.every(p => wasPopupShown(p)) && (
+          <div onClick={() => { setReinvestPlans(completed); setShowReinvest(true); }}
             className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 hover:bg-emerald-500/12 transition-all">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-xl">🏆</div>
@@ -807,7 +804,8 @@ export default function Dashboard() {
           {completed.length ? (
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
               {completed.map((p, i) => (
-                <div key={i} onClick={() => setShowReinvest(true)}
+                <div key={i}
+                  onClick={() => { setReinvestPlans([p]); setShowReinvest(true); }}
                   className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
