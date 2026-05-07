@@ -165,7 +165,15 @@
     "markAllRead": "全部标为已读",
     "close": "关闭",
     "unread": "未读",
-    "contactSupport": "需要帮助？请联系 support@mexicatrading.com"
+    "contactSupport": "需要帮助？请联系 support@mexicatrading.com",
+    "backToDashboard": "返回仪表板",
+    "unreadSingle": "条未读消息",
+    "unreadPlural": "条未读消息",
+    "from": "来自 MexicaTrading 客服",
+    "subject": "主题",
+    "messageLabel": "消息",
+    "contactUs": "需要帮助？请联系我们 support@mexicatrading.com",
+    "close": "关闭"
   },
   "kyc": {
     "title": "KYC身份验证",
