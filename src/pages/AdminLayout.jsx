@@ -15,6 +15,7 @@ const navItems = [
   { path: "/admin/withdrawals", label: "Withdrawals", icon: <ArrowUpCircle size={18} /> },
   { path: "/admin/wallets", label: "Manage Wallets", icon: <Wallet size={18} /> },
   { path: "/admin/kyc", label: "KYC Reviews", icon: <ShieldCheck size={18} /> },
+  { label: "Broadcast", path: "/admin/broadcast", icon: <Radio size={18} /> }
 ];
 
 export default function AdminLayout() {
