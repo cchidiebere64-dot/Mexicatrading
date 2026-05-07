@@ -34,6 +34,7 @@ import AdminWithdrawals from "./pages/AdminWithdrawals.jsx";
 import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
 import AdminKYC from "./pages/AdminKYC.jsx";
+import AdminBroadcast from "./pages/AdminBroadcast.jsx";
 
 const LOCK_TIMEOUT_MS = 30000;
 
@@ -276,6 +277,8 @@ function AppInner() {
               <Route path="credit-user" element={<AdminCreditUser />} />
               <Route path="wallets" element={<AdminWallets />} />
               <Route path="kyc" element={<AdminKYC />} />
+              <Route path="broadcast" element={<AdminBroadcast />} />
+
             </Route>
 
             {/* ── DEFAULT ───────────────────────────────────────────────── */}
