@@ -165,7 +165,15 @@
     "markAllRead": "Tout marquer comme lu",
     "close": "Fermer",
     "unread": "non lu",
-    "contactSupport": "Besoin d'aide? Contactez-nous à support@mexicatrading.com"
+    "contactSupport": "Besoin d'aide? Contactez-nous à support@mexicatrading.com",
+    "backToDashboard": "Retour au Tableau de Bord",
+    "unreadSingle": "message non lu",
+    "unreadPlural": "messages non lus",
+    "from": "De MexicaTrading Support",
+    "subject": "Sujet",
+    "messageLabel": "Message",
+    "contactUs": "Besoin d'aide ? Contactez-nous à support@mexicatrading.com",
+    "close": "Fermer"
   },
   "kyc": {
     "title": "Vérification KYC",
