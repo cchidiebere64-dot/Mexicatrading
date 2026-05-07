@@ -17,33 +17,22 @@ export default function Login() {
   const location = useLocation();
   const API_URL = "https://mexicatradingbackend.onrender.com";
 
-  // ── Check if user just verified their email ───────────────────────────────
   const verified = new URLSearchParams(location.search).get("verified");
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
-      const res = await axios.post(
-        `${API_URL}/api/auth/login`,
-        { email, password },
-        { timeout: 30000 }
-      );
-
+      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password }, { timeout: 30000 });
       if (res.data?.token) {
         const userData = {
-          _id: res.data._id,
-          name: res.data.name,
-          email: res.data.email,
-          balance: res.data.balance,
+          _id: res.data._id, name: res.data.name,
+          email: res.data.email, balance: res.data.balance,
           isAdmin: res.data.isAdmin || false,
         };
-
         sessionStorage.setItem("token", res.data.token);
         sessionStorage.setItem("user", JSON.stringify(userData));
-
         if (userData.isAdmin) {
           sessionStorage.setItem("adminToken", res.data.token);
           navigate("/admin");
@@ -63,8 +52,6 @@ export default function Login() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4">
-
-      {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
         <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
@@ -87,18 +74,14 @@ export default function Login() {
             <p className="text-white/40 text-sm">{t("auth.signInDesc")}</p>
           </div>
 
-          {/* ── Email verified success banner ─────────────────────────────── */}
           {verified === "true" && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
               <CheckCircle size={16} className="shrink-0" />
-              <span>Email verified successfully! You can now log in to your account.</span>
+              <span>{t("auth.emailVerifiedSuccess")}</span>
             </motion.div>
           )}
 
-          {/* ── Error message ─────────────────────────────────────────────── */}
           {error && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               className="mb-6 text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
@@ -107,31 +90,18 @@ export default function Login() {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-
             <div className="relative group">
               <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-              <input
-                type="email"
-                placeholder={t("auth.email")}
+              <input type="email" placeholder={t("auth.email")}
                 className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="username"
-              />
+                value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" />
             </div>
 
             <div className="relative group">
               <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder={t("auth.password")}
+              <input type={showPassword ? "text" : "password"} placeholder={t("auth.password")}
                 className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
+                value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors">
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -147,15 +117,9 @@ export default function Login() {
             <button type="submit" disabled={loading}
               className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
               {loading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {t("auth.signingIn")}
-                </>
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("auth.signingIn")}</>
               ) : (
-                <>
-                  {t("auth.signIn")}
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </>
+                <>{t("auth.signIn")}<ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" /></>
               )}
             </button>
           </form>
