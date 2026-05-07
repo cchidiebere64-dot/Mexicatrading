@@ -8,9 +8,7 @@ export default function Privacy() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const sections = [
     { title: t("privacy.s1Title"), content: t("privacy.s1Content") },
@@ -28,6 +26,7 @@ export default function Privacy() {
 
   return (
     <div className="min-h-screen bg-[#080c18] text-white pb-20">
+
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[600px] h-[600px] bg-emerald-500/6 blur-[150px] rounded-full top-[-200px] left-[-200px]" />
         <div className="absolute w-[500px] h-[500px] bg-blue-500/4 blur-[140px] rounded-full bottom-[-200px] right-[-200px]" />
@@ -36,31 +35,34 @@ export default function Privacy() {
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 pt-24">
 
+        {/* Back button */}
         <button onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition mb-8">
-          <ArrowLeft size={14} />
-          {t("common.back")}
+          <ArrowLeft size={14} /> {t("common.back")}
         </button>
 
+        {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
               <Lock size={22} className="text-blue-400" />
             </div>
             <div>
-              <p className="text-blue-400 text-xs font-semibold uppercase tracking-widest">Legal</p>
+              <p className="text-blue-400 text-xs font-semibold uppercase tracking-widest">{t("common.legal")}</p>
               <h1 className="text-2xl font-bold text-white">{t("privacy.title")}</h1>
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/8">
             <p className="text-white/50 text-sm leading-relaxed">
-              {t("privacy.lastUpdated")}: <span className="text-white/70">January 1, 2026</span> &nbsp;·&nbsp;
-              {t("privacy.effectiveDate")}: <span className="text-white/70">January 1, 2026</span>
+              {t("privacy.lastUpdated")}: <span className="text-white/70">{t("common.updatedDate")}</span>
+              &nbsp;·&nbsp;
+              {t("privacy.effectiveDate")}: <span className="text-white/70">{t("common.updatedDate")}</span>
             </p>
             <p className="text-white/40 text-sm mt-2 leading-relaxed">{t("privacy.subtitle")}</p>
           </div>
         </motion.div>
 
+        {/* Sections */}
         <div className="space-y-6">
           {sections.map((section, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.4 }}
@@ -76,6 +78,7 @@ export default function Privacy() {
           ))}
         </div>
 
+        {/* Footer */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
           className="mt-12 p-6 rounded-2xl border border-blue-500/20 bg-blue-500/5 text-center">
           <p className="text-white/60 text-sm mb-3">{t("privacy.commitment")}</p>
