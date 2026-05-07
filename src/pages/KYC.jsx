@@ -11,12 +11,14 @@ export default function KYC() {
   const [kycStatus, setKycStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [idType, setIdType] = useState("passport");
   const [idFront, setIdFront] = useState(null);
   const [idFrontPreview, setIdFrontPreview] = useState(null);
   const [selfie, setSelfie] = useState(null);
   const [selfiePreview, setSelfiePreview] = useState(null);
+  const [countdown, setCountdown] = useState(5);
 
   const token = sessionStorage.getItem("token");
 
@@ -24,6 +26,17 @@ export default function KYC() {
     if (!token) return navigate("/login");
     fetchKYCStatus();
   }, []);
+
+  // ── Auto-redirect countdown after successful submission ───────────────────
+  useEffect(() => {
+    if (!submitted) return;
+    if (countdown === 0) {
+      navigate("/dashboard");
+      return;
+    }
+    const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [submitted, countdown]);
 
   const fetchKYCStatus = async () => {
     try {
@@ -73,8 +86,7 @@ export default function KYC() {
         { idType, idFrontImage: idFrontBase64, selfieImage: selfieBase64 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMessage({ text: "KYC submitted successfully! Our team will review your documents within 24 hours.", type: "success" });
-      fetchKYCStatus();
+      setSubmitted(true);
     } catch (err) {
       setMessage({ text: err.response?.data?.message || "Submission failed. Please try again.", type: "error" });
     } finally {
@@ -89,6 +101,34 @@ export default function KYC() {
   );
 
   const status = kycStatus?.status || "none";
+
+  // ── Success screen after submission ──────────────────────────────────────
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-[#080c18] text-white flex items-center justify-center px-4">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md bg-white/[0.04] border border-white/10 rounded-3xl p-10 text-center shadow-2xl">
+          <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 text-4xl">
+            ✅
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Documents Submitted!</h2>
+          <p className="text-white/50 text-sm leading-relaxed mb-6">
+            Your identity documents have been received and are now under review by our team. You will receive an email once the review is complete — usually within 24 hours.
+          </p>
+          <div className="p-4 rounded-xl bg-yellow-500/8 border border-yellow-500/20 mb-6">
+            <p className="text-yellow-400 text-sm font-semibold">⏳ KYC Status: Under Review</p>
+          </div>
+          <p className="text-white/30 text-xs mb-5">
+            Redirecting to dashboard in <span className="text-emerald-400 font-bold">{countdown}</span> seconds...
+          </p>
+          <button onClick={() => navigate("/dashboard")}
+            className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-semibold text-sm text-white flex items-center justify-center gap-2">
+            <ShieldCheck size={16} /> Go to Dashboard Now
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#080c18] text-white pb-20">
@@ -124,12 +164,16 @@ export default function KYC() {
             <p className="text-white/50 text-sm leading-relaxed mb-5">
               Your identity has been verified successfully. You have full access to all withdrawal features.
             </p>
-            <div className="p-4 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
+            <div className="p-4 rounded-xl bg-emerald-500/8 border border-emerald-500/20 mb-5">
               <p className="text-emerald-400 text-sm font-semibold">🎉 KYC Status: Approved</p>
               <p className="text-white/40 text-xs mt-1">
                 Verified on {kycStatus?.reviewedAt ? new Date(kycStatus.reviewedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}
               </p>
             </div>
+            <button onClick={() => navigate("/dashboard")}
+              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition font-semibold text-sm text-white">
+              Back to Dashboard
+            </button>
           </motion.div>
         )}
 
@@ -144,13 +188,17 @@ export default function KYC() {
             <p className="text-white/50 text-sm leading-relaxed mb-5">
               Your documents are being reviewed by our team. This usually takes less than 24 hours.
             </p>
-            <div className="p-4 rounded-xl bg-yellow-500/8 border border-yellow-500/20">
+            <div className="p-4 rounded-xl bg-yellow-500/8 border border-yellow-500/20 mb-5">
               <p className="text-yellow-400 text-sm font-semibold">⏳ KYC Status: Under Review</p>
               <p className="text-white/40 text-xs mt-1">
                 Submitted on {kycStatus?.submittedAt ? new Date(kycStatus.submittedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}
               </p>
             </div>
-            <p className="text-white/30 text-xs mt-4">You will receive an email once your verification is complete.</p>
+            <p className="text-white/30 text-xs mb-5">You will receive an email once your verification is complete.</p>
+            <button onClick={() => navigate("/dashboard")}
+              className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/50 hover:text-white font-semibold">
+              Back to Dashboard
+            </button>
           </motion.div>
         )}
 
@@ -236,7 +284,7 @@ export default function KYC() {
                   <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "front")} className="hidden" />
                   {idFrontPreview ? (
                     <div className="relative">
-                      <img src={idFrontPreview} alt="ID" className="w-full h-40 object-cover rounded-xl" />
+                      <img src={idFrontPreview} alt="ID" className="w-full h-44 object-cover rounded-xl" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 hover:opacity-100 transition-all">
                         <p className="text-white text-xs font-semibold">Click to change</p>
                       </div>
@@ -262,7 +310,7 @@ export default function KYC() {
                   <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "selfie")} className="hidden" />
                   {selfiePreview ? (
                     <div className="relative">
-                      <img src={selfiePreview} alt="Selfie" className="w-full h-40 object-cover rounded-xl" />
+                      <img src={selfiePreview} alt="Selfie" className="w-full h-44 object-cover rounded-xl" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 hover:opacity-100 transition-all">
                         <p className="text-white text-xs font-semibold">Click to change</p>
                       </div>
