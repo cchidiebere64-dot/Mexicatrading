@@ -269,7 +269,81 @@
     "effectiveDate": "Fecha de vigencia",
     "privacyLink": "Política de Privacidad",
     "contactEmail": "support@mexicatrading.com",
-    "agreement": "Al usar MexicaTrading confirmas que has leído, entendido y aceptado estos Términos."
+    "agreement": "Al usar MexicaTrading confirmas que has leído, entendido y aceptado estos Términos.",
+    "sections": {
+      "acceptance": {
+        "title": "Aceptación de Términos",
+        "content": "Al acceder o usar la plataforma MexicaTrading, aceptas estar sujeto a estos Términos y Condiciones. MexicaTrading se reserva el derecho de modificar estos términos en cualquier momento, y el uso continuado de la plataforma constituye la aceptación de los cambios."
+      },
+      "eligibility": {
+        "title": "Elegibilidad",
+        "content": "Debes tener al menos 18 años para usar MexicaTrading. Al registrar una cuenta, confirmas que eres legalmente elegible para participar en actividades de inversión en tu país de residencia."
+      },
+      "account": {
+        "title": "Registro de Cuenta",
+        "content": "Eres responsable de mantener la confidencialidad de tus credenciales de cuenta. Notifícanos inmediatamente en support@mexicatrading.com si sospechas acceso no autorizado a tu cuenta."
+      },
+      "plans": {
+        "title": "Planes de Inversión",
+        "content": "MexicaTrading ofrece planes de inversión estructurados con duraciones y tasas de ganancia definidas. Al activar un plan, reconoces que tus fondos estarán bloqueados durante la duración del plan seleccionado."
+      },
+      "deposits": {
+        "title": "Depósitos y Retiros",
+        "content": "Todos los depósitos deben realizarse a través de canales de criptomonedas aprobados listados en nuestra plataforma. Las solicitudes de retiro están sujetas a revisión. MexicaTrading se reserva el derecho de retrasar o rechazar retiros si se sospecha actividad fraudulenta."
+      },
+      "risks": {
+        "title": "Riesgos",
+        "content": "Todas las inversiones conllevan riesgos inherentes. El rendimiento pasado no garantiza resultados futuros. Solo debes invertir fondos que puedas permitirte perder."
+      },
+      "prohibited": {
+        "title": "Actividades Prohibidas",
+        "content": "Aceptas no usar MexicaTrading para ningún propósito ilegal, incluyendo lavado de dinero, fraude o financiamiento de actividades ilegales. No se permiten múltiples cuentas por usuario. Las violaciones pueden resultar en suspensión inmediata de la cuenta."
+      },
+      "suspension": {
+        "title": "Suspensión de Cuenta",
+        "content": "MexicaTrading se reserva el derecho de suspender o terminar cualquier cuenta a su sola discreción, incluyendo casos de sospecha de fraude o violación de estos términos."
+      },
+      "privacy": {
+        "title": "Privacidad",
+        "content": "Tu uso de MexicaTrading también está regido por nuestra Política de Privacidad, incorporada a estos Términos por referencia."
+      },
+      "liability": {
+        "title": "Limitación de Responsabilidad",
+        "content": "En la medida máxima permitida por la ley, MexicaTrading no será responsable de daños indirectos, incidentales, especiales o consecuentes que surjan de tu uso de la plataforma."
+      },
+      "governing": {
+        "title": "Ley Aplicable",
+        "content": "Estos Términos se rigen por las leyes de México. Cualquier disputa estará sujeta a la jurisdicción exclusiva de los tribunales de Oaxaca de Juárez, Oaxaca, México."
+      },
+      "contact": {
+        "title": "Contáctanos",
+        "content": "Si tienes preguntas sobre estos Términos:\n\nMexicaTrading\nCalle Hidalgo 247, Colonia Centro\nOaxaca de Juárez, Oaxaca 68000, México\nCorreo: support@mexicatrading.com\nSitio web: www.mexicatrading.com"
+      }
+    },
+    "s1Title": "Aceptación de Términos",
+    "s1Content": "Al acceder o usar la plataforma MexicaTrading en mexicatrading.com, aceptas estar sujeto a estos Términos y Condiciones. Si no estás de acuerdo, no puedes usar nuestra plataforma. MexicaTrading se reserva el derecho de modificar estos términos en cualquier momento.",
+    "s2Title": "Elegibilidad",
+    "s2Content": "Debes tener al menos 18 años para usar MexicaTrading. Al registrarte, confirmas que eres legalmente elegible para participar en actividades de inversión en tu país de residencia.",
+    "s3Title": "Registro de Cuenta",
+    "s3Content": "Eres responsable de mantener la confidencialidad de tus credenciales. Notifícanos inmediatamente en support@mexicatrading.com si sospechas acceso no autorizado a tu cuenta.",
+    "s4Title": "Planes de Inversión",
+    "s4Content": "MexicaTrading ofrece planes de inversión estructurados con duraciones y tasas de ganancia definidas. Al activar un plan, reconoces que tus fondos estarán bloqueados durante la duración del plan.",
+    "s5Title": "Depósitos y Retiros",
+    "s5Content": "Todos los depósitos deben realizarse a través de canales de criptomonedas aprobados. Las solicitudes de retiro están sujetas a revisión. MexicaTrading se reserva el derecho de retrasar retiros si se sospecha actividad fraudulenta.",
+    "s6Title": "Riesgos",
+    "s6Content": "Todas las inversiones conllevan riesgo inherente. El rendimiento pasado no garantiza resultados futuros. Solo invierte fondos que puedas permitirte perder.",
+    "s7Title": "Actividades Prohibidas",
+    "s7Content": "Aceptas no usar MexicaTrading para ningún propósito ilícito. No se permiten múltiples cuentas por usuario. Las violaciones pueden resultar en suspensión inmediata de la cuenta.",
+    "s8Title": "Suspensión de Cuenta",
+    "s8Content": "MexicaTrading se reserva el derecho de suspender o cancelar cualquier cuenta a su sola discreción, incluyendo casos de sospecha de fraude o violación de estos términos.",
+    "s9Title": "Privacidad",
+    "s9Content": "Tu uso de MexicaTrading también está gobernado por nuestra Política de Privacidad, incorporada a estos Términos por referencia.",
+    "s10Title": "Limitación de Responsabilidad",
+    "s10Content": "MexicaTrading no será responsable de daños indirectos, incidentales o consecuentes que surjan de tu uso de la plataforma.",
+    "s11Title": "Ley Aplicable",
+    "s11Content": "Estos Términos se rigen por las leyes de México. Las disputas estarán sujetas a la jurisdicción exclusiva de los tribunales de Oaxaca de Juárez, Oaxaca, México.",
+    "s12Title": "Contáctanos",
+    "s12Content": "Si tienes preguntas sobre estos Términos, contáctanos en:\n\nMexicaTrading\nCalle Hidalgo 247, Colonia Centro\nOaxaca de Juárez, Oaxaca 68000, Mexico\nEmail: support@mexicatrading.com"
   },
   "privacy": {
     "title": "Política de Privacidad",
@@ -277,7 +351,75 @@
     "lastUpdated": "Última actualización",
     "effectiveDate": "Fecha de vigencia",
     "termsLink": "Términos y Condiciones",
-    "commitment": "Tu privacidad es importante para nosotros. Estamos comprometidos a proteger tu información personal."
+    "commitment": "Tu privacidad es importante para nosotros. Estamos comprometidos a proteger tu información personal.",
+    "sections": {
+      "information": {
+        "title": "Información que Recopilamos",
+        "content": "Al registrarte en MexicaTrading, recopilamos:\n\n• Nombre completo y correo electrónico\n• Contraseña (almacenada encriptada)\n• Dirección IP e información del dispositivo\n• Historial de transacciones\n• Preferencias de idioma y comunicación"
+      },
+      "usage": {
+        "title": "Cómo Usamos tu Información",
+        "content": "Usamos tu información para:\n\n• Crear y gestionar tu cuenta\n• Procesar depósitos, retiros y planes de inversión\n• Detectar y prevenir actividad fraudulenta\n• Mejorar nuestra plataforma y experiencia de usuario"
+      },
+      "security": {
+        "title": "Seguridad de Datos",
+        "content": "MexicaTrading toma la seguridad de datos en serio. Implementamos cifrado SSL/TLS para todas las transmisiones de datos y almacenamiento seguro de contraseñas."
+      },
+      "cookies": {
+        "title": "Cookies y Seguimiento",
+        "content": "MexicaTrading usa cookies de sesión. También usamos servicios de terceros incluyendo Tawk.to para soporte en vivo y TradingView para datos de mercado."
+      },
+      "sharing": {
+        "title": "Compartir Datos",
+        "content": "MexicaTrading no vende, comercia ni alquila tu información personal a terceros. Solo compartimos información cuando es requerido por ley o para proteger los derechos de los usuarios."
+      },
+      "email": {
+        "title": "Comunicaciones por Email",
+        "content": "Al registrarte en MexicaTrading, aceptas recibir emails transaccionales que incluyen confirmaciones de transacciones y anuncios importantes de la plataforma."
+      },
+      "retention": {
+        "title": "Retención de Datos",
+        "content": "Retenemos tus datos personales mientras tu cuenta esté activa. Si solicitas la eliminación, removeremos tu información en 30 días. Los registros de transacciones pueden retenerse hasta 7 años."
+      },
+      "rights": {
+        "title": "Tus Derechos",
+        "content": "Tienes derecho a:\n\n• Acceder a tus datos personales\n• Solicitar corrección de datos inexactos\n• Solicitar eliminación de tu cuenta\n• Oponerte al procesamiento de tus datos\n\nContacta support@mexicatrading.com para ejercer estos derechos."
+      },
+      "children": {
+        "title": "Privacidad de Menores",
+        "content": "MexicaTrading no está destinada a usuarios menores de 18 años. Si sabemos que un menor proporcionó datos, tomaremos medidas inmediatas para eliminarlos."
+      },
+      "changes": {
+        "title": "Cambios a Esta Política",
+        "content": "MexicaTrading puede actualizar esta Política de Privacidad periódicamente. Notificaremos a los usuarios registrados sobre cambios significativos por email."
+      },
+      "contact": {
+        "title": "Contáctanos",
+        "content": "Si tienes preguntas sobre esta Política de Privacidad:\n\nMexicaTrading\nCalle Hidalgo 247, Colonia Centro\nOaxaca de Juárez, Oaxaca 68000, México\nEmail: support@mexicatrading.com"
+      }
+    },
+    "s1Title": "Información que Recopilamos",
+    "s1Content": "Al registrarte en MexicaTrading, recopilamos la siguiente información:\n\n• Nombre completo y correo electrónico\n• Contraseña (almacenada en forma cifrada)\n• Dirección IP e información del dispositivo\n• Historial de transacciones\n• Preferencias de comunicación e idioma",
+    "s2Title": "Cómo Usamos tu Información",
+    "s2Content": "Usamos tu información para:\n\n• Crear y gestionar tu cuenta\n• Procesar depósitos, retiros y planes de inversión\n• Enviar correos de confirmación de transacciones\n• Detectar y prevenir actividad fraudulenta",
+    "s3Title": "Seguridad de Datos",
+    "s3Content": "MexicaTrading toma en serio la seguridad de datos. Implementamos medidas que incluyen:\n\n• Cifrado SSL/TLS\n• Hash de contraseña con Bcrypt\n• Autenticación basada en JWT\n• Bloqueo automático de sesión",
+    "s4Title": "Cookies y Seguimiento",
+    "s4Content": "MexicaTrading usa cookies de sesión para mantener tu estado de inicio de sesión. También usamos servicios de terceros como Tawk.to para chat en vivo y TradingView para widgets de mercado.",
+    "s5Title": "Compartir Datos",
+    "s5Content": "MexicaTrading no vende tu información personal a terceros. Solo compartimos tu información cuando es requerido por ley o para proteger los derechos de usuarios.",
+    "s6Title": "Comunicaciones por Email",
+    "s6Content": "Al registrarte, aceptas recibir emails transaccionales incluyendo confirmaciones de depósito y retiro, activaciones de planes y anuncios importantes.",
+    "s7Title": "Retención de Datos",
+    "s7Content": "Retenemos tus datos mientras tu cuenta esté activa. Si solicitas eliminación, removeremos tu información personal en 30 días.",
+    "s8Title": "Tus Derechos",
+    "s8Content": "Tienes derecho a:\n\n• Acceder a tus datos personales\n• Solicitar corrección de datos inexactos\n• Solicitar eliminación de tu cuenta\n• Retirar el consentimiento en cualquier momento\n\nContáctanos en support@mexicatrading.com.",
+    "s9Title": "Privacidad de Menores",
+    "s9Content": "MexicaTrading no está destinado a usuarios menores de 18 años. No recopilamos conscientemente información de menores.",
+    "s10Title": "Cambios en esta Política",
+    "s10Content": "MexicaTrading puede actualizar esta Política de Privacidad periódicamente. Notificaremos a los usuarios registrados de cambios significativos por email.",
+    "s11Title": "Contáctanos",
+    "s11Content": "Si tienes preguntas sobre esta Política de Privacidad, contáctanos en:\n\nMexicaTrading\nCalle Hidalgo 247, Colonia Centro\nOaxaca de Juárez, Oaxaca 68000, Mexico\nEmail: support@mexicatrading.com"
   },
   "common": {
     "loading": "Cargando...",
