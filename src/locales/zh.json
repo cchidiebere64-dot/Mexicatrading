@@ -316,6 +316,17 @@
     "termsAgree": "注册即表示您同意我们的",
     "termsLink": "服务条款",
     "privacyLink": "隐私政策",
+    "phoneNumber": "电话号码（例：+1 555 123 4567）",
+    "selectCountry": "选择您的国家",
+    "confirmPassword": "确认密码",
+    "passwordsMatch": "密码匹配",
+    "passwordsDoNotMatch": "密码不匹配",
+    "passwordTooShort": "密码必须至少6个字符。",
+    "phoneRequired": "电话号码为必填项。",
+    "countryRequired": "请选择您的国家。",
+    "mustAgreeTerms": "您必须同意条款和隐私政策。",
+    "registrationFailed": "注册失败。请重试。",
+    "referralApplied": "已应用推荐码",
     "and": "和"
   },
   "forgot": {
