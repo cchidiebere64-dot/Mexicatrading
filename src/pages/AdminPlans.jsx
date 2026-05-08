@@ -49,7 +49,7 @@ export default function AdminPlans() {
       name: plan.name || "",
       min: plan.minAmount || "",
       max: plan.maxAmount || "",
-      profit: plan.profitRate || "",
+      profit: plan.profitRate || "", // value is stored as the rate (e.g. 25 means $25/$100)
       duration: plan.duration || "",
       description: plan.description || "",
     });
@@ -165,7 +165,6 @@ export default function AdminPlans() {
                 {p.duration && <p className="text-white/20 text-xs mt-0.5">{p.duration} days duration</p>}
               </div>
 
-              {/* ✅ Fixed field names to match model */}
               <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/8">
                 <div>
                   <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Min</p>
@@ -177,7 +176,7 @@ export default function AdminPlans() {
                 </div>
                 <div>
                   <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Profit</p>
-                  <p className="text-emerald-400 font-bold text-sm">{p.profitRate}%</p>
+                  <p className="text-emerald-400 font-bold text-sm">+${p.profitRate}/$100</p>
                 </div>
               </div>
             </motion.div>
@@ -203,12 +202,12 @@ export default function AdminPlans() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {[
-                  { label: "Plan Name", key: "name", placeholder: "e.g. Gold Plan", type: "text" },
-                  { label: "Minimum ($)", key: "min", placeholder: "e.g. 100", type: "number" },
-                  { label: "Maximum ($)", key: "max", placeholder: "e.g. 5000", type: "number" },
-                  { label: "Profit Rate (%)", key: "profit", placeholder: "e.g. 25", type: "number" },
-                  { label: "Duration (days)", key: "duration", placeholder: "e.g. 7", type: "number" },
-                  { label: "Description (optional)", key: "description", placeholder: "Brief plan description", type: "text" },
+                  { label: "Plan Name", key: "name", placeholder: "e.g. Gold Plan", type: "text", hint: null },
+                  { label: "Minimum ($)", key: "min", placeholder: "e.g. 100", type: "number", hint: null },
+                  { label: "Maximum ($)", key: "max", placeholder: "e.g. 5000", type: "number", hint: null },
+                  { label: "Profit per $100 ($)", key: "profit", placeholder: "e.g. 25", type: "number", hint: "Enter how much profit a user earns for every $100 invested. Example: 25 means $25 profit per $100." },
+                  { label: "Duration (days)", key: "duration", placeholder: "e.g. 7", type: "number", hint: null },
+                  { label: "Description (optional)", key: "description", placeholder: "Brief plan description", type: "text", hint: null },
                 ].map((field) => (
                   <div key={field.key} className="space-y-1.5">
                     <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">{field.label}</label>
@@ -220,6 +219,21 @@ export default function AdminPlans() {
                       required={field.key !== "description"}
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white"
                     />
+                    {field.hint && (
+                      <p className="text-emerald-400/60 text-[11px] mt-1 flex items-start gap-1">
+                        💡 {field.hint}
+                      </p>
+                    )}
+
+                    {/* Live profit preview when entering profit value */}
+                    {field.key === "profit" && form.profit && form.min && (
+                      <div className="mt-2 p-2.5 rounded-lg bg-emerald-500/8 border border-emerald-500/20 flex items-center justify-between">
+                        <span className="text-white/50 text-xs">Min investment earns</span>
+                        <span className="text-emerald-400 font-bold text-xs">
+                          +${((Number(form.min) * Number(form.profit)) / 100).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -268,4 +282,4 @@ export default function AdminPlans() {
       </AnimatePresence>
     </div>
   );
-                }
+}
