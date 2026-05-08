@@ -3,75 +3,114 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TrendingUp, Check, X, ArrowRight, AlertTriangle,
+  TrendingUp, Check, X, AlertTriangle,
   Zap, Shield, Star, Crown, Gem, Sparkles, Clock,
   Flame, ChevronRight
 } from "lucide-react";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 
-// Plan tier styles — matched by plan name
-const planTiers = [
-  {
-    name: "Starter",
-    icon: <Zap size={18} />,
-    accentText: "text-emerald-400",
-    accentBg: "bg-emerald-500/15",
-    accentBorder: "border-emerald-500/30",
-    iconBg: "bg-gradient-to-br from-emerald-500/30 to-emerald-500/10 border-emerald-500/30",
-    button: "bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/25",
-    gradient: "from-emerald-500/8 to-transparent",
-    tag: null,
-  },
-  {
-    name: "Basic",
-    icon: <TrendingUp size={18} />,
-    accentText: "text-blue-400",
-    accentBg: "bg-blue-500/15",
-    accentBorder: "border-blue-500/30",
-    iconBg: "bg-gradient-to-br from-blue-500/30 to-blue-500/10 border-blue-500/30",
-    button: "bg-blue-500 hover:bg-blue-400 shadow-blue-500/25",
-    gradient: "from-blue-500/8 to-transparent",
-    tag: null,
-  },
-  {
-    name: "Premium",
-    icon: <Star size={18} />,
-    accentText: "text-purple-400",
-    accentBg: "bg-purple-500/15",
-    accentBorder: "border-purple-500/40",
-    iconBg: "bg-gradient-to-br from-purple-500/30 to-purple-500/10 border-purple-500/30",
-    button: "bg-purple-500 hover:bg-purple-400 shadow-purple-500/30",
-    gradient: "from-purple-500/12 to-transparent",
-    tag: { label: "POPULAR", icon: <Flame size={9} />, cls: "bg-gradient-to-r from-purple-500 to-pink-500 text-white" },
-  },
-  {
-    name: "Elite",
-    icon: <Crown size={18} />,
-    accentText: "text-amber-400",
-    accentBg: "bg-amber-500/15",
-    accentBorder: "border-amber-500/30",
-    iconBg: "bg-gradient-to-br from-amber-500/30 to-amber-500/10 border-amber-500/30",
-    button: "bg-amber-500 hover:bg-amber-400 shadow-amber-500/25",
-    gradient: "from-amber-500/8 to-transparent",
-    tag: null,
-  },
-  {
-    name: "VIP",
-    icon: <Gem size={18} />,
-    accentText: "text-rose-400",
-    accentBg: "bg-rose-500/15",
-    accentBorder: "border-rose-500/30",
-    iconBg: "bg-gradient-to-br from-rose-500/30 to-rose-500/10 border-rose-500/30",
-    button: "bg-rose-500 hover:bg-rose-400 shadow-rose-500/25",
-    gradient: "from-rose-500/8 to-transparent",
-    tag: { label: "TOP RETURN", icon: <Sparkles size={9} />, cls: "bg-gradient-to-r from-rose-500 to-amber-500 text-white" },
-  },
-];
-
 export default function Plans() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  // ── Translation shortcuts with English fallbacks ────────────────────────
+  const L = {
+    investmentPlans: t("plans.investmentPlans", "Investment Plans"),
+    choosePathTo: t("plans.choosePathTo", "Choose Your Path to"),
+    wealth: t("plans.wealth", "Wealth"),
+    subtitle: t("plans.subtitle", "Premium plans engineered for consistent, predictable returns."),
+    popular: t("plans.popular", "POPULAR"),
+    topReturn: t("plans.topReturn", "TOP RETURN"),
+    earn: t("plans.earn", "Earn"),
+    on: t("plans.on", "on"),
+    bankGrade: t("plans.bankGrade", "Bank-Grade Security"),
+    sslEncrypted: t("plans.sslEncrypted", "SSL Encrypted"),
+    instantActivation: t("plans.instantActivation", "Instant Activation"),
+    returnLabel: t("plans.return", "return"),
+    howMuch: t("plans.howMuch", "How much do you want to invest?"),
+    min: t("plans.min", "Min"),
+    max: t("plans.max", "Max"),
+    youWillEarn: t("plans.youWillEarn", "You will earn"),
+    inLabel: t("plans.in", "In"),
+    confirmInvestment: t("plans.confirmInvestment", "Confirm Investment"),
+    secured: t("plans.secured", "Secured"),
+    ssl: t("plans.ssl", "SSL"),
+    instant: t("plans.instant", "Instant"),
+    enterValidAmount: t("plans.enterValidAmount", "Please enter a valid amount."),
+    minimumIs: t("plans.minimumIs", "Minimum is"),
+    maximumIs: t("plans.maximumIs", "Maximum is"),
+    transactionFailed: t("plans.transactionFailed", "Transaction failed. Please try again."),
+    networkError: t("plans.networkError", "Network error. Please try again."),
+    days: t("common.days", "days"),
+    cancel: t("common.cancel", "Cancel"),
+    processing: t("common.processing", "Processing..."),
+    insufficientBalance: t("common.insufficientBalance", "Insufficient balance"),
+    depositFunds: t("common.depositFunds", "Deposit Funds"),
+    investmentSuccess: t("common.investmentSuccess", "Investment created successfully!"),
+    loading: t("common.loading", "Loading..."),
+    noPlans: t("common.noPlans", "No Plans Available"),
+    noPlansDesc: t("common.noPlansDesc", "Investment plans will appear here once published."),
+  };
+
+  // Plan tier styles — matched by plan name
+  const planTiers = [
+    {
+      name: "Starter",
+      icon: <Zap size={18} />,
+      accentText: "text-emerald-400",
+      accentBg: "bg-emerald-500/15",
+      accentBorder: "border-emerald-500/30",
+      iconBg: "bg-gradient-to-br from-emerald-500/30 to-emerald-500/10 border-emerald-500/30",
+      button: "bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/25",
+      gradient: "from-emerald-500/8 to-transparent",
+      tag: null,
+    },
+    {
+      name: "Basic",
+      icon: <TrendingUp size={18} />,
+      accentText: "text-blue-400",
+      accentBg: "bg-blue-500/15",
+      accentBorder: "border-blue-500/30",
+      iconBg: "bg-gradient-to-br from-blue-500/30 to-blue-500/10 border-blue-500/30",
+      button: "bg-blue-500 hover:bg-blue-400 shadow-blue-500/25",
+      gradient: "from-blue-500/8 to-transparent",
+      tag: null,
+    },
+    {
+      name: "Premium",
+      icon: <Star size={18} />,
+      accentText: "text-purple-400",
+      accentBg: "bg-purple-500/15",
+      accentBorder: "border-purple-500/40",
+      iconBg: "bg-gradient-to-br from-purple-500/30 to-purple-500/10 border-purple-500/30",
+      button: "bg-purple-500 hover:bg-purple-400 shadow-purple-500/30",
+      gradient: "from-purple-500/12 to-transparent",
+      tag: { label: L.popular, icon: <Flame size={9} />, cls: "bg-gradient-to-r from-purple-500 to-pink-500 text-white" },
+    },
+    {
+      name: "Elite",
+      icon: <Crown size={18} />,
+      accentText: "text-amber-400",
+      accentBg: "bg-amber-500/15",
+      accentBorder: "border-amber-500/30",
+      iconBg: "bg-gradient-to-br from-amber-500/30 to-amber-500/10 border-amber-500/30",
+      button: "bg-amber-500 hover:bg-amber-400 shadow-amber-500/25",
+      gradient: "from-amber-500/8 to-transparent",
+      tag: null,
+    },
+    {
+      name: "VIP",
+      icon: <Gem size={18} />,
+      accentText: "text-rose-400",
+      accentBg: "bg-rose-500/15",
+      accentBorder: "border-rose-500/30",
+      iconBg: "bg-gradient-to-br from-rose-500/30 to-rose-500/10 border-rose-500/30",
+      button: "bg-rose-500 hover:bg-rose-400 shadow-rose-500/25",
+      gradient: "from-rose-500/8 to-transparent",
+      tag: { label: L.topReturn, icon: <Sparkles size={9} />, cls: "bg-gradient-to-r from-rose-500 to-amber-500 text-white" },
+    },
+  ];
 
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -127,19 +166,19 @@ export default function Plans() {
     setMessage("");
     const num = parseFloat(val);
     if (!val || isNaN(num)) {
-      setAmountError("Please enter a valid amount.");
+      setAmountError(L.enterValidAmount);
     } else if (num < activePlan.minAmount) {
-      setAmountError(`Minimum is $${Number(activePlan.minAmount).toLocaleString()}`);
+      setAmountError(`${L.minimumIs} $${Number(activePlan.minAmount).toLocaleString()}`);
     } else if (num > activePlan.maxAmount) {
-      setAmountError(`Maximum is $${Number(activePlan.maxAmount).toLocaleString()}`);
+      setAmountError(`${L.maximumIs} $${Number(activePlan.maxAmount).toLocaleString()}`);
     }
   };
 
   const handleConfirm = async () => {
     const amount = parseFloat(investAmount);
-    if (!amount || isNaN(amount)) { setAmountError("Please enter a valid amount."); return; }
-    if (amount < activePlan.minAmount) { setAmountError(`Minimum is $${Number(activePlan.minAmount).toLocaleString()}`); return; }
-    if (amount > activePlan.maxAmount) { setAmountError(`Maximum is $${Number(activePlan.maxAmount).toLocaleString()}`); return; }
+    if (!amount || isNaN(amount)) { setAmountError(L.enterValidAmount); return; }
+    if (amount < activePlan.minAmount) { setAmountError(`${L.minimumIs} $${Number(activePlan.minAmount).toLocaleString()}`); return; }
+    if (amount > activePlan.maxAmount) { setAmountError(`${L.maximumIs} $${Number(activePlan.maxAmount).toLocaleString()}`); return; }
 
     setConfirming(true);
     try {
@@ -157,29 +196,24 @@ export default function Plans() {
       const data = await res.json();
       if (res.ok) {
         setBalanceCheck("success");
-        setMessage(t("common.investmentSuccess"));
+        setMessage(L.investmentSuccess);
         setTimeout(() => navigate("/dashboard"), 1500);
       } else {
-        setMessage(data.message || "Transaction failed. Please try again.");
+        setMessage(data.message || L.transactionFailed);
       }
     } catch {
-      setMessage("Network error. Please try again.");
+      setMessage(L.networkError);
     } finally {
       setConfirming(false);
     }
   };
 
-  // Live profit calculation
   const estimatedProfit = () => {
     const amt = parseFloat(investAmount);
     if (!amt || isNaN(amt) || !activePlan) return null;
     return ((amt * activePlan.profitRate) / 100).toFixed(2);
   };
 
-  // Profit per $100 — simple example showing the rate
-  const profitPer100 = (plan) => Math.round((100 * plan.profitRate) / 100);
-
-  // Match plan to its style
   const getStyle = (plan, idx) => {
     const tier = planTiers.find(t => t.name.toLowerCase() === plan.name?.toLowerCase());
     return tier || planTiers[idx % planTiers.length];
@@ -188,14 +222,14 @@ export default function Plans() {
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#080c18] gap-4">
       <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-      <p className="text-white/30 text-sm animate-pulse">{t("common.loading")}</p>
+      <p className="text-white/30 text-sm animate-pulse">{L.loading}</p>
     </div>
   );
 
   return (
     <div className="relative min-h-screen bg-[#080c18] text-white overflow-hidden pb-12">
 
-      {/* Premium ambient background */}
+      {/* Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute w-[700px] h-[700px] bg-emerald-500/8 blur-[180px] rounded-full top-[-200px] left-[-150px]" />
         <div className="absolute w-[500px] h-[500px] bg-purple-500/6 blur-[160px] rounded-full top-[40%] right-[-100px]" />
@@ -204,33 +238,31 @@ export default function Plans() {
 
       <main className="relative z-10 px-4 pt-20 max-w-3xl mx-auto">
 
-        {/* HERO — compact and premium */}
+        {/* HERO */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-7">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-4 backdrop-blur-md">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <Sparkles size={11} /> Investment Plans
+            <Sparkles size={11} /> {L.investmentPlans}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-            Choose Your Path to{" "}
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">Wealth</span>
+            {L.choosePathTo}{" "}
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">{L.wealth}</span>
           </h1>
-          <p className="text-white/45 text-sm max-w-md mx-auto">
-            Premium plans engineered for consistent, predictable returns.
-          </p>
+          <p className="text-white/45 text-sm max-w-md mx-auto">{L.subtitle}</p>
         </motion.div>
 
-        {/* PLAN LIST — premium horizontal rows */}
+        {/* PLAN LIST */}
         {plans.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
             <TrendingUp size={32} className="text-white/15" />
-            <p className="text-white font-semibold">{t("common.noPlans")}</p>
-            <p className="text-white/30 text-sm">{t("common.noPlansDesc")}</p>
+            <p className="text-white font-semibold">{L.noPlans}</p>
+            <p className="text-white/30 text-sm">{L.noPlansDesc}</p>
           </div>
         ) : (
           <div className="space-y-2.5">
             {plans.map((plan, idx) => {
               const style = getStyle(plan, idx);
-              const per100 = profitPer100(plan);
+              const profit = Math.round((plan.minAmount * plan.profitRate) / 100);
               return (
                 <motion.button
                   key={plan._id}
@@ -243,12 +275,10 @@ export default function Plans() {
 
                   <div className="flex items-center gap-3 p-3.5">
 
-                    {/* Icon */}
                     <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${style.iconBg}`}>
                       <span className={style.accentText}>{style.icon}</span>
                     </div>
 
-                    {/* Plan info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <h3 className="text-white font-bold text-sm">{plan.name}</h3>
@@ -259,22 +289,21 @@ export default function Plans() {
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-[11px] text-white/45">
-                        <span className="flex items-center gap-1"><Clock size={10} /> {plan.duration} {t("common.days")}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} /> {plan.duration} {L.days}</span>
                         <span>·</span>
                         <span>${Number(plan.minAmount).toLocaleString()} – ${Number(plan.maxAmount).toLocaleString()}</span>
                       </div>
                     </div>
 
-                    {/* Profit on minimum investment — real attractive number */}
+                    {/* Profit on minimum investment */}
                     <div className="text-right shrink-0">
-                      <p className="text-white/35 text-[10px] uppercase tracking-widest">Earn</p>
+                      <p className="text-white/35 text-[10px] uppercase tracking-widest">{L.earn}</p>
                       <p className={`${style.accentText} font-bold text-base leading-tight`}>
-                        +${Math.round((plan.minAmount * plan.profitRate) / 100).toLocaleString()}
+                        +${profit.toLocaleString()}
                       </p>
-                      <p className="text-white/30 text-[10px]">on ${Number(plan.minAmount).toLocaleString()}</p>
+                      <p className="text-white/30 text-[10px]">{L.on} ${Number(plan.minAmount).toLocaleString()}</p>
                     </div>
 
-                    {/* Chevron */}
                     <ChevronRight size={16} className={`${style.accentText} opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0`} />
                   </div>
                 </motion.button>
@@ -286,12 +315,12 @@ export default function Plans() {
         {/* Trust footer */}
         <div className="flex flex-wrap items-center justify-center gap-3 mt-7 pt-5 border-t border-white/5">
           <div className="flex items-center gap-1.5 text-white/35 text-[11px]">
-            <Shield size={11} className="text-emerald-400" /> Bank-Grade Security
+            <Shield size={11} className="text-emerald-400" /> {L.bankGrade}
           </div>
           <span className="text-white/15">·</span>
-          <div className="flex items-center gap-1.5 text-white/35 text-[11px]">🔒 SSL Encrypted</div>
+          <div className="flex items-center gap-1.5 text-white/35 text-[11px]">🔒 {L.sslEncrypted}</div>
           <span className="text-white/15">·</span>
-          <div className="flex items-center gap-1.5 text-white/35 text-[11px]">⚡ Instant Activation</div>
+          <div className="flex items-center gap-1.5 text-white/35 text-[11px]">⚡ {L.instantActivation}</div>
         </div>
       </main>
 
@@ -306,7 +335,6 @@ export default function Plans() {
               transition={{ type: "spring", damping: 30, stiffness: 350 }}
               className="relative w-full sm:max-w-md bg-gradient-to-b from-[#0d1525] to-[#0a1120] border border-white/10 rounded-t-3xl sm:rounded-3xl z-10 shadow-2xl overflow-hidden">
 
-              {/* Modal header */}
               <div className={`relative px-6 py-5 border-b border-white/8 bg-gradient-to-r ${activeStyle.gradient}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -315,7 +343,7 @@ export default function Plans() {
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-white">{activePlan.name}</h2>
-                      <p className="text-white/40 text-xs">{activePlan.duration} {t("common.days")} · {activePlan.profitRate}% return</p>
+                      <p className="text-white/40 text-xs">{activePlan.duration} {L.days} · {activePlan.profitRate}% {L.returnLabel}</p>
                     </div>
                   </div>
                   <button onClick={closeModal}
@@ -327,10 +355,9 @@ export default function Plans() {
 
               <div className="p-6 max-h-[70vh] overflow-y-auto">
 
-                {/* Amount input — focal point */}
                 <div className="mb-5">
                   <label className="text-[11px] font-bold text-white/45 uppercase tracking-widest block mb-2">
-                    How much do you want to invest?
+                    {L.howMuch}
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold text-lg">$</span>
@@ -340,8 +367,8 @@ export default function Plans() {
                       className={`w-full pl-9 pr-4 py-4 rounded-2xl bg-white/5 border-2 ${amountError ? "border-red-500/40" : activeStyle.accentBorder} outline-none transition-all text-xl font-bold text-white placeholder:text-white/25`} />
                   </div>
                   <div className="flex justify-between mt-2 text-[11px]">
-                    <span className="text-white/30">Min: ${Number(activePlan.minAmount).toLocaleString()}</span>
-                    <span className="text-white/30">Max: ${Number(activePlan.maxAmount).toLocaleString()}</span>
+                    <span className="text-white/30">{L.min}: ${Number(activePlan.minAmount).toLocaleString()}</span>
+                    <span className="text-white/30">{L.max}: ${Number(activePlan.maxAmount).toLocaleString()}</span>
                   </div>
                   {amountError && (
                     <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
@@ -350,26 +377,24 @@ export default function Plans() {
                   )}
                 </div>
 
-                {/* Live profit preview */}
                 {estimatedProfit() && !amountError && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                     className={`p-4 rounded-2xl border ${activeStyle.accentBorder} ${activeStyle.accentBg} mb-4`}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white/50 text-[11px] uppercase tracking-widest font-semibold">You will earn</p>
+                        <p className="text-white/50 text-[11px] uppercase tracking-widest font-semibold">{L.youWillEarn}</p>
                         <p className={`text-3xl font-bold ${activeStyle.accentText} mt-1`}>
                           +${Number(estimatedProfit()).toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-white/40 text-[11px] uppercase tracking-widest">In</p>
-                        <p className="text-white font-bold text-lg mt-1">{activePlan.duration} {t("common.days")}</p>
+                        <p className="text-white/40 text-[11px] uppercase tracking-widest">{L.inLabel}</p>
+                        <p className="text-white font-bold text-lg mt-1">{activePlan.duration} {L.days}</p>
                       </div>
                     </div>
                   </motion.div>
                 )}
 
-                {/* Quick amount buttons */}
                 <div className="grid grid-cols-3 gap-2 mb-5">
                   {[activePlan.minAmount, Math.round((activePlan.minAmount + activePlan.maxAmount) / 2), activePlan.maxAmount].map((amt, i) => (
                     <button key={i}
@@ -384,12 +409,11 @@ export default function Plans() {
                   ))}
                 </div>
 
-                {/* Status messages */}
                 <AnimatePresence>
                   {balanceCheck === "insufficient" && (
                     <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                       className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
-                      <AlertTriangle size={15} /> {t("common.insufficientBalance")}
+                      <AlertTriangle size={15} /> {L.insufficientBalance}
                     </motion.div>
                   )}
                   {balanceCheck === "success" && (
@@ -406,33 +430,32 @@ export default function Plans() {
                   )}
                 </AnimatePresence>
 
-                {/* Action buttons */}
                 <div className="flex gap-3">
                   <button onClick={closeModal}
                     className="flex-1 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-sm font-semibold hover:bg-white/10 transition">
-                    {t("common.cancel")}
+                    {L.cancel}
                   </button>
                   {balanceCheck === "insufficient" ? (
                     <button onClick={() => navigate("/deposit")}
                       className={`flex-1 py-3.5 rounded-2xl ${activeStyle.button} text-white text-sm font-bold transition shadow-xl`}>
-                      {t("common.depositFunds")}
+                      {L.depositFunds}
                     </button>
                   ) : (
                     <button onClick={handleConfirm}
                       disabled={confirming || balanceCheck === "success" || !!amountError || !investAmount}
                       className={`flex-1 py-3.5 rounded-2xl ${activeStyle.button} text-white text-sm font-bold transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl`}>
                       {confirming && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                      {confirming ? t("common.processing") : "Confirm Investment"}
+                      {confirming ? L.processing : L.confirmInvestment}
                     </button>
                   )}
                 </div>
 
                 <div className="flex items-center justify-center gap-3 mt-4 text-[11px] text-white/25">
-                  <span className="flex items-center gap-1"><Shield size={10} /> Secured</span>
+                  <span className="flex items-center gap-1"><Shield size={10} /> {L.secured}</span>
                   <span>·</span>
-                  <span>🔒 SSL</span>
+                  <span>🔒 {L.ssl}</span>
                   <span>·</span>
-                  <span>⚡ Instant</span>
+                  <span>⚡ {L.instant}</span>
                 </div>
               </div>
             </motion.div>
