@@ -106,7 +106,10 @@
     "kycPendingTitle": "KYC قيد المراجعة",
     "kycPendingDesc": "مستنداتك قيد المراجعة — اضغط لمتابعة التقدم",
     "kycRejectedTitle": "تم رفض التحقق من الهوية",
-    "kycRejectedDesc": "تم رفض مستنداتك — اضغط لإعادة التقديم"
+    "kycRejectedDesc": "تم رفض مستنداتك — اضغط لإعادة التقديم",
+    "completedSingle": "خطة مكتملة",
+    "completedPlural": "خطط مكتملة",
+    "tapToView": "انقر لعرض الأرباح"
   },
   "deposit": {
     "title": "إيداع الأموال",
