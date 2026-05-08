@@ -316,6 +316,17 @@
     "termsAgree": "Ao se registrar, você concorda com nossos",
     "termsLink": "Termos de Serviço",
     "privacyLink": "Política de Privacidade",
+    "phoneNumber": "Número de Telefone (ex. +1 555 123 4567)",
+    "selectCountry": "Selecione Seu País",
+    "confirmPassword": "Confirmar Senha",
+    "passwordsMatch": "As senhas coincidem",
+    "passwordsDoNotMatch": "As senhas não coincidem",
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres.",
+    "phoneRequired": "Número de telefone é obrigatório.",
+    "countryRequired": "Por favor selecione seu país.",
+    "mustAgreeTerms": "Você deve concordar com os Termos e Política de Privacidade.",
+    "registrationFailed": "Registro falhou. Por favor tente novamente.",
+    "referralApplied": "Código de indicação aplicado",
     "and": "e"
   },
   "forgot": {
