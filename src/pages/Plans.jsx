@@ -265,13 +265,13 @@ export default function Plans() {
                       </div>
                     </div>
 
-                    {/* Profit per $100 — the killer hook */}
+                    {/* Profit on minimum investment — real attractive number */}
                     <div className="text-right shrink-0">
                       <p className="text-white/35 text-[10px] uppercase tracking-widest">Earn</p>
                       <p className={`${style.accentText} font-bold text-base leading-tight`}>
-                        +${per100}
+                        +${Math.round((plan.minAmount * plan.profitRate) / 100).toLocaleString()}
                       </p>
-                      <p className="text-white/30 text-[10px]">per $100</p>
+                      <p className="text-white/30 text-[10px]">on ${Number(plan.minAmount).toLocaleString()}</p>
                     </div>
 
                     {/* Chevron */}
