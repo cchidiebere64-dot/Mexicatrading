@@ -1,22 +1,20 @@
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
-  BadgeCheck, Globe, Calendar, ChevronRight,
-  Activity, DollarSign, BarChart2, Clock, RefreshCw, X,
-  Gift, Copy, Check, Users, MessageSquare, ShieldCheck,
+  Wallet, TrendingUp, TrendingDown, ArrowDownCircle, ArrowUpCircle,
+  BadgeCheck, Calendar, ChevronRight, Activity, BarChart2, Clock,
+  RefreshCw, X, Gift, Copy, Check, MessageSquare, ShieldCheck,
+  Sparkles, ArrowUpRight, ArrowDownRight, Eye, EyeOff,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const REFRESH_INTERVAL = 30000;
 
-// ── Animated count-up ─────────────────────────────────────────────────────────
-function CountUp({ end, prefix = "", duration = 1200 }) {
+// ── CountUp animation ────────────────────────────────────────────────────────
+function CountUp({ end, prefix = "", duration = 1200, decimals = 0 }) {
   const [value, setValue] = useState(0);
   const prevEnd = useRef(0);
   useEffect(() => {
@@ -24,26 +22,20 @@ function CountUp({ end, prefix = "", duration = 1200 }) {
     prevEnd.current = end;
     let start = startVal;
     const diff = end - startVal;
-    if (diff === 0) return;
+    if (diff === 0) { setValue(end); return; }
     const step = diff / (duration / 16);
     const timer = setInterval(() => {
       start += step;
       if ((step > 0 && start >= end) || (step < 0 && start <= end)) {
         setValue(end); clearInterval(timer);
-      } else { setValue(Math.floor(start)); }
+      } else { setValue(start); }
     }, 16);
     return () => clearInterval(timer);
   }, [end]);
-  return <span>{prefix}{value.toLocaleString()}</span>;
+  return <span>{prefix}{value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}</span>;
 }
 
-// ── Flag emoji ────────────────────────────────────────────────────────────────
-function flagEmoji(code) {
-  if (!code) return "🌍";
-  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt()));
-}
-
-// ── Detect country ────────────────────────────────────────────────────────────
+// ── Detect country ───────────────────────────────────────────────────────────
 async function detectCountry() {
   try {
     const res = await fetch("https://ipwho.is/");
@@ -53,15 +45,10 @@ async function detectCountry() {
   try {
     const res = await fetch("https://ip-api.com/json/?fields=status,country,countryCode");
     const d = await res.json();
-    if (d.status === "success" && d.country) return { country: d.country, flag: d.countryCode };
+    if (d.status === "success") return { country: d.country, flag: d.countryCode };
   } catch {}
   try {
-    const res = await fetch("https://freeipapi.com/api/json");
-    const d = await res.json();
-    if (d.countryName) return { country: d.countryName, flag: d.countryCode };
-  } catch {}
-  try {
-    const locale = navigator.language || navigator.languages?.[0] || "en-US";
+    const locale = navigator.language || "en-US";
     const regionCode = locale.split("-")[1] || "US";
     const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
     return { country: regionNames.of(regionCode), flag: regionCode };
@@ -69,12 +56,17 @@ async function detectCountry() {
   return { country: "", flag: "" };
 }
 
-// ── One-time popup helpers ────────────────────────────────────────────────────
-function getPlanKey(plan) { return `reinvest_shown_${plan.plan}_${plan.endDate}`; }
-function wasPopupShown(plan) { return sessionStorage.getItem(getPlanKey(plan)) === "true"; }
-function markPopupShown(plan) { sessionStorage.setItem(getPlanKey(plan), "true"); }
+function flagEmoji(code) {
+  if (!code) return "🌍";
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt()));
+}
 
-// ── Reinvest Popup ────────────────────────────────────────────────────────────
+// ── Popup state helpers ──────────────────────────────────────────────────────
+const getPlanKey = (p) => `reinvest_shown_${p.plan}_${p.endDate}`;
+const wasPopupShown = (p) => sessionStorage.getItem(getPlanKey(p)) === "true";
+const markPopupShown = (p) => sessionStorage.setItem(getPlanKey(p), "true");
+
+// ── Reinvest Popup ───────────────────────────────────────────────────────────
 function ReinvestPopup({ completedPlans, onDismiss }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -83,7 +75,7 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
   const latestPlan = completedPlans[completedPlans.length - 1];
 
   const handleAction = (action) => {
-    completedPlans.forEach(p => markPopupShown(p));
+    completedPlans.forEach(markPopupShown);
     onDismiss();
     if (action === "reinvest") navigate("/plans");
     if (action === "withdraw") navigate("/withdraw");
@@ -91,41 +83,37 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
-      <div className="relative w-full max-w-sm bg-[#0d1221] border border-emerald-500/30 rounded-3xl p-6 shadow-2xl"
-        style={{ animation: "scale-in 0.4s ease forwards" }}>
+      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }}>
+      <div className="relative w-full max-w-sm bg-gradient-to-b from-[#0d1525] to-[#0a1120] border border-emerald-500/30 rounded-3xl p-6 shadow-2xl">
         <button onClick={() => handleAction("dismiss")}
-          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+          className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
           <X size={14} />
         </button>
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-4xl mb-4"
-            style={{ animation: "float 3s ease-in-out infinite" }}>🏆</div>
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border border-emerald-500/40 flex items-center justify-center text-4xl mb-4">🏆</div>
           <h2 className="text-xl font-bold text-white mb-1">{t("dashboard.investmentMatured")}</h2>
           <p className="text-white/50 text-sm">
             {t("dashboard.yourPlan")} <strong className="text-white">{latestPlan?.plan}</strong> {t("dashboard.planHasCompleted")}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="bg-white/[0.04] border border-white/8 rounded-2xl p-4 text-center">
             <p className="text-white/40 text-xs uppercase tracking-widest mb-1">{t("dashboard.invested")}</p>
             <p className="text-white font-bold text-lg">${totalAmount.toLocaleString()}</p>
           </div>
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
+          <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-4 text-center">
             <p className="text-emerald-400/70 text-xs uppercase tracking-widest mb-1">{t("dashboard.profitEarned")}</p>
             <p className="text-emerald-400 font-bold text-lg">+${totalProfit.toLocaleString()}</p>
           </div>
         </div>
-        <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 mb-5 text-center">
-          <p className="text-white/60 text-sm leading-relaxed">💡 {t("dashboard.fundsReady")}</p>
-        </div>
-        <div className="flex flex-col gap-2">
+        <p className="text-white/50 text-sm leading-relaxed mb-5 text-center">💡 {t("dashboard.fundsReady")}</p>
+        <div className="space-y-2">
           <button onClick={() => handleAction("reinvest")}
-            className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-bold text-sm text-white shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
+            className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 transition-all font-bold text-sm text-white shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2">
             <TrendingUp size={16} /> {t("dashboard.reinvestNow")}
           </button>
           <button onClick={() => handleAction("withdraw")}
-            className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
+            className="w-full py-3 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
             {t("dashboard.withdrawProfits")}
           </button>
           <button onClick={() => handleAction("dismiss")}
@@ -133,21 +121,20 @@ function ReinvestPopup({ completedPlans, onDismiss }) {
             {t("dashboard.remindLater")}
           </button>
         </div>
-        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
       </div>
     </div>
   );
 }
 
-// ── KYC Modal ─────────────────────────────────────────────────────────────────
+// ── KYC Modal ────────────────────────────────────────────────────────────────
 function KYCModal({ kyc, onClose }) {
   const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
-      <div className="relative w-full max-w-sm bg-[#0d1221] border border-white/10 rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }}>
+      <div className="relative w-full max-w-sm bg-gradient-to-b from-[#0d1525] to-[#0a1120] border border-white/10 rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
         <button onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+          className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
           <X size={14} />
         </button>
         <div className="flex flex-col items-center text-center mb-5">
@@ -155,7 +142,7 @@ function KYCModal({ kyc, onClose }) {
             {kyc?.status === "approved" ? "✅" : kyc?.status === "pending" ? "⏳" : "❌"}
           </div>
           <h2 className="text-lg font-bold text-white">{t("kyc.title")}</h2>
-          <span className={`mt-1 text-xs px-3 py-1 rounded-full font-semibold capitalize ${
+          <span className={`mt-1 text-xs px-3 py-1 rounded-full font-semibold ${
             kyc?.status === "approved" ? "bg-emerald-500/15 text-emerald-400"
             : kyc?.status === "pending" ? "bg-yellow-500/15 text-yellow-400"
             : "bg-red-500/15 text-red-400"
@@ -169,12 +156,6 @@ function KYCModal({ kyc, onClose }) {
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
             <p className="text-white/30 text-xs uppercase tracking-widest mb-1">{t("kyc.documentType")}</p>
             <p className="text-white text-sm font-semibold capitalize">{kyc?.idType?.replace("_", " ") || "—"}</p>
-          </div>
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">{t("kyc.submittedOn") || t("kyc.submittedAt")}</p>
-            <p className="text-white text-sm font-semibold">
-              {kyc?.submittedAt ? new Date(kyc.submittedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "—"}
-            </p>
           </div>
           {kyc?.status === "approved" && kyc?.reviewedAt && (
             <div className="p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
@@ -190,26 +171,11 @@ function KYCModal({ kyc, onClose }) {
               <p className="text-red-400 text-sm">{kyc.rejectionReason}</p>
             </div>
           )}
-          {kyc?.status === "pending" && (
-            <div className="p-3 rounded-xl bg-yellow-500/8 border border-yellow-500/20">
-              <p className="text-yellow-400/80 text-xs leading-relaxed">⏳ {t("dashboard.docsBeingReviewed")}</p>
-            </div>
-          )}
-          {kyc?.idFrontImage && (
-            <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">{t("dashboard.idDocument")}</p>
-              <img src={kyc.idFrontImage} alt="ID" className="w-full rounded-xl border border-white/10 object-cover max-h-40" />
-            </div>
-          )}
-          {kyc?.selfieImage && (
-            <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest mb-2">{t("dashboard.selfieWithId")}</p>
-              <img src={kyc.selfieImage} alt="Selfie" className="w-full rounded-xl border border-white/10 object-cover max-h-40" />
-            </div>
-          )}
+          {kyc?.idFrontImage && <img src={kyc.idFrontImage} alt="ID" className="w-full rounded-xl border border-white/10 max-h-40 object-cover" />}
+          {kyc?.selfieImage && <img src={kyc.selfieImage} alt="Selfie" className="w-full rounded-xl border border-white/10 max-h-40 object-cover" />}
         </div>
         <button onClick={onClose}
-          className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition-all mt-4">
+          className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition-all mt-4">
           {t("dashboard.close")}
         </button>
       </div>
@@ -217,7 +183,34 @@ function KYCModal({ kyc, onClose }) {
   );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
+// ── Sparkline chart for portfolio ────────────────────────────────────────────
+function Sparkline({ profitPercent }) {
+  const isPositive = profitPercent >= 0;
+  const points = [];
+  const segments = 30;
+  for (let i = 0; i < segments; i++) {
+    const x = (i / (segments - 1)) * 100;
+    const noise = Math.sin(i * 0.5) * 8 + Math.cos(i * 0.3) * 5;
+    const trend = isPositive ? (i / segments) * 30 : -(i / segments) * 20;
+    const y = 50 - trend + noise;
+    points.push(`${x},${y}`);
+  }
+  const color = isPositive ? "#10b981" : "#ef4444";
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+      <defs>
+        <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline points={points.join(" ")} fill="none" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <polygon points={`0,100 ${points.join(" ")} 100,100`} fill="url(#sparkGradient)" />
+    </svg>
+  );
+}
+
+// ── Main Dashboard ───────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { t } = useTranslation();
   const [data, setData] = useState(null);
@@ -232,6 +225,7 @@ export default function Dashboard() {
   const [copied, setCopied] = useState(false);
   const [showKYCModal, setShowKYCModal] = useState(false);
   const [kycData, setKycData] = useState(null);
+  const [hideBalance, setHideBalance] = useState(false);
   const prevBalance = useRef(null);
   const navigate = useNavigate();
 
@@ -256,9 +250,7 @@ export default function Dashboard() {
     const token = sessionStorage.getItem("token");
     setResending(true);
     try {
-      await axios.post(`${API_URL}/api/auth/resend-verification`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(`${API_URL}/api/auth/resend-verification`, {}, { headers: { Authorization: `Bearer ${token}` } });
       setNotification({ type: "credit", message: `✅ ${t("dashboard.verificationEmailSent")}` });
       setTimeout(() => setNotification(null), 5000);
     } catch (err) {
@@ -274,9 +266,7 @@ export default function Dashboard() {
     if (!kycStatus || kycStatus === "none") { navigate("/kyc"); return; }
     try {
       const token = sessionStorage.getItem("token");
-      const res = await axios.get(`${API_URL}/api/user/kyc-status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API_URL}/api/user/kyc-status`, { headers: { Authorization: `Bearer ${token}` } });
       setKycData(res.data.kyc);
       setShowKYCModal(true);
     } catch { navigate("/kyc"); }
@@ -287,11 +277,8 @@ export default function Dashboard() {
     if (!token) return navigate("/login");
     if (!silent) setRefreshing(true);
     try {
-      const res = await axios.get(`${API_URL}/api/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API_URL}/api/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
       const newData = res.data;
-
       if (prevBalance.current !== null && newData.balance !== prevBalance.current) {
         const diff = newData.balance - prevBalance.current;
         setNotification({
@@ -330,6 +317,7 @@ export default function Dashboard() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchDashboard]);
 
+  // TradingView chart
   useEffect(() => {
     if (!data) return;
     const timeout = setTimeout(() => {
@@ -337,7 +325,6 @@ export default function Dashboard() {
       if (!container || container.childElementCount > 0) return;
       const script = document.createElement("script");
       script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-      script.type = "text/javascript";
       script.async = true;
       script.innerHTML = JSON.stringify({
         autosize: true, symbol: "BINANCE:BTCUSDT", interval: "15",
@@ -356,7 +343,6 @@ export default function Dashboard() {
       <p className="text-white/40 text-sm animate-pulse">{t("common.loading")}</p>
     </div>
   );
-
   if (!data) return (
     <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
       <p className="text-red-400 text-sm">{t("common.error")}</p>
@@ -373,7 +359,9 @@ export default function Dashboard() {
   const totalInvested = [...plans, ...completed].reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
   const totalProfit = [...plans, ...completed].reduce((s, p) => s + (parseFloat(p.profit) || 0), 0);
   const totalWithdrawn = data.totalWithdrawn || 0;
-  const profitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : "0.0";
+  const balance = parseFloat(data.balance) || 0;
+  const portfolioValue = balance + plans.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+  const profitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
   const memberSince = data.createdAt ? new Date(data.createdAt).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "N/A";
   const referralLink = data.referralCode ? `mexicatrading.com/register?ref=${data.referralCode}` : "";
   const referralEarnings = data.referralEarnings || 0;
@@ -381,36 +369,35 @@ export default function Dashboard() {
   const unreadMessages = data.unreadMessages || 0;
   const kycStatus = data?.kyc?.status || "none";
   const kycInvited = data?.kycInvited || false;
-  const showKYCBadge = kycStatus === "pending" || kycStatus === "approved" || kycStatus === "rejected";
+  const showKYCBadge = kycStatus !== "none";
   const showKYCInvite = kycInvited && kycStatus === "none";
 
   const kycBadgeConfig = {
-    pending:  { label: `KYC ⏳`, cls: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400" },
-    approved: { label: `KYC ✅`, cls: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" },
-    rejected: { label: `KYC ❌`, cls: "bg-red-500/15 border-red-500/25 text-red-400" },
+    pending:  { label: "KYC ⏳", cls: "bg-yellow-500/15 border-yellow-500/30 text-yellow-400" },
+    approved: { label: "KYC ✅", cls: "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" },
+    rejected: { label: "KYC ❌", cls: "bg-red-500/15 border-red-500/30 text-red-400" },
   };
 
+  const maskBalance = (val) => hideBalance ? "••••••" : `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
   return (
-    <div className="min-h-screen bg-[#080c18] text-white font-medium pb-16">
+    <div className="min-h-screen bg-[#080c18] text-white pb-16 font-sans">
 
       {/* MODALS */}
-      {showReinvest && reinvestPlans.length > 0 && (
-        <ReinvestPopup completedPlans={reinvestPlans} onDismiss={() => setShowReinvest(false)} />
-      )}
-      {showKYCModal && kycData && (
-        <KYCModal kyc={kycData} onClose={() => setShowKYCModal(false)} />
-      )}
+      {showReinvest && reinvestPlans.length > 0 && <ReinvestPopup completedPlans={reinvestPlans} onDismiss={() => setShowReinvest(false)} />}
+      {showKYCModal && kycData && <KYCModal kyc={kycData} onClose={() => setShowKYCModal(false)} />}
 
-      {/* BACKGROUND */}
+      {/* AMBIENT BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/6 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
+        <div className="absolute w-[700px] h-[700px] bg-emerald-500/8 blur-[180px] rounded-full top-[-200px] left-[-200px]" />
+        <div className="absolute w-[500px] h-[500px] bg-teal-400/6 blur-[140px] rounded-full bottom-[-100px] right-[-100px]" />
+        <div className="absolute w-[400px] h-[400px] bg-blue-500/4 blur-[140px] rounded-full top-[40%] left-[40%]" />
+        <div className="absolute inset-0 opacity-[0.018]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
       </div>
 
       {/* NOTIFICATION TOAST */}
       {notification && (
-        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[999] px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold flex items-center gap-2 ${
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[999] px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold flex items-center gap-2 backdrop-blur-xl ${
           notification.type === "credit"
             ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
             : "bg-red-500/20 border-red-500/40 text-red-400"
@@ -427,62 +414,57 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-5">
 
-        {/* GREETING */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
-          <div>
-            <p className="text-white/40 text-xs uppercase tracking-widest">{getGreeting()}</p>
-            <h2 className="text-2xl font-bold mt-0.5 flex items-center gap-2">
-              {data.name} <span className="text-emerald-400">👋</span>
-              {showKYCBadge && (
-                <button onClick={handleKYCClick}
-                  className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-semibold transition-all hover:opacity-80 ${kycBadgeConfig[kycStatus]?.cls}`}>
-                  <BadgeCheck size={11} /> {kycBadgeConfig[kycStatus]?.label}
-                </button>
-              )}
-            </h2>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-3 text-xs text-white/30 flex-wrap">
-              {location.country && (
-                <span className="flex items-center gap-1.5">
-                  <Globe size={12} /> {flagEmoji(location.flag)} {location.country}
-                </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <Calendar size={12} /> {t("dashboard.memberSince")} {memberSince}
-              </span>
-              <span className="flex items-center gap-1.5 text-emerald-400/70">
-                <BadgeCheck size={12} /> {t("dashboard.verified")}
-              </span>
-              {lastUpdated && (
-                <span className="flex items-center gap-1 text-white/20">
-                  <RefreshCw size={10} />
-                  {lastUpdated.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              )}
+        {/* GREETING ROW */}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-white font-bold text-lg">
+              {data.name?.charAt(0).toUpperCase()}
             </div>
+            <div>
+              <p className="text-white/40 text-xs">{getGreeting()}</p>
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                {data.name}
+                {showKYCBadge && (
+                  <button onClick={handleKYCClick}
+                    className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border font-semibold transition-all hover:opacity-80 ${kycBadgeConfig[kycStatus]?.cls}`}>
+                    {kycBadgeConfig[kycStatus]?.label}
+                  </button>
+                )}
+              </h2>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
             <button onClick={() => fetchDashboard(false)} disabled={refreshing}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
-              <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+              className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+            </button>
+            <button onClick={() => navigate("/messages")}
+              className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+              <MessageSquare size={14} />
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {unreadMessages > 9 ? "9+" : unreadMessages}
+                </span>
+              )}
             </button>
             <LanguageSelector />
           </div>
         </div>
 
         {/* EMAIL VERIFICATION BANNER */}
-        {data && !data.isVerified && (
-          <div className="flex items-center justify-between p-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center text-xl">📧</div>
-              <div>
-                <p className="font-bold text-sm text-white">{t("dashboard.emailVerifyTitle")}</p>
-                <p className="text-yellow-400/70 text-xs mt-0.5">{t("dashboard.emailVerifyDesc")}</p>
+        {!data.isVerified && (
+          <div className="flex items-center justify-between p-3.5 rounded-2xl border border-yellow-500/30 bg-yellow-500/8">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center text-base shrink-0">📧</div>
+              <div className="min-w-0">
+                <p className="font-bold text-xs text-white truncate">{t("dashboard.emailVerifyTitle")}</p>
+                <p className="text-yellow-400/70 text-[11px] mt-0.5 truncate">{t("dashboard.emailVerifyDesc")}</p>
               </div>
             </div>
             <button onClick={handleResendVerification} disabled={resending}
-              className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition-all font-semibold whitespace-nowrap flex items-center gap-1.5 disabled:opacity-70">
+              className="text-[11px] px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition-all font-semibold whitespace-nowrap flex items-center gap-1.5 disabled:opacity-70 shrink-0">
               {resending
                 ? <><span className="w-3 h-3 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" /> {t("dashboard.sending")}</>
                 : t("dashboard.resendEmail")}
@@ -493,40 +475,37 @@ export default function Dashboard() {
         {/* KYC INVITE BANNER */}
         {showKYCInvite && (
           <div onClick={() => navigate("/kyc")}
-            className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-purple-500/30 bg-purple-500/8 hover:bg-purple-500/12 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-xl">🪪</div>
-              <div>
-                <p className="font-bold text-sm text-white">{t("dashboard.kycInviteTitle")}</p>
-                <p className="text-purple-400/70 text-xs mt-0.5">{t("dashboard.kycInviteDesc")}</p>
+            className="cursor-pointer flex items-center justify-between p-3.5 rounded-2xl border border-purple-500/30 bg-purple-500/8 hover:bg-purple-500/12 transition-all">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-base shrink-0">🪪</div>
+              <div className="min-w-0">
+                <p className="font-bold text-xs text-white truncate">{t("dashboard.kycInviteTitle")}</p>
+                <p className="text-purple-400/70 text-[11px] mt-0.5 truncate">{t("dashboard.kycInviteDesc")}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-              <ChevronRight size={16} className="text-purple-400" />
-            </div>
+            <ChevronRight size={16} className="text-purple-400 shrink-0" />
           </div>
         )}
 
         {/* KYC STATUS BANNER */}
         {(kycStatus === "pending" || kycStatus === "rejected") && (
           <div onClick={handleKYCClick}
-            className={`cursor-pointer flex items-center justify-between p-4 rounded-2xl border transition-all ${
+            className={`cursor-pointer flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
               kycStatus === "pending"
                 ? "border-yellow-500/30 bg-yellow-500/8 hover:bg-yellow-500/12"
                 : "border-red-500/30 bg-red-500/8 hover:bg-red-500/12"
             }`}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${
                 kycStatus === "pending" ? "bg-yellow-500/15 border border-yellow-500/25" : "bg-red-500/15 border border-red-500/25"
               }`}>
                 {kycStatus === "pending" ? "⏳" : "❌"}
               </div>
-              <div>
-                <p className="font-bold text-sm text-white">
+              <div className="min-w-0">
+                <p className="font-bold text-xs text-white truncate">
                   {kycStatus === "pending" ? t("dashboard.kycPendingTitle") : t("dashboard.kycRejectedTitle")}
                 </p>
-                <p className={`text-xs mt-0.5 ${kycStatus === "pending" ? "text-yellow-400/70" : "text-red-400/70"}`}>
+                <p className={`text-[11px] mt-0.5 truncate ${kycStatus === "pending" ? "text-yellow-400/70" : "text-red-400/70"}`}>
                   {kycStatus === "pending" ? t("dashboard.kycPendingDesc") : t("dashboard.kycRejectedDesc")}
                 </p>
               </div>
@@ -536,154 +515,159 @@ export default function Dashboard() {
         )}
 
         {/* REINVEST BANNER */}
-        {completed.length > 0 && completed.every(p => wasPopupShown(p)) && (
+        {completed.length > 0 && completed.every(wasPopupShown) && (
           <div onClick={() => { setReinvestPlans(completed); setShowReinvest(true); }}
-            className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 hover:bg-emerald-500/12 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-xl">🏆</div>
-              <div>
-                <p className="font-bold text-sm text-white">
+            className="cursor-pointer flex items-center justify-between p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 hover:bg-emerald-500/12 transition-all">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-base shrink-0">🏆</div>
+              <div className="min-w-0">
+                <p className="font-bold text-xs text-white truncate">
                   {completed.length} {completed.length > 1 ? t("dashboard.plansCompleted") : t("dashboard.planCompleted1")}
                 </p>
-                <p className="text-emerald-400/70 text-xs mt-0.5">{t("dashboard.tapToSeeEarnings")}</p>
+                <p className="text-emerald-400/70 text-[11px] mt-0.5 truncate">{t("dashboard.tapToSeeEarnings")}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <ChevronRight size={16} className="text-emerald-400" />
-            </div>
+            <ChevronRight size={16} className="text-emerald-400 shrink-0" />
           </div>
         )}
 
-        {/* HERO PORTFOLIO CARD */}
-        <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-teal-500/5 p-6 sm:p-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            {[
-              { label: t("dashboard.totalBalance"), value: parseFloat(data.balance) || 0, prefix: "$", color: "text-white" },
-              { label: t("dashboard.totalInvested"), value: totalInvested, prefix: "$", color: "text-blue-400" },
-              { label: t("dashboard.totalProfit"), value: totalProfit, prefix: "$", color: "text-emerald-400" },
-              { label: t("dashboard.totalWithdrawn"), value: totalWithdrawn, prefix: "$", color: "text-purple-400" },
-            ].map((s, i) => (
-              <div key={i} className="flex flex-col gap-1">
-                <p className="text-white/35 text-xs uppercase tracking-widest">{s.label}</p>
-                <p className={`text-2xl font-bold ${s.color}`}><CountUp end={s.value} prefix={s.prefix} /></p>
+        {/* ── PORTFOLIO HERO CARD (Robinhood-inspired) ────────────────────── */}
+        <div className="relative rounded-3xl overflow-hidden border border-white/8 bg-gradient-to-br from-[#0d1525] via-[#0a1120] to-[#0d1525] p-6">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+          <div className="relative">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <p className="text-white/40 text-xs uppercase tracking-widest">{t("dashboard.totalBalance")}</p>
+                <button onClick={() => setHideBalance(!hideBalance)} className="text-white/30 hover:text-white transition">
+                  {hideBalance ? <EyeOff size={11} /> : <Eye size={11} />}
+                </button>
               </div>
-            ))}
-          </div>
-          <div className="mt-5 pt-5 border-t border-white/8 flex items-center justify-between flex-wrap gap-2">
-            <div className={`flex items-center gap-1.5 text-sm font-semibold ${parseFloat(profitPercent) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              <TrendingUp size={14} /> {profitPercent}% {t("dashboard.overallReturn")}
+              <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                profitPercent >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+              }`}>
+                {profitPercent >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+                {profitPercent.toFixed(2)}%
+              </div>
             </div>
-            <span className="text-white/20 text-xs">
-              {plans.length} {t("dashboard.activePlans")} · {completed.length} {t("dashboard.completedPlans")}
-            </span>
+
+            {/* Balance */}
+            <div className="flex items-baseline gap-2 mb-1">
+              <h1 className="text-4xl font-bold text-white tracking-tight">
+                {hideBalance ? "••••••" : <CountUp end={balance} prefix="$" decimals={2} />}
+              </h1>
+            </div>
+            <p className="text-white/40 text-xs flex items-center gap-1">
+              <Sparkles size={10} className="text-emerald-400" />
+              {t("dashboard.totalProfit")}: <span className="text-emerald-400 font-semibold">+${totalProfit.toLocaleString()}</span>
+              <span className="text-white/20 mx-1">·</span>
+              {t("dashboard.overallReturn")}
+            </p>
+
+            {/* Sparkline */}
+            <div className="h-14 mt-4 -mx-1">
+              <Sparkline profitPercent={profitPercent} />
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/8">
+              <div>
+                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{t("dashboard.totalInvested")}</p>
+                <p className="text-blue-400 font-bold text-sm">{maskBalance(totalInvested)}</p>
+              </div>
+              <div>
+                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{t("dashboard.totalWithdrawn")}</p>
+                <p className="text-purple-400 font-bold text-sm">{maskBalance(totalWithdrawn)}</p>
+              </div>
+              <div>
+                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{t("dashboard.activePlans")}</p>
+                <p className="text-emerald-400 font-bold text-sm">{plans.length}</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* STAT CARDS */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* QUICK ACTIONS — 4 modern square buttons */}
+        <div className="grid grid-cols-4 gap-2.5">
           {[
-            { label: t("dashboard.totalBalance"), value: `$${parseFloat(data.balance || 0).toLocaleString()}`, icon: <Wallet size={18} />, color: "text-white" },
-            { label: t("dashboard.activePlans"), value: plans.length, icon: <Activity size={18} />, color: "text-blue-400" },
-            { label: t("dashboard.transactions"), value: history.length, icon: <BarChart2 size={18} />, color: "text-purple-400" },
-            { label: t("dashboard.totalProfit"), value: `$${totalProfit.toLocaleString()}`, icon: <DollarSign size={18} />, color: "text-emerald-400" },
-          ].map((stat, i) => (
-            <div key={i} className="p-4 rounded-2xl border border-white/8 bg-white/[0.03] flex flex-col gap-3 hover:border-white/15 transition-all">
-              <div className="flex justify-between items-start">
-                <p className="text-white/35 text-xs uppercase tracking-widest">{stat.label}</p>
-                <span className={`${stat.color} opacity-60`}>{stat.icon}</span>
-              </div>
-              <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-            </div>
+            { icon: <ArrowDownCircle size={18} />, label: t("dashboard.deposit"), path: "/deposit", color: "from-emerald-500/20 to-emerald-500/5 text-emerald-400 border-emerald-500/25" },
+            { icon: <TrendingUp size={18} />,      label: t("dashboard.invest"),  path: "/plans",   color: "from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25" },
+            { icon: <ArrowUpCircle size={18} />,   label: t("dashboard.withdraw"),path: "/withdraw",color: "from-purple-500/20 to-purple-500/5 text-purple-400 border-purple-500/25" },
+            { icon: <MessageSquare size={18} />,   label: t("dashboard.messages"),path: "/messages",color: "from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25", badge: unreadMessages },
+          ].map((action, i) => (
+            <button key={i} onClick={() => navigate(action.path)}
+              className={`relative aspect-[4/3] rounded-2xl border bg-gradient-to-br ${action.color} hover:scale-[1.02] transition-all flex flex-col items-center justify-center gap-1.5 group`}>
+              <div className="opacity-90 group-hover:scale-110 transition-transform">{action.icon}</div>
+              <p className="text-xs font-semibold opacity-90">{action.label}</p>
+              {action.badge > 0 && (
+                <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {action.badge > 9 ? "9+" : action.badge}
+                </span>
+              )}
+            </button>
           ))}
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex flex-wrap gap-3">
-          <button onClick={() => navigate("/deposit")} className="btn-primary">
-            <ArrowDownCircle size={16} /> {t("dashboard.deposit")}
-          </button>
-          <button onClick={() => navigate("/plans")} className="btn-primary">
-            <TrendingUp size={16} /> {t("dashboard.plans")}
-          </button>
-          <button onClick={() => navigate("/withdraw")} className="btn-primary">
-            <ArrowUpCircle size={16} /> {t("dashboard.withdraw")}
-          </button>
-          <button onClick={() => navigate("/messages")} className="btn-primary relative">
-            <MessageSquare size={16} /> {t("dashboard.messages")}
-            {unreadMessages > 0 && (
-              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center z-50">
-                {unreadMessages > 9 ? "9+" : unreadMessages}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* REFERRAL SECTION */}
+        {/* REFERRAL CARD */}
         {data.referralCode && (
-          <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 via-white/[0.02] to-teal-500/5 p-6">
-            <div className="flex items-center gap-3 mb-5">
+          <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-white/[0.02] to-teal-500/5 p-5">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
-                <Gift size={18} className="text-emerald-400" />
+                <Gift size={16} className="text-emerald-400" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-white text-sm">{t("dashboard.referralProgram")}</h3>
                 <p className="text-emerald-400/70 text-xs mt-0.5">{t("dashboard.referralProgramDesc")}</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 mb-5">
+            <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
-                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">{t("dashboard.referrals")}</p>
-                <p className="text-white font-bold text-lg">{totalReferrals}</p>
+                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{t("dashboard.referrals")}</p>
+                <p className="text-white font-bold">{totalReferrals}</p>
               </div>
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">{t("dashboard.earned")}</p>
-                <p className="text-emerald-400 font-bold text-lg">${referralEarnings.toLocaleString()}</p>
+                <p className="text-emerald-400/60 text-[10px] uppercase tracking-widest mb-1">{t("dashboard.earned")}</p>
+                <p className="text-emerald-400 font-bold">${referralEarnings.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
-                <p className="text-white/35 text-xs uppercase tracking-widest mb-1">{t("dashboard.rate")}</p>
-                <p className="text-white font-bold text-lg">5%</p>
+                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{t("dashboard.rate")}</p>
+                <p className="text-white font-bold">5%</p>
               </div>
             </div>
-            <div>
-              <p className="text-white/40 text-xs uppercase tracking-widest mb-2">{t("dashboard.yourReferralLink")}</p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white/60 font-mono truncate">
-                  {referralLink}
-                </div>
-                <button onClick={handleCopyReferral}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
-                    copied ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
-                    : "bg-emerald-500 hover:bg-emerald-400 text-white"
-                  }`}>
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
-                  {copied ? t("dashboard.copied") : t("dashboard.copy")}
-                </button>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/60 font-mono truncate">
+                {referralLink}
               </div>
-              <p className="text-white/25 text-xs mt-2">{t("dashboard.shareReferralNote")}</p>
+              <button onClick={handleCopyReferral}
+                className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs transition-all whitespace-nowrap ${
+                  copied ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" : "bg-emerald-500 hover:bg-emerald-400 text-white"
+                }`}>
+                {copied ? <Check size={12} /> : <Copy size={12} />}
+                {copied ? t("dashboard.copied") : t("dashboard.copy")}
+              </button>
             </div>
-          </section>
+          </div>
         )}
 
         {/* LIVE CHART */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.liveMarket")}</h3>
+            <h3 className="text-sm font-bold text-white">{t("dashboard.liveMarket")}</h3>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               {t("dashboard.live")}
             </div>
           </div>
-          <div className="rounded-2xl border border-white/8 overflow-hidden h-[420px]">
+          <div className="rounded-3xl border border-white/8 overflow-hidden h-[380px]">
             <div id="tradingview-widget" style={{ height: "100%", width: "100%" }} />
           </div>
         </section>
 
         {/* ACTIVE PLANS */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.activePlans")}</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-white">{t("dashboard.activePlans")}</h3>
             {plans.length > 0 && (
               <button onClick={() => navigate("/plans")} className="text-xs text-emerald-400 flex items-center gap-1 hover:gap-2 transition-all">
                 {t("dashboard.addPlan")} <ChevronRight size={12} />
@@ -691,73 +675,67 @@ export default function Dashboard() {
             )}
           </div>
           {plans.length ? (
-            <div className="flex gap-4 overflow-x-auto py-1 scroll-smooth snap-x snap-mandatory scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
+            <div className="flex gap-3 overflow-x-auto py-1 scroll-smooth snap-x snap-mandatory pb-2">
               {plans.map((p, i) => {
                 const start = new Date(p.createdAt);
                 const end = new Date(p.endDate);
                 const totalDays = p.duration;
                 const daysPassed = Math.min(totalDays, Math.floor((Date.now() - start) / 86400000));
                 const progress = Math.round((daysPassed / totalDays) * 100);
-                const daysLeft = Math.max(0, Math.ceil((new Date(p.endDate) - new Date()) / (1000 * 60 * 60 * 24)));
+                const daysLeft = Math.max(0, Math.ceil((end - new Date()) / 86400000));
                 const roi = p.amount > 0 ? ((p.profit / p.amount) * 100).toFixed(1) : "0.0";
                 return (
-                  <div key={i} className="min-w-[270px] flex-shrink-0 snap-start rounded-2xl border border-white/8 bg-white/[0.03] p-5 flex flex-col gap-4 hover:border-emerald-500/30 transition-all">
+                  <div key={i} className="min-w-[260px] flex-shrink-0 snap-start rounded-2xl border border-white/8 bg-gradient-to-br from-white/[0.04] to-white/[0.02] p-4 flex flex-col gap-3 hover:border-emerald-500/30 transition-all">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-bold text-white">{p.plan}</h4>
-                        <p className="text-white/30 text-xs mt-0.5">{t("dashboard.endsOn")} {end.toDateString()}</p>
+                        <h4 className="font-bold text-white text-sm">{p.plan}</h4>
+                        <p className="text-white/30 text-[10px] mt-0.5">{t("dashboard.endsOn")} {end.toLocaleDateString()}</p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${progress < 100 ? "bg-emerald-500/15 text-emerald-400" : "bg-green-500/15 text-green-400"}`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${progress < 100 ? "bg-emerald-500/15 text-emerald-400" : "bg-green-500/15 text-green-400"}`}>
                         {progress < 100 ? t("dashboard.active") : t("dashboard.done")}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-16 h-16 shrink-0">
-                        <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="15" stroke="#ffffff08" strokeWidth="3" fill="none" />
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-14 h-14 shrink-0">
+                        <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="15" stroke="#ffffff10" strokeWidth="3" fill="none" />
                           <circle cx="18" cy="18" r="15" stroke="#10b981" strokeWidth="3" fill="none"
                             strokeDasharray={2 * Math.PI * 15}
                             strokeDashoffset={2 * Math.PI * 15 - (2 * Math.PI * 15 * progress) / 100}
                             strokeLinecap="round" style={{ transition: "stroke-dashoffset 1.2s ease-out" }} />
                         </svg>
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-emerald-400">{progress}%</div>
+                        <div className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-emerald-400">{progress}%</div>
                       </div>
-                      <div className="flex flex-col gap-1.5 text-sm">
-                        <div className="flex justify-between gap-6">
-                          <span className="text-white/35 text-xs">{t("dashboard.invested")}</span>
+                      <div className="flex flex-col gap-1 text-xs flex-1">
+                        <div className="flex justify-between">
+                          <span className="text-white/35">{t("dashboard.invested")}</span>
                           <span className="font-semibold">${parseFloat(p.amount).toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between gap-6">
-                          <span className="text-white/35 text-xs">{t("dashboard.profit")}</span>
-                          <span className="font-semibold text-emerald-400">${parseFloat(p.profit).toLocaleString()}</span>
+                        <div className="flex justify-between">
+                          <span className="text-white/35">{t("dashboard.profit")}</span>
+                          <span className="font-semibold text-emerald-400">+${parseFloat(p.profit).toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between gap-6">
-                          <span className="text-white/35 text-xs">{t("dashboard.roi")}</span>
+                        <div className="flex justify-between">
+                          <span className="text-white/35">{t("dashboard.roi")}</span>
                           <span className="font-semibold text-teal-400">{roi}%</span>
                         </div>
                       </div>
                     </div>
-                    {progress < 100 ? (
-                      <div className="flex items-center gap-2 text-xs text-white/40 border-t border-white/5 pt-3">
-                        <Clock size={11} /> <span>{daysLeft} {t("dashboard.daysRemaining")}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-xs text-green-400 border-t border-white/5 pt-3">
-                        <BadgeCheck size={11} /> <span>{t("dashboard.planCompleted")}</span>
-                      </div>
-                    )}
+                    <div className={`flex items-center gap-1.5 text-[10px] border-t border-white/5 pt-2 ${progress < 100 ? "text-white/40" : "text-green-400"}`}>
+                      {progress < 100 ? <><Clock size={10} /> {daysLeft} {t("dashboard.daysRemaining")}</> : <><BadgeCheck size={10} /> {t("dashboard.planCompleted")}</>}
+                    </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <TrendingUp size={24} className="text-emerald-400 opacity-60" />
+            <div className="flex flex-col items-center justify-center py-10 rounded-3xl border border-white/8 bg-white/[0.02] text-center gap-2">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <TrendingUp size={20} className="text-emerald-400 opacity-60" />
               </div>
-              <p className="text-white font-semibold">{t("dashboard.noActivePlans")}</p>
-              <p className="text-white/30 text-sm max-w-xs">{t("dashboard.noActivePlansDesc")}</p>
-              <button onClick={() => navigate("/plans")} className="mt-1 px-5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition-all">
+              <p className="text-white font-semibold text-sm">{t("dashboard.noActivePlans")}</p>
+              <p className="text-white/30 text-xs max-w-xs">{t("dashboard.noActivePlansDesc")}</p>
+              <button onClick={() => navigate("/plans")} className="mt-1 px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-xs hover:bg-emerald-500/25 transition-all font-semibold">
                 {t("dashboard.browsePlans")}
               </button>
             </div>
@@ -765,62 +743,54 @@ export default function Dashboard() {
         </section>
 
         {/* COMPLETED PLANS */}
-        <section>
-          <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest mb-4">{t("dashboard.completedPlans")}</h3>
-          {completed.length ? (
-            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-400/30 scrollbar-track-transparent">
+        {completed.length > 0 && (
+          <section>
+            <h3 className="text-sm font-bold text-white mb-3">{t("dashboard.completedPlans")}</h3>
+            <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
               {completed.map((p, i) => (
                 <div key={i} onClick={() => { setReinvestPlans([p]); setShowReinvest(true); }}
-                  className="cursor-pointer flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+                  className="cursor-pointer flex items-center justify-between p-3 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                      <BadgeCheck size={16} className="text-green-400" />
+                      <BadgeCheck size={15} className="text-green-400" />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">{p.plan}</p>
-                      <p className="text-white/30 text-xs">{t("dashboard.invested")} ${parseFloat(p.amount).toLocaleString()}</p>
+                      <p className="font-semibold text-xs">{p.plan}</p>
+                      <p className="text-white/30 text-[11px]">{t("dashboard.invested")} ${parseFloat(p.amount).toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-emerald-400 font-bold text-sm">+${parseFloat(p.profit).toLocaleString()}</p>
-                    <p className="text-emerald-400/50 text-xs font-medium">{t("dashboard.tapToReinvest")}</p>
+                    <p className="text-emerald-400 font-bold text-xs">+${parseFloat(p.profit).toLocaleString()}</p>
+                    <p className="text-emerald-400/50 text-[10px]">{t("dashboard.tapToReinvest")}</p>
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <ArrowUpCircle size={24} className="text-emerald-400 opacity-60" />
-              </div>
-              <p className="text-white font-semibold">{t("dashboard.noCompletedPlans")}</p>
-              <p className="text-white/30 text-sm max-w-xs">{t("dashboard.noCompletedPlansDesc")}</p>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* RECENT ACTIVITIES */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-widest">{t("dashboard.recentActivities")}</h3>
-            {history.length > 4 && <span className="text-xs text-white/30">{history.length} {t("dashboard.transactions")}</span>}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-white">{t("dashboard.recentActivities")}</h3>
+            {history.length > 0 && <span className="text-xs text-white/30">{history.length} {t("dashboard.transactions") || "total"}</span>}
           </div>
           {history.length ? (
-            <div className="space-y-2 max-h-[272px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
               {history.map((h, i) => {
                 const isDeposit = h.action === "Deposit";
                 return (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition-all">
+                  <div key={i} className="flex items-center justify-between p-3 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition-all">
                     <div className="flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDeposit ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
-                        {isDeposit ? <ArrowDownCircle size={16} className="text-emerald-400" /> : <ArrowUpCircle size={16} className="text-red-400" />}
+                        {isDeposit ? <ArrowDownCircle size={15} className="text-emerald-400" /> : <ArrowUpCircle size={15} className="text-red-400" />}
                       </div>
                       <div>
-                        <p className="font-semibold text-sm">{t(`dashboard.${isDeposit ? "deposit" : "withdraw"}`)}</p>
-                        <p className="text-white/30 text-xs">{new Date(h.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</p>
+                        <p className="font-semibold text-xs">{t(`dashboard.${isDeposit ? "deposit" : "withdraw"}`)}</p>
+                        <p className="text-white/30 text-[11px]">{new Date(h.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</p>
                       </div>
                     </div>
-                    <p className={`font-bold text-sm ${isDeposit ? "text-emerald-400" : "text-red-400"}`}>
+                    <p className={`font-bold text-xs ${isDeposit ? "text-emerald-400" : "text-red-400"}`}>
                       {isDeposit ? "+" : "-"}${parseFloat(h.amount ?? 0).toLocaleString()}
                     </p>
                   </div>
@@ -828,57 +798,52 @@ export default function Dashboard() {
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <Wallet size={24} className="text-emerald-400 opacity-60" />
-              </div>
-              <p className="text-white font-semibold">{t("dashboard.noTransactions")}</p>
-              <p className="text-white/30 text-sm max-w-xs">{t("dashboard.noTransactionsDesc")}</p>
-              <button onClick={() => navigate("/deposit")} className="mt-1 px-5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition-all">
-                {t("dashboard.makeFirstDeposit")}
-              </button>
+            <div className="flex flex-col items-center justify-center py-10 rounded-3xl border border-white/8 bg-white/[0.02] text-center gap-2">
+              <Wallet size={20} className="text-white/20" />
+              <p className="text-white font-semibold text-sm">{t("dashboard.noTransactions")}</p>
+              <p className="text-white/30 text-xs">{t("dashboard.noTransactionsDesc")}</p>
             </div>
           )}
         </section>
 
         {/* ACCOUNT INFO */}
-        <section className="rounded-2xl border border-white/8 bg-white/[0.02] p-5 flex flex-wrap gap-5">
-          <div className="flex items-center gap-3 flex-1 min-w-[180px]">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">
+        <section className="rounded-3xl border border-white/8 bg-white/[0.02] p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-base">
               {flagEmoji(location.flag)}
             </div>
-            <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.location")}</p>
-              <p className="font-semibold text-sm mt-0.5">
-                {location.country && location.country !== "Unknown" ? location.country : t("dashboard.detecting")}
+            <div className="min-w-0">
+              <p className="text-white/30 text-[10px] uppercase tracking-widest">{t("dashboard.location")}</p>
+              <p className="font-semibold text-xs truncate">
+                {location.country || t("dashboard.detecting")}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-1 min-w-[180px]">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              <Calendar size={16} className="text-blue-400" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+              <Calendar size={14} className="text-blue-400" />
             </div>
-            <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.memberSince")}</p>
-              <p className="font-semibold text-sm mt-0.5">{memberSince}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 flex-1 min-w-[180px]">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <BadgeCheck size={16} className="text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.accountStatus")}</p>
-              <p className="font-semibold text-sm mt-0.5 text-emerald-400">{t("dashboard.verified")}</p>
+            <div className="min-w-0">
+              <p className="text-white/30 text-[10px] uppercase tracking-widest">{t("dashboard.memberSince")}</p>
+              <p className="font-semibold text-xs truncate">{memberSince}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-1 min-w-[180px]">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-              <BarChart2 size={16} className="text-purple-400" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <BadgeCheck size={14} className="text-emerald-400" />
             </div>
-            <div>
-              <p className="text-white/30 text-xs uppercase tracking-widest">{t("dashboard.overallRoi")}</p>
-              <p className="font-semibold text-sm mt-0.5 text-purple-400">{profitPercent}%</p>
+            <div className="min-w-0">
+              <p className="text-white/30 text-[10px] uppercase tracking-widest">{t("dashboard.accountStatus")}</p>
+              <p className="font-semibold text-xs text-emerald-400">{t("dashboard.verified")}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+              <BarChart2 size={14} className="text-purple-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-white/30 text-[10px] uppercase tracking-widest">{t("dashboard.overallRoi")}</p>
+              <p className="font-semibold text-xs text-purple-400">{profitPercent.toFixed(2)}%</p>
             </div>
           </div>
         </section>
