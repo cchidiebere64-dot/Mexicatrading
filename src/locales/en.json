@@ -106,7 +106,10 @@
     "kycPendingTitle": "KYC Under Review",
     "kycPendingDesc": "Your documents are being reviewed — tap to track progress",
     "kycRejectedTitle": "KYC Verification Rejected",
-    "kycRejectedDesc": "Your documents were rejected — tap to resubmit"
+    "kycRejectedDesc": "Your documents were rejected — tap to resubmit",
+    "completedSingle": "Plan Completed",
+    "completedPlural": "Plans Completed",
+    "tapToView": "Tap to view earnings"
   },
   "deposit": {
     "title": "Deposit Funds",
