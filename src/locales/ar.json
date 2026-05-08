@@ -316,6 +316,17 @@
     "termsAgree": "بالتسجيل، أنت توافق على",
     "termsLink": "شروط الخدمة",
     "privacyLink": "سياسة الخصوصية",
+    "phoneNumber": "رقم الهاتف (مثال: ‎+1 555 123 4567)",
+    "selectCountry": "اختر بلدك",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "passwordsMatch": "كلمات المرور متطابقة",
+    "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+    "phoneRequired": "رقم الهاتف مطلوب.",
+    "countryRequired": "يرجى اختيار بلدك.",
+    "mustAgreeTerms": "يجب أن توافق على الشروط وسياسة الخصوصية.",
+    "registrationFailed": "فشل التسجيل. يرجى المحاولة مرة أخرى.",
+    "referralApplied": "تم تطبيق رمز الإحالة",
     "and": "و"
   },
   "forgot": {
