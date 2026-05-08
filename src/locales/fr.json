@@ -315,6 +315,17 @@
     "termsAgree": "En vous inscrivant, vous acceptez nos",
     "termsLink": "Conditions d'Utilisation",
     "privacyLink": "Politique de Confidentialité",
+    "phoneNumber": "Numéro de Téléphone (ex. +1 555 123 4567)",
+    "selectCountry": "Sélectionnez Votre Pays",
+    "confirmPassword": "Confirmer le Mot de Passe",
+    "passwordsMatch": "Les mots de passe correspondent",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
+    "phoneRequired": "Le numéro de téléphone est requis.",
+    "countryRequired": "Veuillez sélectionner votre pays.",
+    "mustAgreeTerms": "Vous devez accepter les Conditions et la Politique de Confidentialité.",
+    "registrationFailed": "Inscription échouée. Veuillez réessayer.",
+    "referralApplied": "Code de parrainage appliqué",
     "and": "et"
   },
   "forgot": {
