@@ -102,8 +102,8 @@ const flagEmoji = (code) => !code ? "🌍" : code.toUpperCase().replace(/./g, c 
 
 // ── Popup state helpers ─────────────────────────────────────────────────────
 const planKey = (p) => `reinvest_shown_${p.plan}_${p.endDate}`;
-const wasShown = (p) => sessionStorage.getItem(planKey(p)) === "true";
-const markShown = (p) => sessionStorage.setItem(planKey(p), "true");
+const wasShown = (p) => localStorage.getItem(planKey(p)) === "true";
+const markShown = (p) => localStorage.setItem(planKey(p), "true");
 
 // ── Reinvest Popup ──────────────────────────────────────────────────────────
 function ReinvestPopup({ plans, onDismiss }) {
