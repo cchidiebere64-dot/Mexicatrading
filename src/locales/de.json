@@ -317,6 +317,17 @@
     "termsAgree": "Mit der Registrierung stimmen Sie unseren",
     "termsLink": "Nutzungsbedingungen",
     "privacyLink": "Datenschutzrichtlinie",
+    "phoneNumber": "Telefonnummer (z.B. +1 555 123 4567)",
+    "selectCountry": "Wählen Sie Ihr Land",
+    "confirmPassword": "Passwort bestätigen",
+    "passwordsMatch": "Passwörter stimmen überein",
+    "passwordsDoNotMatch": "Passwörter stimmen nicht überein",
+    "passwordTooShort": "Passwort muss mindestens 6 Zeichen lang sein.",
+    "phoneRequired": "Telefonnummer ist erforderlich.",
+    "countryRequired": "Bitte wählen Sie Ihr Land.",
+    "mustAgreeTerms": "Sie müssen den Bedingungen und der Datenschutzrichtlinie zustimmen.",
+    "registrationFailed": "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "referralApplied": "Empfehlungscode angewendet",
     "and": "und"
   },
   "forgot": {
