@@ -315,6 +315,17 @@
     "termsAgree": "By registering, you agree to our",
     "termsLink": "Terms of Service",
     "privacyLink": "Privacy Policy",
+    "phoneNumber": "Phone Number (e.g. +1 555 123 4567)",
+    "selectCountry": "Select Your Country",
+    "confirmPassword": "Confirm Password",
+    "passwordsMatch": "Passwords match",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "phoneRequired": "Phone number is required.",
+    "countryRequired": "Please select your country.",
+    "mustAgreeTerms": "You must agree to the Terms and Privacy Policy.",
+    "registrationFailed": "Registration failed. Please try again.",
+    "referralApplied": "Referral code applied",
     "and": "and"
   },
   "forgot": {
