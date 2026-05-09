@@ -255,13 +255,56 @@ export default function Register() {
     setError("");
   };
 
+  // Expected phone number length per country (digits only, NOT including dial code)
+  const PHONE_LENGTHS = {
+    AF: [9], AL: [9], DZ: [9], AD: [6], AO: [9], AR: [10], AM: [8], AU: [9], AT: [10, 11],
+    AZ: [9], BS: [10], BH: [8], BD: [10], BB: [10], BY: [9], BE: [9], BZ: [7], BJ: [8],
+    BT: [8], BO: [8], BA: [8], BW: [8], BR: [10, 11], BN: [7], BG: [9], BF: [8], BI: [8],
+    KH: [8, 9], CM: [9], CA: [10], CV: [7], CF: [8], TD: [8], CL: [9], CN: [11], CO: [10],
+    KM: [7], CD: [9], CG: [9], CR: [8], HR: [9], CU: [8], CY: [8], CZ: [9], DK: [8],
+    DJ: [8], DM: [10], DO: [10], EC: [9], EG: [10], SV: [8], GQ: [9], ER: [7], EE: [7, 8],
+    SZ: [8], ET: [9], FJ: [7], FI: [9, 10], FR: [9], GA: [8], GM: [7], GE: [9], DE: [10, 11],
+    GH: [9], GR: [10], GD: [10], GT: [8], GN: [9], GW: [9], GY: [7], HT: [8], HN: [8],
+    HK: [8], HU: [9], IS: [7], IN: [10], ID: [9, 10, 11, 12], IR: [10], IQ: [10], IE: [9],
+    IL: [9], IT: [9, 10], CI: [10], JM: [10], JP: [10], JO: [9], KZ: [10], KE: [9, 10],
+    KI: [8], XK: [8], KW: [8], KG: [9], LA: [9, 10], LV: [8], LB: [7, 8], LS: [8], LR: [8],
+    LY: [9], LI: [7], LT: [8], LU: [9], MO: [8], MG: [9], MW: [9], MY: [9, 10], MV: [7],
+    ML: [8], MT: [8], MH: [7], MR: [8], MU: [8], MX: [10], FM: [7], MD: [8], MC: [8],
+    MN: [8], ME: [8], MA: [9], MZ: [9], MM: [8, 9, 10], NA: [9], NR: [7], NP: [10], NL: [9],
+    NZ: [8, 9], NI: [8], NE: [8], NG: [10], KP: [10], MK: [8], NO: [8], OM: [8], PK: [10],
+    PW: [7], PS: [9], PA: [8], PG: [8], PY: [9], PE: [9], PH: [10], PL: [9], PT: [9],
+    PR: [10], QA: [8], RO: [9], RU: [10], RW: [9], KN: [10], LC: [10], VC: [10], WS: [7],
+    SM: [10], ST: [7], SA: [9], SN: [9], RS: [8, 9], SC: [7], SL: [8], SG: [8], SK: [9],
+    SI: [8], SB: [7], SO: [8], ZA: [9], KR: [9, 10], SS: [9], ES: [9], LK: [9], SD: [9],
+    SR: [7], SE: [9], CH: [9], SY: [9], TW: [9], TJ: [9], TZ: [9], TH: [9], TL: [7, 8],
+    TG: [8], TO: [5, 7], TT: [10], TN: [8], TR: [10], TM: [8], TV: [5], UG: [9], UA: [9],
+    AE: [9], GB: [10], US: [10], UY: [8, 9], UZ: [9], VU: [7], VA: [10], VE: [10], VN: [9, 10],
+    YE: [9], ZM: [9], ZW: [9],
+  };
+
   const validatePhone = () => {
     if (!form.phoneNumber.trim()) return t("auth.phoneRequired", "Phone number is required.");
     if (!selectedCountry) return t("auth.countryRequired", "Please select your country first.");
+
+    // Strip non-digits — only count digits
     const digits = form.phoneNumber.replace(/\D/g, "");
-    if (digits.length < 6 || digits.length > 15) {
-      return t("auth.invalidPhone", `Please enter a valid phone number for ${selectedCountry.name}.`);
+    const expectedLengths = PHONE_LENGTHS[selectedCountry.code] || [];
+
+    if (expectedLengths.length === 0) {
+      // Country not in list — fallback general check
+      if (digits.length < 6 || digits.length > 15) {
+        return `Please enter a valid phone number for ${selectedCountry.name}.`;
+      }
+      return null;
     }
+
+    if (!expectedLengths.includes(digits.length)) {
+      const range = expectedLengths.length === 1
+        ? `${expectedLengths[0]} digits`
+        : `${expectedLengths.join(" or ")} digits`;
+      return `Phone number for ${selectedCountry.name} must be ${range}. You entered ${digits.length} digits.`;
+    }
+
     return null;
   };
 
