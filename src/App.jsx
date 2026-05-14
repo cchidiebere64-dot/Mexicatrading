@@ -21,6 +21,7 @@ import Deposit from "./pages/Deposit.jsx";
 import Plans from "./pages/Plans.jsx";
 import Withdraw from "./pages/Withdraw.jsx";
 import Messages from "./pages/Messages.jsx";
+import UserSettings from "./pages/UserSettings";
 
 // Admin pages
 import AdminLayout from "./pages/AdminLayout.jsx";
@@ -244,7 +245,7 @@ function AppInner() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/messages" element={token ? <Messages /> : <Navigate to="/login" />} />
             <Route path="/kyc" element={token ? <KYC /> : <Navigate to="/login" />} />
-
+            <Route path="/settings" element={<UserSettings />} />
 
             {/* ── PROTECTED USER ROUTES ─────────────────────────────────── */}
             <Route
