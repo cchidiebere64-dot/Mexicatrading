@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, TrendingUp, ArrowDownCircle, ArrowUpCircle,
-  Activity, Clock, RefreshCw,
+  Activity, Clock, RefreshCw, Wrench, CheckCircle, AlertTriangle, X,
 } from "lucide-react";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
@@ -38,6 +38,11 @@ export default function AdminDashboardHome() {
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
+  // Fix stuck investments state
+  const [fixLoading, setFixLoading] = useState(false);
+  const [fixResult, setFixResult] = useState(null);
+  const [confirmFix, setConfirmFix] = useState(false);
+
   const fetchStats = async () => {
     try {
       setRefreshing(true);
@@ -64,6 +69,27 @@ export default function AdminDashboardHome() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const runFixStuckInvestments = async () => {
+    setFixLoading(true);
+    setFixResult(null);
+    try {
+      const adminToken = sessionStorage.getItem("adminToken");
+      const res = await axios.post(
+        `${API_URL}/api/admin/fix-stuck-investments`,
+        {},
+        { headers: { Authorization: `Bearer ${adminToken}` } }
+      );
+      setFixResult(res.data);
+      fetchStats();
+    } catch (err) {
+      console.error(err);
+      setFixResult({ success: false, message: err.response?.data?.message || "Failed to run fix" });
+    } finally {
+      setFixLoading(false);
+      setConfirmFix(false);
     }
   };
 
@@ -112,6 +138,101 @@ export default function AdminDashboardHome() {
         <StatCard label="Active Plans" value={stats.plans} icon={<TrendingUp size={16} className="text-emerald-400" />} color="bg-emerald-500/10 border border-emerald-500/20" delay={0.1} />
         <StatCard label="Total Deposits" value={stats.deposits} prefix="$" icon={<ArrowDownCircle size={16} className="text-green-400" />} color="bg-green-500/10 border border-green-500/20" delay={0.2} />
         <StatCard label="Total Withdrawals" value={stats.withdrawals} prefix="$" icon={<ArrowUpCircle size={16} className="text-red-400" />} color="bg-red-500/10 border border-red-500/20" delay={0.3} />
+      </div>
+
+      {/* ── MAINTENANCE TOOL: Fix Stuck Investments ────────────────── */}
+      <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
+            <Wrench size={18} className="text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-white font-semibold text-sm">Fix Stuck Investments</p>
+            <p className="text-white/40 text-xs mt-0.5 mb-3 leading-relaxed">
+              Credits users whose matured plans never paid out. Safe to run anytime — has double-payment protection.
+            </p>
+
+            {!confirmFix && !fixResult && (
+              <button
+                onClick={() => setConfirmFix(true)}
+                className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400 text-xs font-semibold transition flex items-center gap-2"
+              >
+                <Wrench size={12} /> Run Fix Now
+              </button>
+            )}
+
+            {confirmFix && !fixResult && (
+              <div className="space-y-2">
+                <p className="text-amber-400 text-xs font-semibold">⚠️ Are you sure?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={runFixStuckInvestments}
+                    disabled={fixLoading}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-2"
+                  >
+                    {fixLoading ? (
+                      <><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
+                    ) : (
+                      <>Yes, Run Fix</>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setConfirmFix(false)}
+                    disabled={fixLoading}
+                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-xs font-semibold transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <AnimatePresence>
+              {fixResult && (
+                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                  className={`p-3 rounded-xl border ${fixResult.success ? "bg-emerald-500/10 border-emerald-500/25" : "bg-red-500/10 border-red-500/25"}`}>
+                  <div className="flex items-start gap-2">
+                    {fixResult.success ? <CheckCircle size={14} className="text-emerald-400 mt-0.5 shrink-0" /> : <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />}
+                    <div className="flex-1">
+                      <p className={`text-xs font-bold ${fixResult.success ? "text-emerald-400" : "text-red-400"}`}>
+                        {fixResult.message}
+                      </p>
+                      {fixResult.success && (
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
+                          <div className="bg-white/5 rounded-lg p-2">
+                            <p className="text-white/40 uppercase tracking-wider font-bold">Total</p>
+                            <p className="text-white font-bold text-sm">{fixResult.totalExpired}</p>
+                          </div>
+                          <div className="bg-emerald-500/10 rounded-lg p-2">
+                            <p className="text-white/40 uppercase tracking-wider font-bold">Fixed</p>
+                            <p className="text-emerald-400 font-bold text-sm">{fixResult.fixed}</p>
+                          </div>
+                          <div className="bg-blue-500/10 rounded-lg p-2">
+                            <p className="text-white/40 uppercase tracking-wider font-bold">Already Paid</p>
+                            <p className="text-blue-400 font-bold text-sm">{fixResult.alreadyPaid}</p>
+                          </div>
+                        </div>
+                      )}
+                      {fixResult.details && fixResult.details.length > 0 && (
+                        <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
+                          {fixResult.details.map((d, i) => (
+                            <div key={i} className="text-[11px] text-white/60 bg-white/5 rounded-lg px-2 py-1 flex justify-between">
+                              <span className="truncate">{d.email}</span>
+                              <span className="text-emerald-400 font-bold">+${d.total}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <button onClick={() => setFixResult(null)} className="mt-2 text-white/40 hover:text-white text-[11px] underline">
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
 
       {/* PENDING ALERTS */}
