@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import mexicanLogo from "../assets/mexican.png";
 import { useState, useEffect } from "react";
-import { X, Menu, LayoutDashboard, LogOut, ChevronRight } from "lucide-react";
+import { X, Menu, LayoutDashboard, LogOut, ChevronRight, Settings } from "lucide-react";
 import LanguageSelector from "./LanguageSelector.jsx";
 import { useTranslation } from "react-i18next";
 
@@ -119,6 +119,17 @@ export default function Navbar() {
                   {t("nav.dashboard")}
                 </button>
                 <button
+                  onClick={() => handleProtectedNav("/settings")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
+                    isActive("/settings")
+                      ? "text-emerald-400 bg-emerald-500/10"
+                      : "text-white/60 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Settings size={15} />
+                  {t("nav.settings", "Settings")}
+                </button>
+                <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
                 >
@@ -193,7 +204,7 @@ export default function Navbar() {
             )}
 
             {/* Nav Links */}
-            <nav className="flex flex-col gap-1 px-3 py-4 flex-1">
+            <nav className="flex flex-col gap-1 px-3 py-4 flex-1 overflow-y-auto">
               {navLinks.map((link) =>
                 link.protected ? (
                   <button
@@ -225,17 +236,37 @@ export default function Navbar() {
               )}
 
               {token && !OUTSIDE_PAGES.includes(location.pathname) && (
-                <button
-                  onClick={() => handleProtectedNav("/dashboard")}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    isActive("/dashboard")
-                      ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                      : "text-white/50 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  {t("nav.dashboard")}
-                  <ChevronRight size={14} className="opacity-40" />
-                </button>
+                <>
+                  <button
+                    onClick={() => handleProtectedNav("/dashboard")}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      isActive("/dashboard")
+                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                        : "text-white/50 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <LayoutDashboard size={15} />
+                      {t("nav.dashboard")}
+                    </span>
+                    <ChevronRight size={14} className="opacity-40" />
+                  </button>
+
+                  <button
+                    onClick={() => handleProtectedNav("/settings")}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      isActive("/settings")
+                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                        : "text-white/50 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Settings size={15} />
+                      {t("nav.settings", "Settings")}
+                    </span>
+                    <ChevronRight size={14} className="opacity-40" />
+                  </button>
+                </>
               )}
             </nav>
 
