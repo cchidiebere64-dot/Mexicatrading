@@ -3,11 +3,12 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ArrowDownCircle,
   ArrowUpCircle, Wallet, ChevronRight, Menu, X,
-  ShieldCheck, LogOut, Activity, Radio, CreditCard,
+  ShieldCheck, LogOut, Activity, Radio, CreditCard, BarChart3,
 } from "lucide-react";
 
 const navItems = [
   { path: "/admin",                label: "Dashboard",      icon: <LayoutDashboard size={18} />, exact: true },
+  { path: "/admin/analytics",      label: "Analytics",      icon: <BarChart3 size={18} /> },
   { path: "/admin/users",          label: "Manage Users",   icon: <Users size={18} /> },
   { path: "/admin/plans",          label: "Manage Plans",   icon: <Package size={18} /> },
   { path: "/admin/active-plans",   label: "Active Plans",   icon: <Activity size={18} /> },
