@@ -36,6 +36,8 @@ import AdminCreditUser from "./pages/AdminCreditUser.jsx";
 import AdminWallets from "./pages/AdminWallets.jsx";
 import AdminKYC from "./pages/AdminKYC.jsx";
 import AdminBroadcast from "./pages/AdminBroadcast.jsx";
+import AdminAnalytics from "./pages/AdminAnalytics";
+
 
 const LOCK_TIMEOUT_MS = 30000;
 
@@ -279,6 +281,7 @@ function AppInner() {
               <Route path="wallets" element={<AdminWallets />} />
               <Route path="kyc" element={<AdminKYC />} />
               <Route path="broadcast" element={<AdminBroadcast />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
 
             </Route>
 
