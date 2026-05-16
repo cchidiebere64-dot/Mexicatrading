@@ -1,31 +1,71 @@
 // src/components/NetworkStatus.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function NetworkStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSlow, setIsSlow] = useState(false);
-  const [showBackOnline, setShowBackOnline] = useState(false);
+
+  // Each banner has its own visible state — controlled by timers
+  const [showOfflineBanner, setShowOfflineBanner] = useState(false);
   const [showSlowBanner, setShowSlowBanner] = useState(false);
+  const [showBackOnlineBanner, setShowBackOnlineBanner] = useState(false);
+
+  const slowTimerRef = useRef(null);
+  const offlineTimerRef = useRef(null);
+  const onlineTimerRef = useRef(null);
+  const wasOfflineRef = useRef(false);
+
+  // 🎨 Show offline banner — auto-hides after 6 seconds
+  const triggerOfflineBanner = () => {
+    setShowOfflineBanner(true);
+    if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
+    offlineTimerRef.current = setTimeout(() => {
+      setShowOfflineBanner(false);
+    }, 6000);
+  };
+
+  // 🐢 Show slow banner — auto-hides after 5 seconds
+  const triggerSlowBanner = () => {
+    setShowSlowBanner(true);
+    if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+    slowTimerRef.current = setTimeout(() => {
+      setShowSlowBanner(false);
+    }, 5000);
+  };
+
+  // ✅ Show back online banner — auto-hides after 3 seconds
+  const triggerBackOnlineBanner = () => {
+    setShowBackOnlineBanner(true);
+    if (onlineTimerRef.current) clearTimeout(onlineTimerRef.current);
+    onlineTimerRef.current = setTimeout(() => {
+      setShowBackOnlineBanner(false);
+    }, 3000);
+  };
 
   useEffect(() => {
-    // Handle online/offline events
+    // Online/offline detection
     const handleOnline = () => {
       setIsOnline(true);
-      setShowBackOnline(true);
-      // Hide "back online" message after 3 seconds
-      setTimeout(() => setShowBackOnline(false), 3000);
+      // Only show "back online" if we were actually offline before
+      if (wasOfflineRef.current) {
+        triggerBackOnlineBanner();
+        wasOfflineRef.current = false;
+      }
+      // Hide offline banner immediately
+      setShowOfflineBanner(false);
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      setShowBackOnline(false);
+      wasOfflineRef.current = true;
+      triggerOfflineBanner();
     };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // Check connection speed using Network Information API
+    // Network speed detection
     const checkConnectionSpeed = () => {
       if ("connection" in navigator) {
         const connection = navigator.connection;
@@ -34,8 +74,12 @@ export default function NetworkStatus() {
           slowTypes.includes(connection.effectiveType) ||
           connection.downlink < 0.5;
 
-        setIsSlow(isSlowConnection);
-        setShowSlowBanner(isSlowConnection);
+        if (isSlowConnection && navigator.onLine) {
+          setIsSlow(true);
+          triggerSlowBanner();
+        } else {
+          setIsSlow(false);
+        }
       }
     };
 
@@ -45,45 +89,39 @@ export default function NetworkStatus() {
       navigator.connection.addEventListener("change", checkConnectionSpeed);
     }
 
-    // Periodic ping check (every 15s) to detect actual server reachability
-    let pingInterval;
-    const startPingCheck = () => {
-      pingInterval = setInterval(async () => {
-        if (!navigator.onLine) return;
+    // Periodic ping check
+    const pingInterval = setInterval(async () => {
+      if (!navigator.onLine) return;
 
-        try {
-          const start = Date.now();
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
+      try {
+        const start = Date.now();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-          await fetch("/logo.png?_=" + Date.now(), {
-            method: "HEAD",
-            cache: "no-cache",
-            signal: controller.signal,
-          });
+        await fetch("/logo.png?_=" + Date.now(), {
+          method: "HEAD",
+          cache: "no-cache",
+          signal: controller.signal,
+        });
 
-          clearTimeout(timeoutId);
-          const duration = Date.now() - start;
+        clearTimeout(timeoutId);
+        const duration = Date.now() - start;
 
-          // If ping takes more than 3 seconds, treat as slow
-          if (duration > 3000) {
+        if (duration > 3000) {
+          if (!isSlow) {
             setIsSlow(true);
-            setShowSlowBanner(true);
-          } else {
-            setIsSlow(false);
-            setShowSlowBanner(false);
+            triggerSlowBanner();
           }
-        } catch (err) {
-          // Fetch failed but navigator says online → slow/unstable
-          if (navigator.onLine) {
-            setIsSlow(true);
-            setShowSlowBanner(true);
-          }
+        } else {
+          setIsSlow(false);
         }
-      }, 15000);
-    };
-
-    startPingCheck();
+      } catch (err) {
+        if (navigator.onLine && !isSlow) {
+          setIsSlow(true);
+          triggerSlowBanner();
+        }
+      }
+    }, 20000); // Every 20 seconds
 
     return () => {
       window.removeEventListener("online", handleOnline);
@@ -91,70 +129,80 @@ export default function NetworkStatus() {
       if ("connection" in navigator) {
         navigator.connection.removeEventListener("change", checkConnectionSpeed);
       }
-      if (pingInterval) clearInterval(pingInterval);
+      clearInterval(pingInterval);
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
+      if (onlineTimerRef.current) clearTimeout(onlineTimerRef.current);
     };
   }, []);
 
   return (
-    <AnimatePresence>
-      {/* ❌ Offline Banner */}
-      {!isOnline && (
+    <AnimatePresence mode="wait">
+
+      {/* 📡 Offline Banner — auto-fades after 6s */}
+      {showOfflineBanner && !isOnline && (
         <motion.div
-          key="offline"
-          initial={{ y: -50, opacity: 0 }}
+          key="offline-banner"
+          initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -50, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg"
+          exit={{ y: -60, opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="fixed top-0 left-0 right-0 z-[9999] flex justify-center pt-3 px-4 pointer-events-none"
         >
-          <div className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium">
-            <span className="flex h-2 w-2">
-              <span className="absolute inline-flex h-2 w-2 rounded-full bg-red-300 opacity-75 animate-ping" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-200" />
-            </span>
-            <span>📡 You're offline — please check your internet connection</span>
+          <div className="bg-gradient-to-r from-red-600/95 to-rose-600/95 backdrop-blur-md text-white shadow-2xl rounded-2xl border border-white/10 px-5 py-3 max-w-md w-full pointer-events-auto">
+            <div className="flex items-center justify-center gap-3 text-sm font-medium">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-200" />
+              </span>
+              <span className="flex-1 text-center">📡 You're offline — check your connection</span>
+            </div>
           </div>
         </motion.div>
       )}
 
-      {/* 🐢 Slow Network Banner */}
-      {isOnline && showSlowBanner && (
+      {/* 🐢 Slow Network Banner — auto-fades after 5s */}
+      {showSlowBanner && isOnline && (
         <motion.div
-          key="slow"
-          initial={{ y: -50, opacity: 0 }}
+          key="slow-banner"
+          initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -50, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-yellow-500 to-orange-500 text-black shadow-lg"
+          exit={{ y: -60, opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="fixed top-0 left-0 right-0 z-[9999] flex justify-center pt-3 px-4 pointer-events-none"
         >
-          <div className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium">
-            <span>🐢</span>
-            <span>Slow network detected — things may take longer than usual</span>
-            <button
-              onClick={() => setShowSlowBanner(false)}
-              className="ml-3 text-xs underline opacity-80 hover:opacity-100"
-            >
-              Dismiss
-            </button>
+          <div className="bg-gradient-to-r from-amber-500/95 to-orange-500/95 backdrop-blur-md text-white shadow-2xl rounded-2xl border border-white/10 px-5 py-3 max-w-md w-full pointer-events-auto">
+            <div className="flex items-center justify-center gap-3 text-sm font-medium">
+              <motion.span
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="text-base"
+              >
+                🐢
+              </motion.span>
+              <span className="flex-1 text-center">Slow network — this might take a moment</span>
+            </div>
           </div>
         </motion.div>
       )}
 
-      {/* ✅ Back Online Banner (auto-hides) */}
-      {isOnline && showBackOnline && !isSlow && (
+      {/* ✅ Back Online Banner — auto-fades after 3s */}
+      {showBackOnlineBanner && isOnline && !isSlow && (
         <motion.div
-          key="online"
-          initial={{ y: -50, opacity: 0 }}
+          key="online-banner"
+          initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -50, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
+          exit={{ y: -60, opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="fixed top-0 left-0 right-0 z-[9999] flex justify-center pt-3 px-4 pointer-events-none"
         >
-          <div className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium">
-            <span className="flex h-2 w-2">
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-200" />
-            </span>
-            <span>✅ You're back online!</span>
+          <div className="bg-gradient-to-r from-emerald-500/95 to-green-500/95 backdrop-blur-md text-white shadow-2xl rounded-2xl border border-white/10 px-5 py-3 max-w-md w-full pointer-events-auto">
+            <div className="flex items-center justify-center gap-3 text-sm font-medium">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-200" />
+              </span>
+              <span className="flex-1 text-center">✅ You're back online</span>
+            </div>
           </div>
         </motion.div>
       )}
