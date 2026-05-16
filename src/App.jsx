@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import PageLoader from "./components/PageLoader.jsx";
 import LockScreen from "./components/LockScreen.jsx";
+import NetworkStatus from "./components/NetworkStatus.jsx"; // ✅ NEW
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
@@ -227,6 +228,9 @@ function AppInner() {
 
   return (
     <>
+      {/* ✅ NEW: Real-time network status banner */}
+      <NetworkStatus />
+
       {!location.pathname.startsWith("/admin") && <Navbar />}
 
       {shouldShowLock && <LockScreen onUnlock={handleUnlock} />}
