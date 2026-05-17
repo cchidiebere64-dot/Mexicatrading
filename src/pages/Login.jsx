@@ -1,23 +1,32 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Mail, Lock, ArrowRight, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function Login() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const API_URL = "https://mexicatradingbackend.onrender.com";
+  /* progressive reveal */
+  const [showPassword_f, setShowPassword_f] = useState(false);
 
-  const verified = new URLSearchParams(location.search).get("verified");
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const API_URL   = "https://mexicatradingbackend.onrender.com";
+  const verified  = new URLSearchParams(location.search).get("verified");
+
+  const onEmailBlur = () => {
+    if (/\S+@\S+\.\S+/.test(email) && !showPassword_f) {
+      setShowPassword_f(true);
+      setTimeout(() => document.getElementById("login-password")?.focus(), 500);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -38,7 +47,7 @@ export default function Login() {
           navigate("/admin");
         } else {
           navigate("/dashboard");
-          setTimeout(() => { window.location.reload(); }, 100);
+          setTimeout(() => window.location.reload(), 100);
         }
       } else {
         setError("Invalid response from server.");
@@ -50,99 +59,211 @@ export default function Login() {
     }
   };
 
+  const inp = "w-full pl-11 pr-4 py-4 bg-white/[0.03] border border-white/[0.08] outline-none text-sm text-white placeholder:text-white/25 transition-all duration-300 focus:border-emerald-500/60 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
+
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
+    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4"
+      style={{ fontFamily: "'Montserrat',sans-serif" }}>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Montserrat:wght@300;400;500;600;700&display=swap');
+        :root { --em:#10b981; --teal:#14b8a6; }
+        .serif { font-family:'Cormorant Garamond',serif; }
+        ::selection { background:var(--em); color:#080c18; }
+        @keyframes orb { 0%,100%{opacity:.06} 50%{opacity:.13} }
+        .orb { animation:orb 7s ease-in-out infinite; }
+        @keyframes scan { from{top:-30%} to{top:110%} }
+        .scan { animation:scan 10s ease-in-out infinite; }
+        @keyframes shine { 0%{background-position:200% center} 100%{background-position:-200% center} }
+        .top-line { background:linear-gradient(90deg,transparent,var(--em) 40%,var(--teal) 60%,transparent); background-size:400% 100%; animation:shine 3s linear infinite; }
+        .grid-bg { background-image:linear-gradient(rgba(16,185,129,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,.03) 1px,transparent 1px); background-size:72px 72px; }
+        .btn-prime { background:linear-gradient(135deg,var(--em),var(--teal)); transition:transform .3s,box-shadow .3s; position:relative; overflow:hidden; }
+        .btn-prime::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15),transparent); opacity:0; transition:opacity .3s; }
+        .btn-prime:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 0 0 1px var(--em),0 16px 40px rgba(16,185,129,.35); }
+        .btn-prime:hover:not(:disabled)::before { opacity:1; }
+        .shine-badge { border:1px solid transparent; background:linear-gradient(#080c18,#080c18) padding-box, linear-gradient(90deg,transparent 20%,var(--em) 50%,transparent 80%) border-box; background-size:200% auto; animation:shine 4s linear infinite; }
+        .nav-link { color:rgba(255,255,255,.35); transition:color .3s; }
+        .nav-link:hover { color:var(--em); }
+        .field-done { border-color:rgba(16,185,129,.25)!important; background:rgba(16,185,129,.04)!important; }
+      `}</style>
+
+      {/* Top shimmer */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-[2px]">
+        <div className="top-line h-full w-full" />
       </div>
 
-      <Link to="/" className="absolute top-6 left-6 text-white/30 hover:text-white/70 text-sm transition flex items-center gap-1">
-        ← MexicaTrading
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="grid-bg absolute inset-0" />
+        <div className="orb absolute rounded-full" style={{ width:800, height:800, background:"radial-gradient(circle,rgba(16,185,129,.09) 0%,transparent 70%)", top:"-300px", left:"-300px" }} />
+        <div className="orb absolute rounded-full" style={{ width:600, height:600, background:"radial-gradient(circle,rgba(20,184,166,.07) 0%,transparent 70%)", bottom:"-200px", right:"-200px", animationDelay:"3.5s" }} />
+        <div className="absolute left-[5%] top-0 bottom-0 w-px hidden lg:block" style={{ background:"linear-gradient(to bottom,transparent 5%,rgba(16,185,129,.15) 40%,rgba(16,185,129,.3) 60%,transparent 95%)" }} />
+        <div className="scan absolute left-[5%] w-px hidden lg:block" style={{ height:"28%", background:"linear-gradient(to bottom,transparent,var(--em),transparent)" }} />
+        <div className="absolute right-[5%] top-0 bottom-0 w-px hidden lg:block" style={{ background:"linear-gradient(to bottom,transparent 5%,rgba(20,184,166,.1) 40%,rgba(20,184,166,.22) 60%,transparent 95%)" }} />
+      </div>
+
+      {/* Back nav */}
+      <Link to="/" className="nav-link absolute top-7 left-8 text-[10px] font-medium tracking-[.2em] uppercase flex items-center gap-2 z-20">
+        ← <span className="serif text-base font-light" style={{ color:"var(--em)" }}>Mexica<em className="not-italic text-white">Trading</em></span>
       </Link>
 
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative w-full max-w-md">
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl">
+      <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} transition={{ duration:.7, ease:[.22,1,.36,1] }}
+        className="relative w-full max-w-md z-10">
 
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        {/* Card */}
+        <div className="px-8 py-10" style={{ background:"rgba(255,255,255,.025)", border:"1px solid rgba(255,255,255,.07)", backdropFilter:"blur(24px)" }}>
+
+          {/* Header */}
+          <div className="text-center mb-10">
+            <div className="shine-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-semibold tracking-[.28em] uppercase mb-6"
+              style={{ color:"var(--em)" }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background:"var(--em)" }} />
               {t("auth.secureLogin")}
             </div>
-            <h2 className="text-3xl font-bold tracking-tight mb-2">{t("auth.welcomeBack")}</h2>
-            <p className="text-white/40 text-sm">{t("auth.signInDesc")}</p>
+            <h2 className="serif font-light text-white mb-2" style={{ fontSize:"clamp(30px,5vw,44px)", lineHeight:1.1 }}>
+              {t("auth.welcomeBack")}{" "}
+              <em style={{ fontStyle:"italic", background:"linear-gradient(135deg,var(--em),var(--teal))", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+                back.
+              </em>
+            </h2>
+            <p className="text-xs font-light tracking-wide" style={{ color:"rgba(255,255,255,.35)" }}>
+              {t("auth.signInDesc")}
+            </p>
           </div>
 
-          {verified === "true" && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
-              <CheckCircle size={16} className="shrink-0" />
-              <span>{t("auth.emailVerifiedSuccess")}</span>
-            </motion.div>
-          )}
+          {/* Verified banner */}
+          <AnimatePresence>
+            {verified === "true" && (
+              <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
+                className="mb-6 flex items-center gap-3 px-4 py-3 border text-xs font-medium"
+                style={{ background:"rgba(16,185,129,.07)", borderColor:"rgba(16,185,129,.25)", color:"var(--em)" }}>
+                <CheckCircle size={13} className="shrink-0" />
+                <span>{t("auth.emailVerifiedSuccess")}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {error && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              className="mb-6 text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
-              {error}
-            </motion.div>
-          )}
+          {/* Error */}
+          <AnimatePresence>
+            {error && (
+              <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
+                className="mb-6 flex items-start gap-2.5 text-xs px-4 py-3 border"
+                style={{ background:"rgba(239,68,68,.07)", borderColor:"rgba(239,68,68,.2)", color:"#f87171" }}>
+                <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative group">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-              <input type="email" placeholder={t("auth.email")}
-                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
-                value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" />
+          <form onSubmit={handleLogin}>
+            <div className="space-y-3">
+
+              {/* Email — always visible */}
+              <div className="relative group">
+                <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 text-white/25 group-focus-within:text-emerald-400" />
+                <input
+                  type="email"
+                  placeholder={t("auth.email")}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onBlur={onEmailBlur}
+                  required
+                  autoComplete="username"
+                  autoFocus
+                  className={`${inp} ${/\S+@\S+\.\S+/.test(email) ? "field-done" : ""}`} />
+                {/\S+@\S+\.\S+/.test(email) && (
+                  <CheckCircle size={13} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color:"var(--em)" }} />
+                )}
+              </div>
+
+              {/* Password — fades in after valid email */}
+              <AnimatePresence>
+                {showPassword_f && (
+                  <motion.div
+                    initial={{ opacity:0, y:16, filter:"blur(6px)" }}
+                    animate={{ opacity:1, y:0, filter:"blur(0px)" }}
+                    exit={{ opacity:0 }}
+                    transition={{ duration:.55, ease:[.22,1,.36,1] }}>
+                    <div className="relative group">
+                      <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 text-white/25 group-focus-within:text-emerald-400" />
+                      <input
+                        id="login-password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder={t("auth.password")}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                        className={`${inp} pr-11 ${password.length >= 6 ? "field-done" : ""}`} />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors duration-300"
+                        style={{ color:"rgba(255,255,255,.25)" }}>
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Forgot password — fades in with password */}
+              <AnimatePresence>
+                {showPassword_f && (
+                  <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:.3 }}
+                    className="flex justify-end">
+                    <Link to="/forgot-password"
+                      className="text-[10px] font-medium tracking-[.15em] uppercase transition-colors duration-300"
+                      style={{ color:"rgba(255,255,255,.3)" }}
+                      onMouseEnter={e => e.target.style.color = "var(--em)"}
+                      onMouseLeave={e => e.target.style.color = "rgba(255,255,255,.3)"}>
+                      {t("auth.forgotPassword")}
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Submit — fades in with password */}
+              <AnimatePresence>
+                {showPassword_f && (
+                  <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:.2, duration:.5, ease:[.22,1,.36,1] }}>
+                    <button type="submit" disabled={loading}
+                      className="btn-prime group w-full py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white flex items-center justify-center gap-3 mt-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                      {loading ? (
+                        <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("auth.signingIn")}</>
+                      ) : (
+                        <>{t("auth.signIn")} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" /></>
+                      )}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
             </div>
-
-            <div className="relative group">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-              <input type={showPassword ? "text" : "password"} placeholder={t("auth.password")}
-                className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 focus:bg-white/8 transition-all text-sm placeholder:text-white/25"
-                value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors">
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-
-            <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-xs text-white/40 hover:text-emerald-400 transition">
-                {t("auth.forgotPassword")}
-              </Link>
-            </div>
-
-            <button type="submit" disabled={loading}
-              className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
-              {loading ? (
-                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("auth.signingIn")}</>
-              ) : (
-                <>{t("auth.signIn")}<ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" /></>
-              )}
-            </button>
           </form>
 
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-white/8" />
-            <span className="text-white/20 text-xs">{t("auth.newToMexica")}</span>
-            <div className="flex-1 h-px bg-white/8" />
+          {/* Divider + register */}
+          <div className="mt-8">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex-1 h-px" style={{ background:"rgba(255,255,255,.07)" }} />
+              <span className="text-[10px] font-light tracking-wider" style={{ color:"rgba(255,255,255,.2)" }}>{t("auth.newToMexica")}</span>
+              <div className="flex-1 h-px" style={{ background:"rgba(255,255,255,.07)" }} />
+            </div>
+            <button onClick={() => navigate("/register")}
+              className="w-full py-3.5 border text-[11px] font-medium tracking-[.18em] uppercase transition-all duration-300"
+              style={{ borderColor:"rgba(255,255,255,.08)", background:"rgba(255,255,255,.02)", color:"rgba(255,255,255,.4)" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(16,185,129,.3)"; e.currentTarget.style.color="var(--em)"; e.currentTarget.style.background="rgba(16,185,129,.05)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,.08)"; e.currentTarget.style.color="rgba(255,255,255,.4)"; e.currentTarget.style.background="rgba(255,255,255,.02)"; }}>
+              {t("auth.createAccount")}
+            </button>
           </div>
-
-          <button onClick={() => navigate("/register")}
-            className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
-            {t("auth.createAccount")}
-          </button>
         </div>
 
-        <div className="flex items-center justify-center gap-6 mt-6 text-white/20 text-xs">
-          <span>🔒 {t("common.sslSecured")}</span>
-          <span>·</span>
-          <span>🛡️ {t("common.dataProtected")}</span>
-          <span>·</span>
-          <span>⚡ {t("common.instantAccess")}</span>
+        {/* Trust row */}
+        <div className="flex items-center justify-center gap-6 mt-5">
+          {[`🔒 ${t("common.sslSecured")}`, `🛡️ ${t("common.dataProtected")}`, `⚡ ${t("common.instantAccess")}`].map((txt, i) => (
+            <span key={i} className="text-[10px] font-light tracking-wider" style={{ color:"rgba(255,255,255,.18)" }}>{txt}</span>
+          ))}
         </div>
+
       </motion.div>
     </div>
   );
