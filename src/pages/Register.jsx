@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-// All 195+ countries
 const COUNTRIES = [
   { name: "Afghanistan", code: "AF", flag: "🇦🇫", dial: "+93" },
   { name: "Albania", code: "AL", flag: "🇦🇱", dial: "+355" },
@@ -212,10 +211,13 @@ const COUNTRIES = [
   { name: "Zimbabwe", code: "ZW", flag: "🇿🇼", dial: "+263" },
 ];
 
-// Reusable input shell
+const PHONE_LENGTHS = {
+  AF:[9],AL:[9],DZ:[9],AD:[6],AO:[9],AR:[10],AM:[8],AU:[9],AT:[10,11],AZ:[9],BS:[10],BH:[8],BD:[10],BB:[10],BY:[9],BE:[9],BZ:[7],BJ:[8],BT:[8],BO:[8],BA:[8],BW:[8],BR:[10,11],BN:[7],BG:[9],BF:[8],BI:[8],KH:[8,9],CM:[9],CA:[10],CV:[7],CF:[8],TD:[8],CL:[9],CN:[11],CO:[10],KM:[7],CD:[9],CG:[9],CR:[8],HR:[9],CU:[8],CY:[8],CZ:[9],DK:[8],DJ:[8],DM:[10],DO:[10],EC:[9],EG:[10],SV:[8],GQ:[9],ER:[7],EE:[7,8],SZ:[8],ET:[9],FJ:[7],FI:[9,10],FR:[9],GA:[8],GM:[7],GE:[9],DE:[10,11],GH:[9],GR:[10],GD:[10],GT:[8],GN:[9],GW:[9],GY:[7],HT:[8],HN:[8],HK:[8],HU:[9],IS:[7],IN:[10],ID:[9,10,11,12],IR:[10],IQ:[10],IE:[9],IL:[9],IT:[9,10],CI:[10],JM:[10],JP:[10],JO:[9],KZ:[10],KE:[9,10],KI:[8],XK:[8],KW:[8],KG:[9],LA:[9,10],LV:[8],LB:[7,8],LS:[8],LR:[8],LY:[9],LI:[7],LT:[8],LU:[9],MO:[8],MG:[9],MW:[9],MY:[9,10],MV:[7],ML:[8],MT:[8],MH:[7],MR:[8],MU:[8],MX:[10],FM:[7],MD:[8],MC:[8],MN:[8],ME:[8],MA:[9],MZ:[9],MM:[8,9,10],NA:[9],NR:[7],NP:[10],NL:[9],NZ:[8,9],NI:[8],NE:[8],NG:[10],KP:[10],MK:[8],NO:[8],OM:[8],PK:[10],PW:[7],PS:[9],PA:[8],PG:[8],PY:[9],PE:[9],PH:[10],PL:[9],PT:[9],PR:[10],QA:[8],RO:[9],RU:[10],RW:[9],KN:[10],LC:[10],VC:[10],WS:[7],SM:[10],ST:[7],SA:[9],SN:[9],RS:[8,9],SC:[7],SL:[8],SG:[8],SK:[9],SI:[8],SB:[7],SO:[8],ZA:[9],KR:[9,10],SS:[9],ES:[9],LK:[9],SD:[9],SR:[7],SE:[9],CH:[9],SY:[9],TW:[9],TJ:[9],TZ:[9],TH:[9],TL:[7,8],TG:[8],TO:[5,7],TT:[10],TN:[8],TR:[10],TM:[8],TV:[5],UG:[9],UA:[9],AE:[9],GB:[10],US:[10],UY:[8,9],UZ:[9],VU:[7],VA:[10],VE:[10],VN:[9,10],YE:[9],ZM:[9],ZW:[9],
+};
+
 const Field = ({ icon: Icon, children, error }) => (
   <div className="relative group">
-    {Icon && <Icon size={15} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${error ? "text-red-400" : "text-white/30 group-focus-within:text-emerald-400"}`} />}
+    {Icon && <Icon size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 ${error ? "text-red-400" : "text-white/25 group-focus-within:text-emerald-400"}`} />}
     {children}
   </div>
 );
@@ -227,10 +229,7 @@ export default function Register() {
   const location = useLocation();
   const refCode = new URLSearchParams(location.search).get("ref") || "";
 
-  const [form, setForm] = useState({
-    name: "", email: "", phoneNumber: "",
-    password: "", confirmPassword: "", referralCode: refCode,
-  });
+  const [form, setForm] = useState({ name:"", email:"", phoneNumber:"", password:"", confirmPassword:"", referralCode:refCode });
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [countryOpen, setCountryOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
@@ -244,357 +243,341 @@ export default function Register() {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const filteredCountries = COUNTRIES.filter(c =>
-    c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
-    c.dial.includes(countrySearch)
+    c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.dial.includes(countrySearch)
   );
 
-  const handleSelectCountry = (country) => {
-    setSelectedCountry(country);
-    setCountryOpen(false);
-    setCountrySearch("");
-    setError("");
-  };
-
-  // Expected phone number length per country (digits only, NOT including dial code)
-  const PHONE_LENGTHS = {
-    AF: [9], AL: [9], DZ: [9], AD: [6], AO: [9], AR: [10], AM: [8], AU: [9], AT: [10, 11],
-    AZ: [9], BS: [10], BH: [8], BD: [10], BB: [10], BY: [9], BE: [9], BZ: [7], BJ: [8],
-    BT: [8], BO: [8], BA: [8], BW: [8], BR: [10, 11], BN: [7], BG: [9], BF: [8], BI: [8],
-    KH: [8, 9], CM: [9], CA: [10], CV: [7], CF: [8], TD: [8], CL: [9], CN: [11], CO: [10],
-    KM: [7], CD: [9], CG: [9], CR: [8], HR: [9], CU: [8], CY: [8], CZ: [9], DK: [8],
-    DJ: [8], DM: [10], DO: [10], EC: [9], EG: [10], SV: [8], GQ: [9], ER: [7], EE: [7, 8],
-    SZ: [8], ET: [9], FJ: [7], FI: [9, 10], FR: [9], GA: [8], GM: [7], GE: [9], DE: [10, 11],
-    GH: [9], GR: [10], GD: [10], GT: [8], GN: [9], GW: [9], GY: [7], HT: [8], HN: [8],
-    HK: [8], HU: [9], IS: [7], IN: [10], ID: [9, 10, 11, 12], IR: [10], IQ: [10], IE: [9],
-    IL: [9], IT: [9, 10], CI: [10], JM: [10], JP: [10], JO: [9], KZ: [10], KE: [9, 10],
-    KI: [8], XK: [8], KW: [8], KG: [9], LA: [9, 10], LV: [8], LB: [7, 8], LS: [8], LR: [8],
-    LY: [9], LI: [7], LT: [8], LU: [9], MO: [8], MG: [9], MW: [9], MY: [9, 10], MV: [7],
-    ML: [8], MT: [8], MH: [7], MR: [8], MU: [8], MX: [10], FM: [7], MD: [8], MC: [8],
-    MN: [8], ME: [8], MA: [9], MZ: [9], MM: [8, 9, 10], NA: [9], NR: [7], NP: [10], NL: [9],
-    NZ: [8, 9], NI: [8], NE: [8], NG: [10], KP: [10], MK: [8], NO: [8], OM: [8], PK: [10],
-    PW: [7], PS: [9], PA: [8], PG: [8], PY: [9], PE: [9], PH: [10], PL: [9], PT: [9],
-    PR: [10], QA: [8], RO: [9], RU: [10], RW: [9], KN: [10], LC: [10], VC: [10], WS: [7],
-    SM: [10], ST: [7], SA: [9], SN: [9], RS: [8, 9], SC: [7], SL: [8], SG: [8], SK: [9],
-    SI: [8], SB: [7], SO: [8], ZA: [9], KR: [9, 10], SS: [9], ES: [9], LK: [9], SD: [9],
-    SR: [7], SE: [9], CH: [9], SY: [9], TW: [9], TJ: [9], TZ: [9], TH: [9], TL: [7, 8],
-    TG: [8], TO: [5, 7], TT: [10], TN: [8], TR: [10], TM: [8], TV: [5], UG: [9], UA: [9],
-    AE: [9], GB: [10], US: [10], UY: [8, 9], UZ: [9], VU: [7], VA: [10], VE: [10], VN: [9, 10],
-    YE: [9], ZM: [9], ZW: [9],
-  };
+  const handleSelectCountry = (country) => { setSelectedCountry(country); setCountryOpen(false); setCountrySearch(""); setError(""); };
 
   const validatePhone = () => {
     if (!form.phoneNumber.trim()) return t("auth.phoneRequired", "Phone number is required.");
     if (!selectedCountry) return t("auth.countryRequired", "Please select your country first.");
-
-    // Strip non-digits — only count digits
     const digits = form.phoneNumber.replace(/\D/g, "");
-    const expectedLengths = PHONE_LENGTHS[selectedCountry.code] || [];
-
-    if (expectedLengths.length === 0) {
-      // Country not in list — fallback general check
-      if (digits.length < 6 || digits.length > 15) {
-        return `Please enter a valid phone number for ${selectedCountry.name}.`;
-      }
-      return null;
-    }
-
-    if (!expectedLengths.includes(digits.length)) {
-      const range = expectedLengths.length === 1
-        ? `${expectedLengths[0]} digits`
-        : `${expectedLengths.join(" or ")} digits`;
-      return `Phone number for ${selectedCountry.name} must be ${range}. You entered ${digits.length} digits.`;
-    }
-
+    const expected = PHONE_LENGTHS[selectedCountry.code] || [];
+    if (expected.length === 0) { if (digits.length < 6 || digits.length > 15) return `Please enter a valid phone number for ${selectedCountry.name}.`; return null; }
+    if (!expected.includes(digits.length)) { const range = expected.length === 1 ? `${expected[0]} digits` : `${expected.join(" or ")} digits`; return `Phone number for ${selectedCountry.name} must be ${range}. You entered ${digits.length} digits.`; }
     return null;
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
+    e.preventDefault(); setError("");
     if (!form.name.trim()) return setError(t("auth.nameRequired", "Full name is required."));
     if (!form.email.trim()) return setError(t("auth.emailRequired", "Email is required."));
     if (!selectedCountry) return setError(t("auth.countryRequired", "Please select your country."));
-
     const phoneError = validatePhone();
     if (phoneError) return setError(phoneError);
-
     if (form.password.length < 6) return setError(t("auth.passwordTooShort", "Password must be at least 6 characters."));
     if (form.password !== form.confirmPassword) return setError(t("auth.passwordsDoNotMatch", "Passwords do not match."));
     if (!agreedToTerms) return setError(t("auth.mustAgreeTerms", "You must agree to the Terms and Privacy Policy."));
-
     const fullPhone = `${selectedCountry.dial} ${form.phoneNumber.trim()}`;
-
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, {
-        name: form.name,
-        email: form.email,
-        phone: fullPhone,
-        country: selectedCountry.name,
-        password: form.password,
-        referralCode: form.referralCode,
-      });
-      if (res.data.token) {
-        sessionStorage.setItem("token", res.data.token);
-        setSuccess(true);
-        setTimeout(() => navigate("/login"), 4000);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || t("auth.registrationFailed", "Registration failed. Please try again."));
-    } finally {
-      setLoading(false);
-    }
+      const res = await axios.post(`${API_URL}/api/auth/register`, { name:form.name, email:form.email, phone:fullPhone, country:selectedCountry.name, password:form.password, referralCode:form.referralCode });
+      if (res.data.token) { sessionStorage.setItem("token", res.data.token); setSuccess(true); setTimeout(() => navigate("/login"), 4000); }
+    } catch (err) { setError(err.response?.data?.message || t("auth.registrationFailed", "Registration failed. Please try again.")); }
+    finally { setLoading(false); }
   };
 
-  // Common input class
-  const inputCls = "w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/8 outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] transition text-sm text-white placeholder:text-white/30";
+  /* ── Input style ── */
+  const inp = "w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] outline-none text-sm text-white placeholder:text-white/25 transition-all duration-300 focus:border-emerald-500/50 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]";
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4 py-10">
+    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4 py-10"
+      style={{ fontFamily:"'Montserrat',sans-serif" }}>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Montserrat:wght@300;400;500;600;700&display=swap');
+        :root{--em:#10b981;--teal:#14b8a6;--muted:rgba(255,255,255,.38);}
+        .serif{font-family:'Cormorant Garamond',serif;}
+        ::selection{background:var(--em);color:#080c18;}
+        @keyframes orb{0%,100%{opacity:.07}50%{opacity:.14}}
+        .orb{animation:orb 7s ease-in-out infinite;}
+        @keyframes scan{from{top:-30%}to{top:110%}}
+        .scan{animation:scan 9s ease-in-out infinite;}
+        @keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}
+        .top-line{background:linear-gradient(90deg,transparent,var(--em) 40%,var(--teal) 60%,transparent);background-size:400% 100%;animation:shine 3s linear infinite;}
+        .grid-bg{background-image:linear-gradient(rgba(16,185,129,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,.035) 1px,transparent 1px);background-size:72px 72px;}
+        .btn-prime{background:linear-gradient(135deg,var(--em),var(--teal));transition:transform .3s,box-shadow .3s;position:relative;overflow:hidden;}
+        .btn-prime::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .3s;}
+        .btn-prime:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 0 1px var(--em),0 16px 40px rgba(16,185,129,.35);}
+        .btn-prime:hover:not(:disabled)::before{opacity:1;}
+        .shine-badge{border:1px solid transparent;background:linear-gradient(#080c18,#080c18) padding-box,linear-gradient(90deg,transparent 20%,var(--em) 50%,transparent 80%) border-box;background-size:200% auto;animation:shine 4s linear infinite;}
+        .card-panel{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);backdrop-filter:blur(24px);}
+        .nav-link{color:var(--muted);transition:color .3s;}
+        .nav-link:hover{color:var(--em);}
+        .country-btn:hover{background:rgba(16,185,129,.08);}
+        .country-btn.selected{background:rgba(16,185,129,.1);}
+      `}</style>
+
+      {/* Top shimmer */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-[2px]"><div className="top-line h-full w-full" /></div>
 
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[180px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/6 blur-[140px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
+        <div className="grid-bg absolute inset-0" />
+        <div className="orb absolute rounded-full" style={{width:700,height:700,background:"radial-gradient(circle,rgba(16,185,129,.09) 0%,transparent 70%)",top:"-200px",left:"-200px"}} />
+        <div className="orb absolute rounded-full" style={{width:500,height:500,background:"radial-gradient(circle,rgba(20,184,166,.07) 0%,transparent 70%)",bottom:"-100px",right:"-100px",animationDelay:"3s"}} />
+        {/* Vertical accent lines */}
+        <div className="absolute left-[4%] top-0 bottom-0 w-px hidden lg:block" style={{background:"linear-gradient(to bottom,transparent 5%,rgba(16,185,129,.18) 40%,rgba(16,185,129,.35) 60%,transparent 95%)"}} />
+        <div className="scan absolute left-[4%] w-px hidden lg:block" style={{height:"30%",background:"linear-gradient(to bottom,transparent,var(--em),transparent)"}} />
+        <div className="absolute right-[4%] top-0 bottom-0 w-px hidden lg:block" style={{background:"linear-gradient(to bottom,transparent 5%,rgba(20,184,166,.12) 40%,rgba(20,184,166,.25) 60%,transparent 95%)"}} />
       </div>
 
-      <Link to="/" className="absolute top-6 left-6 text-white/30 hover:text-white/70 text-sm transition flex items-center gap-1 z-10">
-        ← MexicaTrading
+      {/* Back link */}
+      <Link to="/" className="nav-link absolute top-7 left-8 text-[10px] font-medium tracking-[.2em] uppercase flex items-center gap-2 z-10">
+        ← <span className="serif text-base font-light" style={{color:"var(--em)"}}>Mexica<em className="not-italic text-white">Trading</em></span>
       </Link>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative w-full max-w-md">
-        <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/8 px-7 py-8 rounded-3xl shadow-2xl">
+      <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.7,ease:[.22,1,.36,1]}}
+        className="relative w-full max-w-md z-10">
 
-          <AnimatePresence mode="wait">
-            {success ? (
-              <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center text-center gap-5 py-4">
-                <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <CheckCircle size={40} className="text-emerald-400" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">{t("auth.accountCreated", "Account Created!")}</h2>
-                  <p className="text-white/45 text-sm">{t("auth.verificationSentTo", "We sent a verification email to")}</p>
-                  <p className="text-emerald-400 font-semibold text-sm mt-1">{form.email}</p>
-                </div>
-                <div className="w-full p-4 rounded-2xl bg-emerald-500/8 border border-emerald-500/20">
-                  <p className="text-white/55 text-sm leading-relaxed">
-                    📧 {t("auth.checkInboxAndClick", "Please check your inbox and click the verification link to activate your account.")}
-                  </p>
-                </div>
-                <button onClick={() => navigate("/login")}
-                  className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 transition font-semibold text-sm text-white flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20">
-                  {t("auth.goToLogin", "Go to Login")} <ArrowRight size={16} />
-                </button>
-              </motion.div>
-            ) : (
-              <motion.div key="form" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <AnimatePresence mode="wait">
 
-                {refCode && (
-                  <div className="mb-5 px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs text-center">
-                    🎁 {t("auth.referralApplied", "Referral code applied")} · <strong className="font-mono">{refCode}</strong>
-                  </div>
+          {/* ── SUCCESS ── */}
+          {success ? (
+            <motion.div key="success" initial={{opacity:0,scale:.96}} animate={{opacity:1,scale:1}} exit={{opacity:0}}
+              className="card-panel px-8 py-10 flex flex-col items-center text-center gap-6">
+              <div className="w-20 h-20 flex items-center justify-center border" style={{borderColor:"rgba(16,185,129,.3)",background:"rgba(16,185,129,.08)"}}>
+                <CheckCircle size={36} style={{color:"var(--em)"}} />
+              </div>
+              <div>
+                <h2 className="serif font-light text-4xl mb-2 text-white">{t("auth.accountCreated","Account Created!")}</h2>
+                <p className="text-sm font-light" style={{color:"var(--muted)"}}>{t("auth.verificationSentTo","We sent a verification email to")}</p>
+                <p className="font-semibold text-sm mt-1" style={{color:"var(--em)"}}>{form.email}</p>
+              </div>
+              <div className="w-full px-5 py-4 border" style={{borderColor:"rgba(16,185,129,.2)",background:"rgba(16,185,129,.06)"}}>
+                <p className="text-sm font-light leading-relaxed" style={{color:"var(--muted)"}}>
+                  📧 {t("auth.checkInboxAndClick","Please check your inbox and click the verification link to activate your account.")}
+                </p>
+              </div>
+              <button onClick={()=>navigate("/login")}
+                className="btn-prime w-full py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white flex items-center justify-center gap-3">
+                {t("auth.goToLogin","Go to Login")} <ArrowRight size={14} />
+              </button>
+            </motion.div>
+
+          ) : (
+
+            /* ── FORM ── */
+            <motion.div key="form" initial={{opacity:1}} exit={{opacity:0}}
+              className="card-panel px-8 py-9">
+
+              {/* Referral banner */}
+              {refCode && (
+                <div className="mb-6 px-4 py-3 border text-center text-xs font-medium tracking-wider"
+                  style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.07)",color:"var(--em)"}}>
+                  🎁 {t("auth.referralApplied","Referral code applied")} · <strong className="font-mono">{refCode}</strong>
+                </div>
+              )}
+
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="shine-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-semibold tracking-[.28em] uppercase mb-5"
+                  style={{color:"var(--em)"}}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:"var(--em)"}} />
+                  {t("auth.secureRegister","Secure Registration")}
+                </div>
+                <h2 className="serif font-light text-white mb-2" style={{fontSize:"clamp(28px,5vw,40px)",lineHeight:1.1}}>
+                  {t("auth.createAccountTitle","Create Your")} <em style={{fontStyle:"italic",background:"linear-gradient(135deg,var(--em),var(--teal))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Account</em>
+                </h2>
+                <p className="text-xs font-light tracking-wide" style={{color:"var(--muted)"}}>{t("auth.joinDesc","Join thousands growing their wealth.")}</p>
+              </div>
+
+              {/* Error */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0}}
+                    className="mb-5 flex items-start gap-2.5 text-xs px-4 py-3 border"
+                    style={{background:"rgba(239,68,68,.07)",borderColor:"rgba(239,68,68,.2)",color:"#f87171"}}>
+                    <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </motion.div>
                 )}
+              </AnimatePresence>
 
-                {/* Heading */}
-                <div className="text-center mb-7">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-4">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {t("auth.secureRegister", "Secure Registration")}
-                  </div>
-                  <h2 className="text-2xl font-bold tracking-tight mb-1.5">{t("auth.createAccountTitle", "Create Your Account")}</h2>
-                  <p className="text-white/40 text-sm">{t("auth.joinDesc", "Join thousands growing their wealth.")}</p>
+              <form onSubmit={handleSubmit} className="space-y-3">
+
+                {/* Name */}
+                <Field icon={User}>
+                  <input type="text" name="name" value={form.name} onChange={handleChange}
+                    placeholder={t("auth.fullName","Full Name")} required className={inp} />
+                </Field>
+
+                {/* Email */}
+                <Field icon={Mail}>
+                  <input type="email" name="email" value={form.email} onChange={handleChange}
+                    placeholder={t("auth.email","Email Address")} required className={inp} />
+                </Field>
+
+                {/* Country selector */}
+                <div className="relative">
+                  <button type="button" onClick={()=>setCountryOpen(!countryOpen)}
+                    className="w-full flex items-center justify-between px-4 py-3.5 border text-sm text-left transition-all duration-300 focus:outline-none"
+                    style={{background:"rgba(255,255,255,.03)",borderColor: countryOpen ? "rgba(16,185,129,.5)" : "rgba(255,255,255,.08)"}}>
+                    {selectedCountry ? (
+                      <span className="flex items-center gap-3 text-white">
+                        <span className="text-lg leading-none">{selectedCountry.flag}</span>
+                        <span className="truncate">{selectedCountry.name}</span>
+                        <span className="font-mono text-xs ml-auto pr-2" style={{color:"var(--em)"}}>{selectedCountry.dial}</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-3" style={{color:"rgba(255,255,255,.25)"}}>
+                        <Globe size={14} />{t("auth.selectCountry","Select Your Country")}
+                      </span>
+                    )}
+                    <ChevronDown size={14} className={`transition-transform duration-300 shrink-0`} style={{color:"rgba(255,255,255,.3)",transform:countryOpen?"rotate(180deg)":"none"}} />
+                  </button>
+
+                  <AnimatePresence>
+                    {countryOpen && (
+                      <motion.div initial={{opacity:0,y:-6}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:.2}}
+                        className="absolute top-full mt-1.5 left-0 right-0 z-50 border shadow-2xl max-h-72 overflow-hidden flex flex-col"
+                        style={{background:"#0d1120",borderColor:"rgba(16,185,129,.2)",backdropFilter:"blur(20px)"}}>
+                        <div className="p-2.5 border-b" style={{borderColor:"rgba(255,255,255,.06)"}}>
+                          <div className="relative">
+                            <Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2" style={{color:"rgba(255,255,255,.25)"}} />
+                            <input type="text" placeholder={t("auth.searchCountry","Search country...")}
+                              value={countrySearch} onChange={(e)=>setCountrySearch(e.target.value)}
+                              className="w-full pl-8 pr-3 py-2 text-xs text-white outline-none transition-all duration-300"
+                              style={{background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)",caretColor:"var(--em)"}}
+                              autoFocus />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto flex-1">
+                          {filteredCountries.length === 0 ? (
+                            <p className="text-center py-6 text-xs" style={{color:"rgba(255,255,255,.25)"}}>{t("auth.noCountryFound","No country found")}</p>
+                          ) : filteredCountries.map(c=>(
+                            <button key={c.code} type="button" onClick={()=>handleSelectCountry(c)}
+                              className={`country-btn w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors duration-200 ${selectedCountry?.code===c.code?"selected":""}`}>
+                              <span className="text-lg leading-none">{c.flag}</span>
+                              <span className="text-white flex-1 truncate text-sm">{c.name}</span>
+                              <span className="font-mono text-xs" style={{color:"rgba(16,185,129,.7)"}}>{c.dial}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {/* Error banner */}
-                <AnimatePresence>
-                  {error && (
-                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                      className="mb-4 flex items-start gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 px-3 py-2.5 rounded-xl">
-                      <AlertTriangle size={13} className="shrink-0 mt-0.5" />
-                      <span>{error}</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <form onSubmit={handleSubmit} className="space-y-3">
-
-                  {/* Name */}
-                  <Field icon={User}>
-                    <input type="text" name="name" value={form.name} onChange={handleChange}
-                      placeholder={t("auth.fullName", "Full Name")} required className={inputCls} />
-                  </Field>
-
-                  {/* Email */}
-                  <Field icon={Mail}>
-                    <input type="email" name="email" value={form.email} onChange={handleChange}
-                      placeholder={t("auth.email", "Email Address")} required className={inputCls} />
-                  </Field>
-
-                  {/* Country */}
-                  <div className="relative">
-                    <button type="button" onClick={() => setCountryOpen(!countryOpen)}
-                      className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/8 outline-none focus:border-emerald-500/50 transition text-sm text-left hover:bg-white/[0.06]">
+                {/* Phone */}
+                <div>
+                  <div className="flex gap-2">
+                    <div className="px-3 py-3.5 border flex items-center gap-1.5 shrink-0 min-w-[88px] justify-center"
+                      style={{background:"rgba(255,255,255,.03)",borderColor:selectedCountry?"rgba(16,185,129,.25)":"rgba(255,255,255,.08)"}}>
                       {selectedCountry ? (
-                        <span className="flex items-center gap-2.5 text-white">
-                          <span className="text-lg leading-none">{selectedCountry.flag}</span>
-                          <span className="truncate">{selectedCountry.name}</span>
-                          <span className="text-emerald-400 font-mono text-xs ml-auto pr-2">{selectedCountry.dial}</span>
-                        </span>
+                        <><span className="text-base leading-none">{selectedCountry.flag}</span><span className="font-bold font-mono text-sm" style={{color:"var(--em)"}}>{selectedCountry.dial}</span></>
                       ) : (
-                        <span className="flex items-center gap-2.5 text-white/30">
-                          <Globe size={15} />
-                          {t("auth.selectCountry", "Select Your Country")}
-                        </span>
+                        <span className="font-mono text-xs" style={{color:"rgba(255,255,255,.2)"}}>+ —</span>
                       )}
-                      <ChevronDown size={15} className={`text-white/40 transition shrink-0 ${countryOpen ? "rotate-180" : ""}`} />
-                    </button>
-
-                    <AnimatePresence>
-                      {countryOpen && (
-                        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                          className="absolute top-full mt-2 left-0 right-0 z-50 bg-[#0e1422] border border-white/10 rounded-2xl shadow-2xl max-h-72 overflow-hidden flex flex-col">
-                          <div className="p-2.5 border-b border-white/8">
-                            <div className="relative">
-                              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-                              <input type="text" placeholder={t("auth.searchCountry", "Search country or dial code...")}
-                                value={countrySearch}
-                                onChange={(e) => setCountrySearch(e.target.value)}
-                                className="w-full pl-8 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 outline-none focus:border-emerald-500/50 text-xs text-white placeholder:text-white/30" autoFocus />
-                            </div>
-                          </div>
-                          <div className="overflow-y-auto flex-1">
-                            {filteredCountries.length === 0 ? (
-                              <p className="text-white/30 text-xs text-center py-6">{t("auth.noCountryFound", "No country found")}</p>
-                            ) : (
-                              filteredCountries.map(c => (
-                                <button key={c.code} type="button" onClick={() => handleSelectCountry(c)}
-                                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-emerald-500/10 transition text-left ${selectedCountry?.code === c.code ? "bg-emerald-500/10" : ""}`}>
-                                  <span className="text-lg leading-none">{c.flag}</span>
-                                  <span className="text-white flex-1 truncate">{c.name}</span>
-                                  <span className="text-emerald-400/70 text-xs font-mono">{c.dial}</span>
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <div className="flex gap-2">
-                      <div className={`px-3.5 py-3.5 rounded-xl bg-white/[0.04] border flex items-center gap-1.5 shrink-0 min-w-[88px] justify-center transition ${selectedCountry ? "border-emerald-500/25" : "border-white/8"}`}>
-                        {selectedCountry ? (
-                          <>
-                            <span className="text-base leading-none">{selectedCountry.flag}</span>
-                            <span className="text-emerald-400 text-sm font-bold font-mono">{selectedCountry.dial}</span>
-                          </>
-                        ) : (
-                          <span className="text-white/25 text-xs font-mono">+ —</span>
-                        )}
-                      </div>
-                      <Field icon={Phone}>
-                        <input type="tel" name="phoneNumber" value={form.phoneNumber} onChange={handleChange}
-                          placeholder={selectedCountry ? t("auth.enterPhoneNumber", "Phone number") : t("auth.selectCountryFirst", "Select country first")}
-                          disabled={!selectedCountry} required
-                          className={`${inputCls} disabled:opacity-50 disabled:cursor-not-allowed`} />
-                      </Field>
                     </div>
-                    {selectedCountry && form.phoneNumber && (
-                      <p className="text-white/30 text-[11px] mt-1.5 ml-1">
-                        {t("auth.willBeSavedAs", "Saved as:")} <span className="text-emerald-400 font-mono">{selectedCountry.dial} {form.phoneNumber}</span>
-                      </p>
-                    )}
+                    <Field icon={Phone}>
+                      <input type="tel" name="phoneNumber" value={form.phoneNumber} onChange={handleChange}
+                        placeholder={selectedCountry ? t("auth.enterPhoneNumber","Phone number") : t("auth.selectCountryFirst","Select country first")}
+                        disabled={!selectedCountry} required className={`${inp} disabled:opacity-40 disabled:cursor-not-allowed`} />
+                    </Field>
                   </div>
-
-                  {/* Password */}
-                  <Field icon={Lock}>
-                    <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange}
-                      placeholder={t("auth.password", "Password (min 6 characters)")} required minLength={6}
-                      className={`${inputCls} pr-11`} />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition">
-                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </Field>
-
-                  {/* Confirm Password */}
-                  <Field icon={Lock}>
-                    <input type={showConfirm ? "text" : "password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange}
-                      placeholder={t("auth.confirmPassword", "Confirm Password")} required minLength={6}
-                      className={`${inputCls} pr-11`} />
-                    <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition">
-                      {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </Field>
-
-                  {form.confirmPassword && (
-                    <p className={`text-[11px] flex items-center gap-1 ml-1 ${
-                      form.password === form.confirmPassword ? "text-emerald-400" : "text-red-400"
-                    }`}>
-                      {form.password === form.confirmPassword
-                        ? <><CheckCircle size={11} /> {t("auth.passwordsMatch", "Passwords match")}</>
-                        : <><AlertTriangle size={11} /> {t("auth.passwordsDoNotMatch", "Passwords do not match")}</>}
+                  {selectedCountry && form.phoneNumber && (
+                    <p className="text-[11px] mt-1.5 ml-1 font-light" style={{color:"rgba(255,255,255,.28)"}}>
+                      {t("auth.willBeSavedAs","Saved as:")} <span className="font-mono" style={{color:"var(--em)"}}>{selectedCountry.dial} {form.phoneNumber}</span>
                     </p>
                   )}
-
-                  {/* Referral */}
-                  {!refCode && (
-                    <input type="text" name="referralCode" value={form.referralCode} onChange={handleChange}
-                      placeholder={t("auth.referralCode", "Referral Code (Optional)")}
-                      className="w-full px-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/8 outline-none focus:border-emerald-500/50 transition text-sm text-white placeholder:text-white/30" />
-                  )}
-
-                  {/* Terms */}
-                  <label className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-white/[0.02] border border-white/8 cursor-pointer hover:bg-white/[0.04] transition select-none">
-                    <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded accent-emerald-500 cursor-pointer shrink-0" />
-                    <span className="text-white/55 text-xs leading-relaxed">
-                      {t("auth.termsAgree", "I agree to the")}{" "}
-                      <Link to="/terms" target="_blank" className="text-emerald-400 hover:underline font-semibold">{t("auth.termsLink", "Terms of Service")}</Link>
-                      {" "}{t("auth.and", "and")}{" "}
-                      <Link to="/privacy" target="_blank" className="text-emerald-400 hover:underline font-semibold">{t("auth.privacyLink", "Privacy Policy")}</Link>
-                    </span>
-                  </label>
-
-                  {/* Submit */}
-                  <button type="submit" disabled={loading || !agreedToTerms}
-                    className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2">
-                    {loading ? (
-                      <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("auth.registering", "Creating Account...")}</>
-                    ) : (
-                      <>{t("auth.register", "Create Account")}<ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
-                    )}
-                  </button>
-                </form>
-
-                <div className="flex items-center gap-3 my-5">
-                  <div className="flex-1 h-px bg-white/8" />
-                  <span className="text-white/25 text-xs">{t("auth.alreadyHave", "Already have an account?")}</span>
-                  <div className="flex-1 h-px bg-white/8" />
                 </div>
 
-                <button onClick={() => navigate("/login")}
-                  className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition text-sm text-white/60 hover:text-white font-medium">
-                  {t("auth.signIn", "Sign In")}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                {/* Password */}
+                <Field icon={Lock}>
+                  <input type={showPassword?"text":"password"} name="password" value={form.password} onChange={handleChange}
+                    placeholder={t("auth.password","Password (min 6 characters)")} required minLength={6}
+                    className={`${inp} pr-11`} />
+                  <button type="button" onClick={()=>setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors duration-300"
+                    style={{color:"rgba(255,255,255,.25)"}}>
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </Field>
 
-        <div className="flex items-center justify-center gap-3 mt-5 text-white/25 text-[11px]">
-          <span>🔒 {t("common.sslSecured", "SSL Secured")}</span>
-          <span>·</span>
-          <span>🛡️ {t("common.dataProtected", "Data Protected")}</span>
-          <span>·</span>
-          <span>⚡ {t("common.instantAccess", "Instant Access")}</span>
-        </div>
+                {/* Confirm password */}
+                <Field icon={Lock}>
+                  <input type={showConfirm?"text":"password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange}
+                    placeholder={t("auth.confirmPassword","Confirm Password")} required minLength={6}
+                    className={`${inp} pr-11`} />
+                  <button type="button" onClick={()=>setShowConfirm(!showConfirm)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors duration-300"
+                    style={{color:"rgba(255,255,255,.25)"}}>
+                    {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </Field>
+
+                {form.confirmPassword && (
+                  <p className={`text-[11px] flex items-center gap-1.5 ml-1 ${form.password===form.confirmPassword?"text-emerald-400":"text-red-400"}`}>
+                    {form.password===form.confirmPassword
+                      ? <><CheckCircle size={11}/>{t("auth.passwordsMatch","Passwords match")}</>
+                      : <><AlertTriangle size={11}/>{t("auth.passwordsDoNotMatch","Passwords do not match")}</>}
+                  </p>
+                )}
+
+                {/* Referral */}
+                {!refCode && (
+                  <input type="text" name="referralCode" value={form.referralCode} onChange={handleChange}
+                    placeholder={t("auth.referralCode","Referral Code (Optional)")}
+                    className="w-full px-4 py-3.5 text-sm text-white outline-none transition-all duration-300"
+                    style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.08)",placeholder:"rgba(255,255,255,.25)"}}
+                    onFocus={e=>{e.target.style.borderColor="rgba(16,185,129,.5)";e.target.style.boxShadow="0 0 0 3px rgba(16,185,129,.08)";}}
+                    onBlur={e=>{e.target.style.borderColor="rgba(255,255,255,.08)";e.target.style.boxShadow="none";}} />
+                )}
+
+                {/* Terms */}
+                <label className="flex items-start gap-3 px-4 py-3.5 border cursor-pointer transition-all duration-300 select-none"
+                  style={{background:"rgba(255,255,255,.02)",borderColor:agreedToTerms?"rgba(16,185,129,.25)":"rgba(255,255,255,.07)"}}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.035)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.02)"}>
+                  <input type="checkbox" checked={agreedToTerms} onChange={(e)=>setAgreedToTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 cursor-pointer shrink-0 accent-emerald-500" />
+                  <span className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.45)"}}>
+                    {t("auth.termsAgree","I agree to the")}{" "}
+                    <Link to="/terms" target="_blank" className="font-semibold hover:underline" style={{color:"var(--em)"}}>{t("auth.termsLink","Terms of Service")}</Link>
+                    {" "}{t("auth.and","and")}{" "}
+                    <Link to="/privacy" target="_blank" className="font-semibold hover:underline" style={{color:"var(--em)"}}>{t("auth.privacyLink","Privacy Policy")}</Link>
+                  </span>
+                </label>
+
+                {/* Submit */}
+                <button type="submit" disabled={loading||!agreedToTerms}
+                  className="btn-prime group w-full py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white flex items-center justify-center gap-3 mt-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {loading ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("auth.registering","Creating Account...")}</>
+                  ) : (
+                    <>{t("auth.register","Create Account")}<ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" /></>
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-6">
+                <div className="flex-1 h-px" style={{background:"rgba(255,255,255,.07)"}} />
+                <span className="text-[10px] font-light tracking-wider" style={{color:"rgba(255,255,255,.2)"}}>{t("auth.alreadyHave","Already have an account?")}</span>
+                <div className="flex-1 h-px" style={{background:"rgba(255,255,255,.07)"}} />
+              </div>
+
+              <button onClick={()=>navigate("/login")}
+                className="w-full py-3.5 border text-[11px] font-medium tracking-[.18em] uppercase transition-all duration-300"
+                style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(255,255,255,.02)",color:"rgba(255,255,255,.45)"}}
+                onMouseEnter={e=>{e.target.style.borderColor="rgba(16,185,129,.3)";e.target.style.color="var(--em)";e.target.style.background="rgba(16,185,129,.05)";}}
+                onMouseLeave={e=>{e.target.style.borderColor="rgba(255,255,255,.08)";e.target.style.color="rgba(255,255,255,.45)";e.target.style.background="rgba(255,255,255,.02)";}}>
+                {t("auth.signIn","Sign In")}
+              </button>
+
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Trust row */}
+        <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:.5}}
+          className="flex items-center justify-center gap-6 mt-6">
+          {["🔒 SSL Secured","🛡️ Data Protected","⚡ Instant Access"].map((txt,i)=>(
+            <span key={i} className="text-[10px] font-light tracking-wider" style={{color:"rgba(255,255,255,.2)"}}>{txt}</span>
+          ))}
+        </motion.div>
+
       </motion.div>
     </div>
   );
