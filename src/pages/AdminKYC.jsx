@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, RefreshCw, CheckCircle, XCircle, Eye, X, ZoomIn, Mail } from "lucide-react";
+import { ShieldCheck, RefreshCw, CheckCircle, XCircle, Eye, X, ZoomIn, Mail, Landmark } from "lucide-react";
 
 const API_URL = "https://mexicatradingbackend.onrender.com/api";
 
@@ -171,7 +171,7 @@ export default function AdminKYC() {
                   <p className="text-white text-sm font-medium">{u.name}</p>
                   <p className="text-white/30 text-xs truncate">{u.email}</p>
                 </div>
-                <p className="text-white/50 text-sm capitalize">{u.kyc?.idType?.replace("_", " ") || "—"}</p>
+                <p className="text-white/50 text-sm capitalize">{u.kyc?.idType?.replace(/_/g, " ") || "—"}</p>
                 <p className="text-white/40 text-xs">
                   {u.kyc?.submittedAt
                     ? new Date(u.kyc.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -280,8 +280,8 @@ export default function AdminKYC() {
                 {/* Info row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                    <p className="text-white/30 text-xs mb-1">Document Type</p>
-                    <p className="text-white text-sm font-semibold capitalize">{selected.kyc?.idType?.replace("_", " ") || "—"}</p>
+                    <p className="text-white/30 text-xs mb-1">{selected.kyc?.method === "bank" ? "Method" : "Document Type"}</p>
+                    <p className="text-white text-sm font-semibold capitalize">{selected.kyc?.idType?.replace(/_/g, " ") || "—"}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
                     <p className="text-white/30 text-xs mb-1">Submitted</p>
@@ -311,7 +311,28 @@ export default function AdminKYC() {
                   </div>
                 )}
 
-                {/* ID Document */}
+                {/* ── BANK DETAILS (when method is bank) ── */}
+                {selected.kyc?.method === "bank" && (
+                  <div className="p-4 rounded-xl bg-white/[0.03] border border-white/8 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Landmark size={14} className="text-emerald-400" />
+                      <p className="text-white/40 text-xs uppercase tracking-widest font-semibold">Bank Details</p>
+                    </div>
+                    {[
+                      ["Bank Name", selected.kyc?.bankName],
+                      ["Account Holder", selected.kyc?.accountName],
+                      ["Account Number", selected.kyc?.accountNumber],
+                      ...(selected.kyc?.routingNumber ? [["Routing / SWIFT", selected.kyc.routingNumber]] : []),
+                    ].map(([k, v], idx) => (
+                      <div key={idx} className="flex justify-between items-center">
+                        <span className="text-white/30 text-xs">{k}</span>
+                        <span className="text-white text-sm font-medium">{v || "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* ID Document (Front) */}
                 {selected.kyc?.idFrontImage && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -324,6 +345,29 @@ export default function AdminKYC() {
                     <div className="relative group cursor-pointer rounded-xl overflow-hidden border border-white/10"
                       onClick={() => setZoomedImage(selected.kyc.idFrontImage)}>
                       <img src={selected.kyc.idFrontImage} alt="ID Front"
+                        className="w-full object-cover max-h-56 group-hover:brightness-75 transition-all" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                        <div className="bg-black/50 rounded-xl px-3 py-2 flex items-center gap-2 text-white text-xs font-semibold">
+                          <ZoomIn size={14} /> Click to zoom
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ID Document (Back) */}
+                {selected.kyc?.idBackImage && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-white/40 text-xs uppercase tracking-widest font-semibold">ID Document (Back)</p>
+                      <button onClick={() => setZoomedImage(selected.kyc.idBackImage)}
+                        className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 transition">
+                        <ZoomIn size={12} /> View Full Size
+                      </button>
+                    </div>
+                    <div className="relative group cursor-pointer rounded-xl overflow-hidden border border-white/10"
+                      onClick={() => setZoomedImage(selected.kyc.idBackImage)}>
+                      <img src={selected.kyc.idBackImage} alt="ID Back"
                         className="w-full object-cover max-h-56 group-hover:brightness-75 transition-all" />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                         <div className="bg-black/50 rounded-xl px-3 py-2 flex items-center gap-2 text-white text-xs font-semibold">
