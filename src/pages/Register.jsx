@@ -76,6 +76,28 @@ const NextHint = ({ show, label = "Keep going…" }) => (
 );
 
 /* ─────────────────────────────────────────────
+   NEXT BUTTON — travels down the form
+   Only shows under the current active field
+───────────────────────────────────────────── */
+const NextButton = ({ show, onClick }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.button
+        type="button"
+        onClick={onClick}
+        initial={{ opacity:0, y:6 }}
+        animate={{ opacity:1, y:0 }}
+        exit={{ opacity:0, y:-6 }}
+        transition={{ duration:0.4, ease:[0.22,1,0.36,1] }}
+        className="btn-prime group/next w-full py-3 mt-2.5 text-[10px] font-semibold tracking-[.22em] uppercase text-white flex items-center justify-center gap-2.5">
+        Next
+        <ChevronRight size={13} className="group-hover/next:translate-x-1 transition-transform duration-300" />
+      </motion.button>
+    )}
+  </AnimatePresence>
+);
+
+/* ─────────────────────────────────────────────
    PROGRESS BAR
 ───────────────────────────────────────────── */
 const ProgressBar = ({ step, total }) => {
@@ -127,6 +149,9 @@ export default function Register() {
   const [showReferral, setShowReferral] = useState(false);
   const [showTerms,    setShowTerms]    = useState(false);
 
+  /* per-field inline error for the Next button */
+  const [fieldError, setFieldError] = useState("");
+
   /* refs for auto-focus */
   const emailRef   = useRef(null);
   const phoneRef   = useRef(null);
@@ -137,7 +162,7 @@ export default function Register() {
   const focus  = (ref, delay = 650) => setTimeout(() => ref.current?.focus(), delay);
   const scroll = (delay = 120)      => setTimeout(() => bottomRef.current?.scrollIntoView({ behavior:"smooth", block:"end" }), delay);
 
-  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) => { setFieldError(""); setForm(f => ({ ...f, [e.target.name]: e.target.value })); };
 
   /* ── AUTO-REVEAL EFFECTS (fire while typing, no blur needed) ── */
 
@@ -191,11 +216,40 @@ export default function Register() {
     setCountryOpen(false);
     setCountrySearch("");
     setError("");
+    setFieldError("");
     if (!showPhone) {
       setShowPhone(true);
       focus(phoneRef);
       scroll();
     }
+  };
+
+  /* ── NEXT BUTTON HANDLERS — reveal next field, show error if invalid ── */
+  const nextFromName = () => {
+    if (!isValidName(form.name)) return setFieldError("Please enter your first and last name to continue.");
+    setFieldError(""); setShowEmail(true); focus(emailRef); scroll();
+  };
+  const nextFromEmail = () => {
+    if (!isValidEmail(form.email)) return setFieldError("Please enter a valid email address to continue.");
+    setFieldError(""); setShowCountry(true); scroll();
+  };
+  const nextFromCountry = () => {
+    if (!selectedCountry) return setFieldError("Please select your country to continue.");
+    setFieldError(""); setShowPhone(true); focus(phoneRef); scroll();
+  };
+  const nextFromPhone = () => {
+    if (!isValidPhone(form.phoneNumber)) return setFieldError("Please enter your phone number to continue.");
+    setFieldError(""); setShowPassword(true); focus(passRef); scroll();
+  };
+  const nextFromPassword = () => {
+    if (!isValidPass(form.password)) return setFieldError("Password must be at least 6 characters to continue.");
+    setFieldError(""); setShowConfirmF(true); focus(confirmRef); scroll();
+  };
+  const nextFromConfirm = () => {
+    if (form.confirmPassword.length < 6) return setFieldError("Please confirm your password to continue.");
+    if (form.password !== form.confirmPassword) return setFieldError("Passwords do not match yet.");
+    setFieldError(""); setShowReferral(true); scroll();
+    setTimeout(() => { setShowTerms(true); scroll(200); }, 350);
   };
 
   /* progress step 0–7 */
@@ -245,6 +299,18 @@ export default function Register() {
 
   const inp = "w-full pl-11 pr-4 py-4 bg-white/[0.03] border border-white/[0.08] outline-none text-sm text-white placeholder:text-white/25 transition-all duration-300 focus:border-emerald-500/60 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
   const done = "border-emerald-500/25 bg-emerald-500/[0.04]";
+
+  /* inline field error shown under the Next button */
+  const FieldError = ({ show }) => (
+    <AnimatePresence>
+      {show && fieldError && (
+        <motion.p initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} exit={{opacity:0}}
+          className="text-[11px] flex items-center gap-1.5 mt-2 ml-1 text-red-400">
+          <AlertTriangle size={11} className="shrink-0" />{fieldError}
+        </motion.p>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <div className="relative flex flex-col items-center justify-start min-h-screen bg-[#080c18] text-white overflow-x-hidden px-4 py-12"
@@ -379,6 +445,9 @@ export default function Register() {
                     </Field>
                     {/* Hint: shows while typing but name not yet valid */}
                     <NextHint show={form.name.length > 0 && !isValidName(form.name)} label="Enter your first and last name" />
+                    {/* Next button — only while email not yet revealed */}
+                    <NextButton show={!showEmail} onClick={nextFromName} />
+                    <FieldError show={!showEmail} />
                   </div>
 
                   {/* ── 2. EMAIL ── */}
@@ -392,6 +461,8 @@ export default function Register() {
                         {isValidEmail(form.email) && <CheckCircle size={13} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{color:"var(--em)"}} />}
                       </Field>
                       <NextHint show={form.email.length > 0 && !isValidEmail(form.email)} label="Enter a valid email address" />
+                      <NextButton show={showEmail && !showCountry} onClick={nextFromEmail} />
+                      <FieldError show={showEmail && !showCountry} />
                     </div>
                   </Fade>
 
@@ -443,6 +514,8 @@ export default function Register() {
                         )}
                       </AnimatePresence>
                       <NextHint show={showCountry && !selectedCountry} label="Select your country to continue" />
+                      <NextButton show={showCountry && !showPhone} onClick={nextFromCountry} />
+                      <FieldError show={showCountry && !showPhone} />
                     </div>
                   </Fade>
 
@@ -468,6 +541,8 @@ export default function Register() {
                         </p>
                       )}
                       <NextHint show={form.phoneNumber.length > 0 && !isValidPhone(form.phoneNumber)} label="Enter your phone number" />
+                      <NextButton show={showPhone && !showPassword} onClick={nextFromPhone} />
+                      <FieldError show={showPhone && !showPassword} />
                     </div>
                   </Fade>
 
@@ -485,6 +560,8 @@ export default function Register() {
                         </button>
                       </Field>
                       <NextHint show={form.password.length > 0 && !isValidPass(form.password)} label="At least 6 characters" />
+                      <NextButton show={showPassword && !showConfirmF} onClick={nextFromPassword} />
+                      <FieldError show={showPassword && !showConfirmF} />
                     </div>
                   </Fade>
 
@@ -509,6 +586,8 @@ export default function Register() {
                             : <><AlertTriangle size={11}/>Passwords don't match yet</>}
                         </motion.p>
                       )}
+                      <NextButton show={showConfirmF && !showReferral && !showTerms} onClick={nextFromConfirm} />
+                      <FieldError show={showConfirmF && !showReferral && !showTerms} />
                     </div>
                   </Fade>
 
