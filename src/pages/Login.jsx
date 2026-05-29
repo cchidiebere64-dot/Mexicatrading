@@ -28,6 +28,25 @@ const NextHint = ({ show, label }) => (
   </AnimatePresence>
 );
 
+/* ── Next button — travels down the form ── */
+const NextButton = ({ show, onClick }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.button
+        type="button"
+        onClick={onClick}
+        initial={{ opacity:0, y:6 }}
+        animate={{ opacity:1, y:0 }}
+        exit={{ opacity:0, y:-6 }}
+        transition={{ duration:0.4, ease:[0.22,1,0.36,1] }}
+        className="btn-prime group/next w-full py-3 mt-2.5 text-[10px] font-semibold tracking-[.22em] uppercase text-white flex items-center justify-center gap-2.5">
+        Next
+        <ChevronRight size={13} className="group-hover/next:translate-x-1 transition-transform duration-300" />
+      </motion.button>
+    )}
+  </AnimatePresence>
+);
+
 /* ── Progress bar ── */
 const ProgressBar = ({ step, total }) => {
   const pct = Math.round((step / total) * 100);
@@ -60,6 +79,7 @@ export default function Login() {
   const [error,       setError]       = useState("");
   const [showPass,    setShowPass]    = useState(false);
   const [showPassF,   setShowPassF]   = useState(false); /* reveal flag */
+  const [fieldError,  setFieldError]  = useState("");      /* inline next-button error */
 
   const passRef   = useRef(null);
   const bottomRef = useRef(null);
@@ -78,6 +98,15 @@ export default function Login() {
       setShowPassF(false);
     }
   }, [email]);
+
+  /* Next button handler — reveal password, show error if email invalid */
+  const nextFromEmail = () => {
+    if (!isValidEmail(email)) return setFieldError("Please enter a valid email address to continue.");
+    setFieldError("");
+    setShowPassF(true);
+    setTimeout(() => passRef.current?.focus(), 600);
+    scroll();
+  };
 
   /* progress: 0 = nothing, 1 = valid email, 2 = valid pass */
   const step = isValidPass(password) ? 2 : isValidEmail(email) ? 1 : 0;
@@ -213,7 +242,7 @@ export default function Login() {
                 <div className="relative group">
                   <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 text-white/25 group-focus-within:text-emerald-400 z-10" />
                   <input
-                    type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    type="email" value={email} onChange={e => { setFieldError(""); setEmail(e.target.value); }}
                     placeholder={t("auth.email")}
                     required autoFocus autoComplete="username"
                     className={`${inp} ${isValidEmail(email) ? done : ""}`} />
@@ -225,6 +254,16 @@ export default function Login() {
                 <NextHint
                   show={email.length > 0 && !isValidEmail(email)}
                   label="Enter your full email address" />
+                {/* Next button — only while password not yet revealed */}
+                <NextButton show={!showPassF} onClick={nextFromEmail} />
+                <AnimatePresence>
+                  {!showPassF && fieldError && (
+                    <motion.p initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} exit={{opacity:0}}
+                      className="text-[11px] flex items-center gap-1.5 mt-2 ml-1 text-red-400">
+                      <AlertTriangle size={11} className="shrink-0" />{fieldError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* ── PASSWORD — auto-reveals when email is valid ── */}
