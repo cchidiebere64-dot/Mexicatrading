@@ -10,7 +10,7 @@ import { MessageCircle, X } from "lucide-react";
 */
 
 const WHATSAPP_NUMBER = "447353370690"; // +44 7353 370690 (no +, no spaces)
-const DEFAULT_MESSAGE = "Hi MexicaTrading support, I need some help with my account.";
+const DEFAULT_MESSAGE = "Hi dear, I'd love some help getting started with MexicaTrading 😊";
 
 export default function WhatsAppButton() {
   const [open, setOpen] = useState(false);
@@ -57,16 +57,16 @@ export default function WhatsAppButton() {
 
               {/* body */}
               <div className="px-5 py-5">
-                <div className="px-4 py-3 mb-4 text-sm" style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.07)", color:"rgba(255,255,255,.6)" }}>
-                  👋 Hi there! Need help with deposits, withdrawals, KYC or your account? Chat with our support team on WhatsApp.
+                <div className="px-4 py-3 mb-4 text-sm leading-relaxed" style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.07)", color:"rgba(255,255,255,.6)" }}>
+                  👋 Hi dear! Need a hand with registration, investing, or withdrawing? Our friendly team is here for you — chat with us on WhatsApp anytime.
                 </div>
                 <a href={link} target="_blank" rel="noopener noreferrer"
                   className="w-full py-3.5 text-[11px] font-semibold tracking-[.18em] uppercase text-white flex items-center justify-center gap-2.5 transition-transform duration-300 hover:-translate-y-0.5"
                   style={{ background:"linear-gradient(135deg,#10b981,#14b8a6)" }}>
-                  <MessageCircle size={15} /> Start Chat
+                  <MessageCircle size={15} /> Chat With Us
                 </a>
                 <p className="text-center text-[10px] mt-3 tracking-wider" style={{ color:"rgba(255,255,255,.25)" }}>
-                  🔒 Secure · Available 24/7
+                  🔒 Secure · Friendly Support · 24/7
                 </p>
               </div>
             </motion.div>
