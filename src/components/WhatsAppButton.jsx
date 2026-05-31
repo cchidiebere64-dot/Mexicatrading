@@ -4,8 +4,9 @@ import { MessageCircle, X } from "lucide-react";
 
 /*
   Floating WhatsApp support button.
-  Drop <WhatsAppButton /> once in your App (near the bottom, inside the router)
-  and it appears on every page.
+  Positioned BOTTOM-LEFT so it never overlaps the Tawk.to live chat
+  widget (which sits bottom-right).
+  Drop <WhatsAppButton /> once in your App and it appears on every page.
 */
 
 const WHATSAPP_NUMBER = "447353370690"; // +44 7353 370690 (no +, no spaces)
@@ -27,7 +28,8 @@ export default function WhatsAppButton() {
         .wa-pulse { animation: waPulse 2.4s ease-out infinite; }
       `}</style>
 
-      <div className="fixed bottom-6 right-6 z-[9998] flex flex-col items-end gap-3" style={{ fontFamily:"'Montserrat',sans-serif" }}>
+      {/* BOTTOM-LEFT — clear of the bottom-right Tawk.to widget */}
+      <div className="fixed bottom-6 left-6 z-[9998] flex flex-col items-start gap-3" style={{ fontFamily:"'Montserrat',sans-serif" }}>
 
         {/* Popup card */}
         <AnimatePresence>
