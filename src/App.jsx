@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import PageLoader from "./components/PageLoader.jsx";
 import LockScreen from "./components/LockScreen.jsx";
 import NetworkStatus from "./components/NetworkStatus.jsx"; // ✅ NEW
+import WhatsAppButton from "./components/WhatsAppButton.jsx"; // ✅ NEW
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
@@ -226,6 +227,10 @@ function AppInner() {
   const shouldShowLock =
     locked && !isExemptPage && (token || adminToken) && hasVisitedDashboard;
 
+  // Hide WhatsApp button on admin pages and while the lock screen is showing
+  const isAdminPage = location.pathname.startsWith("/admin");
+  const showWhatsApp = !isAdminPage && !shouldShowLock;
+
   return (
     <>
       {/* ✅ NEW: Real-time network status banner */}
@@ -295,6 +300,9 @@ function AppInner() {
           </Routes>
         </div>
       </PageWrapper>
+
+      {/* ✅ NEW: Floating WhatsApp support button (all non-admin pages) */}
+      {showWhatsApp && <WhatsAppButton />}
     </>
   );
 }
