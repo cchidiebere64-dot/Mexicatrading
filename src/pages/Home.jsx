@@ -1,51 +1,67 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight, Clock, Users, Cpu, Zap, ShieldCheck, BarChart3, FileText,
+  ArrowRight, Clock, Users, Cpu, Zap, ShieldCheck, BarChart3,
   UserPlus, LogIn, Wallet, TrendingUp, ChevronLeft, ChevronRight, Quote, Star
 } from "lucide-react";
 
-/* ─────────── Hero slides ─────────── */
+/* ─────────── Hero slides (Unsplash CDN — free for commercial use) ─────────── */
 const SLIDES = [
-  { tag: "Expanding the possibilities", head: "Grow your wealth,", accent: "the smart way." },
-  { tag: "Built for everyone", head: "Investing made", accent: "simple & secure." },
-  { tag: "Endless opportunities", head: "Your journey to", accent: "financial freedom." },
-  { tag: "A brand new horizon", head: "Trade. Earn.", accent: "Prosper." },
+  {
+    tag: "Expanding the possibilities",
+    head: "Grow your wealth,",
+    accent: "the smart way.",
+    img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1920&q=80", // trading charts
+  },
+  {
+    tag: "Built for everyone",
+    head: "Investing made",
+    accent: "simple & secure.",
+    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=80", // city skyline
+  },
+  {
+    tag: "Endless opportunities",
+    head: "Your journey to",
+    accent: "financial freedom.",
+    img: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=1920&q=80", // crypto / digital
+  },
+  {
+    tag: "A brand new horizon",
+    head: "Trade. Earn.",
+    accent: "Prosper.",
+    img: "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1920&q=80", // abstract tech glow
+  },
 ];
 
-/* ─────────── 3 pillars ─────────── */
 const PILLARS = [
   { icon: Clock, title: "The Right Timing", text: "We align opportunities using advanced market analysis. In a fast-moving market, timing is everything — and we help you act with confidence." },
   { icon: Users, title: "The Right Team", text: "Our dedicated team is committed to delivering a dependable platform, always one step ahead, built for the long term." },
   { icon: Cpu,   title: "The Right Technology", text: "A refined, secure platform developed and monitored by professionals. Reliable technology you can trust with your investments." },
 ];
 
-/* ─────────── Plans (EXAMPLE — edit to match your real Plans page) ─────────── */
+/* EXAMPLE plans — edit to match your real Plans page */
 const PLANS = [
-  { name: "Starter",   rate: "Flexible returns", min: "$15",     max: "$499",    feat: ["Principal + Profit", "5% Referral Commission", "24/7 Support"], popular: false },
-  { name: "Bronze",    rate: "Higher returns",   min: "$500",    max: "$1,999",  feat: ["Principal + Profit", "5% Referral Commission", "Priority Support"], popular: true  },
-  { name: "Silver",    rate: "Premium returns",  min: "$2,000",  max: "$9,999",  feat: ["Principal + Profit", "5% Referral Commission", "Priority Support"], popular: false },
-  { name: "Gold",      rate: "Elite returns",    min: "$10,000", max: "Unlimited", feat: ["Principal + Profit", "5% Referral Commission", "Dedicated Manager"], popular: false },
+  { name: "Starter", rate: "Flexible returns", min: "$15",     max: "$499",      feat: ["Principal + Profit", "5% Referral Commission", "24/7 Support"], popular: false },
+  { name: "Bronze",  rate: "Higher returns",   min: "$500",    max: "$1,999",    feat: ["Principal + Profit", "5% Referral Commission", "Priority Support"], popular: true  },
+  { name: "Silver",  rate: "Premium returns",  min: "$2,000",  max: "$9,999",    feat: ["Principal + Profit", "5% Referral Commission", "Priority Support"], popular: false },
+  { name: "Gold",    rate: "Elite returns",    min: "$10,000", max: "Unlimited", feat: ["Principal + Profit", "5% Referral Commission", "Dedicated Manager"], popular: false },
 ];
 
-/* ─────────── Platform features ─────────── */
 const FEATURES = [
-  { icon: Zap,         title: "Fast Payments",         text: "Accessing your funds is quick and effortless, regardless of your technical experience." },
-  { icon: ShieldCheck, title: "Layered Security",      text: "Your account is protected with state-of-the-art security, safeguarding your funds and data." },
-  { icon: Cpu,         title: "Proprietary Technology",text: "Our platform is designed and refined exclusively by our own team for our members." },
-  { icon: BarChart3,   title: "Transparent Reporting", text: "Track your investments and results clearly, anytime, right from your dashboard." },
+  { icon: Zap,         title: "Fast Payments",          text: "Accessing your funds is quick and effortless, regardless of your technical experience." },
+  { icon: ShieldCheck, title: "Layered Security",       text: "Your account is protected with state-of-the-art security, safeguarding your funds and data." },
+  { icon: Cpu,         title: "Proprietary Technology", text: "Our platform is designed and refined exclusively by our own team for our members." },
+  { icon: BarChart3,   title: "Transparent Reporting",  text: "Track your investments and results clearly, anytime, right from your dashboard." },
 ];
 
-/* ─────────── How it works ─────────── */
 const STEPS = [
-  { icon: UserPlus, title: "Register",  text: "Open your free MexicaTrading account in minutes." },
-  { icon: LogIn,    title: "Login",     text: "Confirm your details and access your dashboard." },
-  { icon: Wallet,   title: "Fund",      text: "Fund your account easily with crypto (BTC / USDT)." },
-  { icon: TrendingUp, title: "Earn",    text: "Choose a plan and watch your investment grow." },
+  { icon: UserPlus,   title: "Register", text: "Open your free MexicaTrading account in minutes." },
+  { icon: LogIn,      title: "Login",    text: "Confirm your details and access your dashboard." },
+  { icon: Wallet,     title: "Fund",     text: "Fund your account easily with crypto (BTC / USDT)." },
+  { icon: TrendingUp, title: "Earn",     text: "Choose a plan and watch your investment grow." },
 ];
 
-/* ─────────── Testimonials (generic, no fake earnings claims) ─────────── */
 const TESTIMONIALS = [
   { name: "Daniel O.", country: "Nigeria",      text: "One of the most transparent platforms I've used. Withdrawals are smooth and the support team is always there when I need them." },
   { name: "Maria S.",  country: "Mexico",       text: "I started small and grew at my own pace. The dashboard is clear and easy, and I always know what's happening with my account." },
@@ -53,7 +69,6 @@ const TESTIMONIALS = [
   { name: "Aisha B.",  country: "Ghana",        text: "Simple to use and reliable. The referral program is a nice bonus and the whole experience feels professional." },
 ];
 
-/* ─────────── Fake-but-labelled live activity ─────────── */
 const FIRST_NAMES = ["John","Maria","Ahmed","Chen","Daniel","Aisha","Carlos","Priya","Liam","Sofia","Kwame","Yuki","Omar","Elena","David","Grace"];
 const FLAGS = ["🇳🇬","🇲🇽","🇿🇦","🇬🇭","🇰🇪","🇧🇷","🇮🇳","🇵🇭","🇪🇬","🇺🇸","🇬🇧","🇨🇦","🇩🇪","🇫🇷"];
 const COINS = ["BTC","USDT","ETH"];
@@ -74,26 +89,19 @@ export default function Home() {
   const [deposits, setDeposits]   = useState(() => Array.from({length:8}, genRow));
   const [withdraws, setWithdraws] = useState(() => Array.from({length:8}, genRow));
 
-  /* hero auto-rotate */
   useEffect(() => {
-    const t = setInterval(() => setSlide(s => (s+1) % SLIDES.length), 5000);
+    const t = setInterval(() => setSlide(s => (s+1) % SLIDES.length), 5500);
     return () => clearInterval(t);
   }, []);
 
-  /* testimonials auto-rotate */
   useEffect(() => {
     const t = setInterval(() => setTesti(s => (s+1) % TESTIMONIALS.length), 6000);
     return () => clearInterval(t);
   }, []);
 
-  /* live activity: push a new row every few seconds */
   useEffect(() => {
-    const t = setInterval(() => {
-      setDeposits(d => [genRow(), ...d.slice(0,7)]);
-    }, 3500);
-    const t2 = setInterval(() => {
-      setWithdraws(d => [genRow(), ...d.slice(0,7)]);
-    }, 4200);
+    const t  = setInterval(() => setDeposits(d => [genRow(), ...d.slice(0,7)]), 3500);
+    const t2 = setInterval(() => setWithdraws(d => [genRow(), ...d.slice(0,7)]), 4200);
     return () => { clearInterval(t); clearInterval(t2); };
   }, []);
 
@@ -106,28 +114,44 @@ export default function Home() {
         ::selection{background:var(--em);color:#080c18;}
         @keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}
         @keyframes orb{0%,100%{opacity:.05}50%{opacity:.12}}
+        @keyframes kenburns{0%{transform:scale(1)}100%{transform:scale(1.12)}}
         .orb{animation:orb 7s ease-in-out infinite;}
         .top-line{background:linear-gradient(90deg,transparent,var(--em) 40%,var(--teal) 60%,transparent);background-size:400% 100%;animation:shine 3s linear infinite;}
         .grid-bg{background-image:linear-gradient(rgba(16,185,129,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,.03) 1px,transparent 1px);background-size:72px 72px;}
         .btn-prime{background:linear-gradient(135deg,var(--em),var(--teal));transition:transform .3s,box-shadow .3s;position:relative;overflow:hidden;}
         .btn-prime:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--em),0 16px 40px rgba(16,185,129,.35);}
-        .shine-badge{border:1px solid transparent;background:linear-gradient(#080c18,#080c18) padding-box,linear-gradient(90deg,transparent 20%,var(--em) 50%,transparent 80%) border-box;background-size:200% auto;animation:shine 4s linear infinite;}
+        .shine-badge{border:1px solid transparent;background:linear-gradient(rgba(8,12,24,.6),rgba(8,12,24,.6)) padding-box,linear-gradient(90deg,transparent 20%,var(--em) 50%,transparent 80%) border-box;background-size:200% auto;animation:shine 4s linear infinite;}
         .card-hover{transition:transform .4s,border-color .4s,background .4s;}
         .card-hover:hover{transform:translateY(-6px);border-color:rgba(16,185,129,.4)!important;background:rgba(16,185,129,.04)!important;}
         .gradtext{background:linear-gradient(135deg,var(--em),var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+        .kb{animation:kenburns 7s ease-out forwards;}
       `}</style>
 
       {/* Top shimmer */}
       <div className="fixed top-0 left-0 right-0 z-50 h-[2px]"><div className="top-line h-full w-full" /></div>
 
-      {/* ════════ HERO ════════ */}
-      <section className="relative min-h-[88vh] flex items-center justify-center px-6">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="grid-bg absolute inset-0" />
-          <div className="orb absolute rounded-full" style={{width:800,height:800,background:"radial-gradient(circle,rgba(16,185,129,.1) 0%,transparent 70%)",top:"-300px",left:"-200px"}} />
-          <div className="orb absolute rounded-full" style={{width:600,height:600,background:"radial-gradient(circle,rgba(20,184,166,.08) 0%,transparent 70%)",bottom:"-200px",right:"-150px",animationDelay:"3.5s"}} />
+      {/* ════════ HERO (photo background) ════════ */}
+      <section className="relative min-h-[90vh] flex items-center justify-center px-6">
+        {/* Background photo layers */}
+        <div className="absolute inset-0 overflow-hidden">
+          <AnimatePresence mode="sync">
+            <motion.div key={slide}
+              initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+              transition={{duration:1.2}}
+              className="absolute inset-0">
+              <div
+                className="absolute inset-0 kb bg-cover bg-center"
+                style={{ backgroundImage:`url(${SLIDES[slide].img})` }} />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Emerald-dark overlays — keep text readable + on brand */}
+          <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.78),rgba(8,12,24,.86) 60%,#080c18 100%)" }} />
+          <div className="absolute inset-0" style={{ background:"radial-gradient(circle at 30% 40%,rgba(16,185,129,.18),transparent 55%)" }} />
+          <div className="grid-bg absolute inset-0 opacity-60" />
         </div>
 
+        {/* Hero content */}
         <div className="relative z-10 text-center max-w-3xl">
           <AnimatePresence mode="wait">
             <motion.div key={slide}
@@ -137,14 +161,14 @@ export default function Home() {
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:"var(--em)"}} />
                 {SLIDES[slide].tag}
               </div>
-              <h1 className="serif font-light mb-6" style={{fontSize:"clamp(40px,8vw,76px)",lineHeight:1.02}}>
+              <h1 className="serif font-light mb-6" style={{fontSize:"clamp(40px,8vw,78px)",lineHeight:1.02,textShadow:"0 2px 30px rgba(0,0,0,.5)"}}>
                 {SLIDES[slide].head}<br />
                 <em className="gradtext" style={{fontStyle:"italic"}}>{SLIDES[slide].accent}</em>
               </h1>
             </motion.div>
           </AnimatePresence>
 
-          <p className="text-sm sm:text-base font-light max-w-xl mx-auto mb-9" style={{color:"rgba(255,255,255,.45)"}}>
+          <p className="text-sm sm:text-base font-light max-w-xl mx-auto mb-9" style={{color:"rgba(255,255,255,.6)",textShadow:"0 1px 12px rgba(0,0,0,.5)"}}>
             A secure, transparent investment platform trusted by people worldwide. Start your journey toward financial growth — with no minimum and friendly 24/7 support.
           </p>
 
@@ -155,18 +179,17 @@ export default function Home() {
             </button>
             <button onClick={()=>navigate("/plans")}
               className="px-8 py-4 border text-[11px] font-medium tracking-[.18em] uppercase transition-all duration-300"
-              style={{borderColor:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.6)"}}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.4)";e.currentTarget.style.color="var(--em)";}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,.12)";e.currentTarget.style.color="rgba(255,255,255,.6)";}}>
+              style={{borderColor:"rgba(255,255,255,.25)",color:"rgba(255,255,255,.85)",backdropFilter:"blur(4px)"}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--em)";e.currentTarget.style.color="var(--em)";}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,.25)";e.currentTarget.style.color="rgba(255,255,255,.85)";}}>
               View Plans
             </button>
           </div>
 
-          {/* slide dots */}
           <div className="flex items-center justify-center gap-2 mt-10">
             {SLIDES.map((_,i)=>(
               <button key={i} onClick={()=>setSlide(i)} className="h-1.5 rounded-full transition-all duration-400"
-                style={{width:i===slide?28:8,background:i===slide?"var(--em)":"rgba(255,255,255,.2)"}} />
+                style={{width:i===slide?28:8,background:i===slide?"var(--em)":"rgba(255,255,255,.3)"}} />
             ))}
           </div>
         </div>
@@ -206,14 +229,17 @@ export default function Home() {
             </button>
           </Reveal>
           <Reveal delay={.15}>
-            <div className="relative aspect-video border flex items-center justify-center overflow-hidden" style={{borderColor:"rgba(16,185,129,.2)",background:"linear-gradient(135deg,rgba(16,185,129,.08),rgba(20,184,166,.04))"}}>
-              <div className="grid-bg absolute inset-0 opacity-50" />
-              <div className="relative text-center">
-                <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center" style={{background:"linear-gradient(135deg,var(--em),var(--teal))"}}>
-                  <TrendingUp size={28} className="text-white" />
+            <div className="relative aspect-video border overflow-hidden" style={{borderColor:"rgba(16,185,129,.2)"}}>
+              <div className="absolute inset-0 bg-cover bg-center kb" style={{backgroundImage:"url(https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80)"}} />
+              <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.75),rgba(16,185,129,.25))"}} />
+              <div className="relative h-full flex items-center justify-center text-center">
+                <div>
+                  <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center" style={{background:"linear-gradient(135deg,var(--em),var(--teal))"}}>
+                    <TrendingUp size={28} className="text-white" />
+                  </div>
+                  <p className="serif text-xl font-light text-white">MexicaTrading</p>
+                  <p className="text-[10px] tracking-[.2em] uppercase mt-1" style={{color:"rgba(255,255,255,.6)"}}>Secure · Transparent · Global</p>
                 </div>
-                <p className="serif text-xl font-light gradtext">MexicaTrading</p>
-                <p className="text-[10px] tracking-[.2em] uppercase mt-1" style={{color:"rgba(255,255,255,.3)"}}>Secure · Transparent · Global</p>
               </div>
             </div>
           </Reveal>
@@ -350,13 +376,15 @@ export default function Home() {
       {/* ════════ FINAL CTA ════════ */}
       <Section>
         <Reveal>
-          <div className="relative text-center p-12 border overflow-hidden" style={{borderColor:"rgba(16,185,129,.25)",background:"linear-gradient(135deg,rgba(16,185,129,.08),rgba(20,184,166,.03))"}}>
+          <div className="relative text-center p-12 border overflow-hidden" style={{borderColor:"rgba(16,185,129,.25)"}}>
+            <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:"url(https://images.unsplash.com/photo-1620325867502-221cfb5faa5f?auto=format&fit=crop&w=1600&q=80)"}} />
+            <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.9),rgba(16,185,129,.3))"}} />
             <div className="grid-bg absolute inset-0 opacity-40" />
             <div className="relative">
-              <h2 className="serif font-light mb-4" style={{fontSize:"clamp(28px,5vw,52px)",lineHeight:1.05}}>
+              <h2 className="serif font-light mb-4" style={{fontSize:"clamp(28px,5vw,52px)",lineHeight:1.05,textShadow:"0 2px 20px rgba(0,0,0,.5)"}}>
                 Ready to <em className="gradtext" style={{fontStyle:"italic"}}>begin?</em>
               </h2>
-              <p className="text-sm font-light max-w-md mx-auto mb-8" style={{color:"rgba(255,255,255,.45)"}}>
+              <p className="text-sm font-light max-w-md mx-auto mb-8" style={{color:"rgba(255,255,255,.7)"}}>
                 Join MexicaTrading today and take your first step toward financial growth. No minimum, secure platform, friendly 24/7 support.
               </p>
               <button onClick={()=>navigate("/register")}
