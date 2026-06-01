@@ -125,6 +125,8 @@ export default function Home() {
         .card-hover:hover{transform:translateY(-6px);border-color:rgba(16,185,129,.4)!important;background:rgba(16,185,129,.04)!important;}
         .gradtext{background:linear-gradient(135deg,var(--em),var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
         .kb{animation:kenburns 7s ease-out forwards;}
+        .parallax{background-attachment:fixed;background-size:cover;background-position:center;}
+        @media (max-width:768px){.parallax{background-attachment:scroll;}}
       `}</style>
 
       {/* Top shimmer */}
@@ -140,15 +142,15 @@ export default function Home() {
               transition={{duration:1.2}}
               className="absolute inset-0">
               <div
-                className="absolute inset-0 kb bg-cover bg-center"
+                className="parallax absolute inset-0 kb"
                 style={{ backgroundImage:`url(${SLIDES[slide].img})` }} />
             </motion.div>
           </AnimatePresence>
 
-          {/* Emerald-dark overlays — keep text readable + on brand */}
-          <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.78),rgba(8,12,24,.86) 60%,#080c18 100%)" }} />
-          <div className="absolute inset-0" style={{ background:"radial-gradient(circle at 30% 40%,rgba(16,185,129,.18),transparent 55%)" }} />
-          <div className="grid-bg absolute inset-0 opacity-60" />
+          {/* Emerald overlays — brighter so the photo shows clearly, text still readable */}
+          <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.45),rgba(8,12,24,.55) 65%,#080c18 100%)" }} />
+          <div className="absolute inset-0" style={{ background:"radial-gradient(circle at 30% 40%,rgba(16,185,129,.15),transparent 60%)" }} />
+          <div className="grid-bg absolute inset-0 opacity-40" />
         </div>
 
         {/* Hero content */}
@@ -285,6 +287,21 @@ export default function Home() {
         </p>
       </Section>
 
+      {/* ════════ PARALLAX BAND ════════ */}
+      <section className="relative">
+        <div className="parallax absolute inset-0" style={{backgroundImage:"url(https://images.unsplash.com/photo-1591994843349-f415893b3a6b?auto=format&fit=crop&w=1920&q=80)"}} />
+        <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.7),rgba(16,185,129,.25))"}} />
+        <div className="relative z-10 px-6 py-28 text-center max-w-3xl mx-auto">
+          <Reveal>
+            <Quote size={32} className="mx-auto mb-6" style={{color:"rgba(255,255,255,.5)"}} />
+            <h2 className="serif font-light" style={{fontSize:"clamp(26px,4vw,44px)",lineHeight:1.15,textShadow:"0 2px 24px rgba(0,0,0,.5)"}}>
+              "The journey to financial freedom begins with a single, <em className="gradtext" style={{fontStyle:"italic"}}>confident step.</em>"
+            </h2>
+            <p className="text-[11px] tracking-[.25em] uppercase mt-6" style={{color:"rgba(255,255,255,.6)"}}>— The MexicaTrading Team</p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ════════ LIVE ACTIVITY ════════ */}
       <Section>
         <Heading kicker="Live Activity" title="Real-time" accent="transactions" />
@@ -377,8 +394,8 @@ export default function Home() {
       <Section>
         <Reveal>
           <div className="relative text-center p-12 border overflow-hidden" style={{borderColor:"rgba(16,185,129,.25)"}}>
-            <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:"url(https://images.unsplash.com/photo-1620325867502-221cfb5faa5f?auto=format&fit=crop&w=1600&q=80)"}} />
-            <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.9),rgba(16,185,129,.3))"}} />
+            <div className="parallax absolute inset-0" style={{backgroundImage:"url(https://images.unsplash.com/photo-1620325867502-221cfb5faa5f?auto=format&fit=crop&w=1600&q=80)"}} />
+            <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.72),rgba(16,185,129,.28))"}} />
             <div className="grid-bg absolute inset-0 opacity-40" />
             <div className="relative">
               <h2 className="serif font-light mb-4" style={{fontSize:"clamp(28px,5vw,52px)",lineHeight:1.05,textShadow:"0 2px 20px rgba(0,0,0,.5)"}}>
