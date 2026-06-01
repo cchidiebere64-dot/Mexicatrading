@@ -3,36 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, Clock, Users, Cpu, Zap, ShieldCheck, BarChart3,
-  UserPlus, LogIn, Wallet, TrendingUp, ChevronLeft, ChevronRight, Quote, Star
+  UserPlus, LogIn, Wallet, TrendingUp, ChevronLeft, ChevronRight, Quote, Star,
+  Lock, BadgeCheck, Globe, Server
 } from "lucide-react";
 
 /* ─────────── Hero slides (Unsplash CDN — free for commercial use) ─────────── */
 const SLIDES = [
-  {
-    tag: "Expanding the possibilities",
-    head: "Grow your wealth,",
-    accent: "the smart way.",
-    img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1920&q=80", // trading charts
-  },
-  {
-    tag: "Built for everyone",
-    head: "Investing made",
-    accent: "simple & secure.",
-    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=80", // city skyline
-  },
-  {
-    tag: "Endless opportunities",
-    head: "Your journey to",
-    accent: "financial freedom.",
-    img: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=1920&q=80", // crypto / digital
-  },
-  {
-    tag: "A brand new horizon",
-    head: "Trade. Earn.",
-    accent: "Prosper.",
-    img: "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1920&q=80", // abstract tech glow
-  },
+  { tag: "Expanding the possibilities", head: "Grow your wealth,", accent: "the smart way.",      img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1920&q=80" },
+  { tag: "Built for everyone",          head: "Investing made",     accent: "simple & secure.",    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=80" },
+  { tag: "Endless opportunities",       head: "Your journey to",    accent: "financial freedom.",  img: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=1920&q=80" },
+  { tag: "A brand new horizon",         head: "Trade. Earn.",       accent: "Prosper.",            img: "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1920&q=80" },
 ];
+
+/* Continuous fixed background shown behind the whole page */
+const PAGE_BG = "https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1920&q=80";
 
 const PILLARS = [
   { icon: Clock, title: "The Right Timing", text: "We align opportunities using advanced market analysis. In a fast-moving market, timing is everything — and we help you act with confidence." },
@@ -62,6 +46,14 @@ const STEPS = [
   { icon: TrendingUp, title: "Earn",     text: "Choose a plan and watch your investment grow." },
 ];
 
+/* Trust badges (no fake license numbers — genuine signals only) */
+const TRUST = [
+  { icon: Lock,       title: "Bank-Level Encryption", text: "All data is protected with strong end-to-end encryption." },
+  { icon: ShieldCheck,title: "Secure Platform",        text: "Layered security safeguards your account around the clock." },
+  { icon: Globe,      title: "Global Members",         text: "Trusted by people across many countries worldwide." },
+  { icon: Server,     title: "Reliable Infrastructure",text: "Built on dependable technology for stable, 24/7 access." },
+];
+
 const TESTIMONIALS = [
   { name: "Daniel O.", country: "Nigeria",      text: "One of the most transparent platforms I've used. Withdrawals are smooth and the support team is always there when I need them." },
   { name: "Maria S.",  country: "Mexico",       text: "I started small and grew at my own pace. The dashboard is clear and easy, and I always know what's happening with my account." },
@@ -89,16 +81,8 @@ export default function Home() {
   const [deposits, setDeposits]   = useState(() => Array.from({length:8}, genRow));
   const [withdraws, setWithdraws] = useState(() => Array.from({length:8}, genRow));
 
-  useEffect(() => {
-    const t = setInterval(() => setSlide(s => (s+1) % SLIDES.length), 5500);
-    return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => setTesti(s => (s+1) % TESTIMONIALS.length), 6000);
-    return () => clearInterval(t);
-  }, []);
-
+  useEffect(() => { const t = setInterval(() => setSlide(s => (s+1) % SLIDES.length), 5500); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setTesti(s => (s+1) % TESTIMONIALS.length), 6000); return () => clearInterval(t); }, []);
   useEffect(() => {
     const t  = setInterval(() => setDeposits(d => [genRow(), ...d.slice(0,7)]), 3500);
     const t2 = setInterval(() => setWithdraws(d => [genRow(), ...d.slice(0,7)]), 4200);
@@ -106,7 +90,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="bg-[#080c18] text-white overflow-hidden" style={{ fontFamily:"'Montserrat',sans-serif" }}>
+    <div className="relative text-white" style={{ fontFamily:"'Montserrat',sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap');
         :root{--em:#10b981;--teal:#14b8a6;}
@@ -120,57 +104,56 @@ export default function Home() {
         .grid-bg{background-image:linear-gradient(rgba(16,185,129,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,.03) 1px,transparent 1px);background-size:72px 72px;}
         .btn-prime{background:linear-gradient(135deg,var(--em),var(--teal));transition:transform .3s,box-shadow .3s;position:relative;overflow:hidden;}
         .btn-prime:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--em),0 16px 40px rgba(16,185,129,.35);}
-        .shine-badge{border:1px solid transparent;background:linear-gradient(rgba(8,12,24,.6),rgba(8,12,24,.6)) padding-box,linear-gradient(90deg,transparent 20%,var(--em) 50%,transparent 80%) border-box;background-size:200% auto;animation:shine 4s linear infinite;}
+        .shine-badge{border:1px solid transparent;background:linear-gradient(rgba(8,12,24,.5),rgba(8,12,24,.5)) padding-box,linear-gradient(90deg,transparent 20%,var(--em) 50%,transparent 80%) border-box;background-size:200% auto;animation:shine 4s linear infinite;}
         .card-hover{transition:transform .4s,border-color .4s,background .4s;}
-        .card-hover:hover{transform:translateY(-6px);border-color:rgba(16,185,129,.4)!important;background:rgba(16,185,129,.04)!important;}
+        .card-hover:hover{transform:translateY(-6px);border-color:rgba(16,185,129,.4)!important;background:rgba(8,12,24,.7)!important;}
         .gradtext{background:linear-gradient(135deg,var(--em),var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
         .kb{animation:kenburns 7s ease-out forwards;}
         .parallax{background-attachment:fixed;background-size:cover;background-position:center;}
         @media (max-width:768px){.parallax{background-attachment:scroll;}}
+        /* glass panel sits over the continuous bg so plain sections stay readable */
+        .glass{background:rgba(8,12,24,.55);backdrop-filter:blur(2px);}
       `}</style>
 
       {/* Top shimmer */}
       <div className="fixed top-0 left-0 right-0 z-50 h-[2px]"><div className="top-line h-full w-full" /></div>
 
-      {/* ════════ HERO (photo background) ════════ */}
+      {/* ════════ CONTINUOUS FIXED BACKGROUND (behind whole page) ════════ */}
+      <div className="fixed inset-0 -z-10">
+        <div className="parallax absolute inset-0" style={{ backgroundImage:`url(${PAGE_BG})` }} />
+        <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.82),rgba(8,12,24,.9))" }} />
+        <div className="grid-bg absolute inset-0 opacity-30" />
+      </div>
+
+      {/* ════════ HERO (own bright photo slider) ════════ */}
       <section className="relative min-h-[90vh] flex items-center justify-center px-6">
-        {/* Background photo layers */}
         <div className="absolute inset-0 overflow-hidden">
           <AnimatePresence mode="sync">
-            <motion.div key={slide}
-              initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-              transition={{duration:1.2}}
-              className="absolute inset-0">
-              <div
-                className="parallax absolute inset-0 kb"
-                style={{ backgroundImage:`url(${SLIDES[slide].img})` }} />
+            <motion.div key={slide} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:1.2}} className="absolute inset-0">
+              <div className="parallax absolute inset-0 kb" style={{ backgroundImage:`url(${SLIDES[slide].img})` }} />
             </motion.div>
           </AnimatePresence>
-
-          {/* Emerald overlays — brighter so the photo shows clearly, text still readable */}
-          <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.45),rgba(8,12,24,.55) 65%,#080c18 100%)" }} />
+          {/* brighter overlays so the photo shows clearly */}
+          <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.45),rgba(8,12,24,.55) 65%,rgba(8,12,24,.8) 100%)" }} />
           <div className="absolute inset-0" style={{ background:"radial-gradient(circle at 30% 40%,rgba(16,185,129,.15),transparent 60%)" }} />
           <div className="grid-bg absolute inset-0 opacity-40" />
         </div>
 
-        {/* Hero content */}
         <div className="relative z-10 text-center max-w-3xl">
           <AnimatePresence mode="wait">
-            <motion.div key={slide}
-              initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}
-              transition={{duration:.6,ease:[.22,1,.36,1]}}>
+            <motion.div key={slide} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}} transition={{duration:.6,ease:[.22,1,.36,1]}}>
               <div className="shine-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-semibold tracking-[.28em] uppercase mb-7" style={{color:"var(--em)"}}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:"var(--em)"}} />
                 {SLIDES[slide].tag}
               </div>
-              <h1 className="serif font-light mb-6" style={{fontSize:"clamp(40px,8vw,78px)",lineHeight:1.02,textShadow:"0 2px 30px rgba(0,0,0,.5)"}}>
+              <h1 className="serif font-light mb-6" style={{fontSize:"clamp(40px,8vw,78px)",lineHeight:1.02,textShadow:"0 2px 30px rgba(0,0,0,.55)"}}>
                 {SLIDES[slide].head}<br />
                 <em className="gradtext" style={{fontStyle:"italic"}}>{SLIDES[slide].accent}</em>
               </h1>
             </motion.div>
           </AnimatePresence>
 
-          <p className="text-sm sm:text-base font-light max-w-xl mx-auto mb-9" style={{color:"rgba(255,255,255,.6)",textShadow:"0 1px 12px rgba(0,0,0,.5)"}}>
+          <p className="text-sm sm:text-base font-light max-w-xl mx-auto mb-9" style={{color:"rgba(255,255,255,.65)",textShadow:"0 1px 12px rgba(0,0,0,.55)"}}>
             A secure, transparent investment platform trusted by people worldwide. Start your journey toward financial growth — with no minimum and friendly 24/7 support.
           </p>
 
@@ -179,12 +162,12 @@ export default function Home() {
               className="btn-prime px-8 py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white flex items-center gap-3">
               Start Now <ArrowRight size={15} />
             </button>
-            <button onClick={()=>navigate("/plans")}
-              className="px-8 py-4 border text-[11px] font-medium tracking-[.18em] uppercase transition-all duration-300"
-              style={{borderColor:"rgba(255,255,255,.25)",color:"rgba(255,255,255,.85)",backdropFilter:"blur(4px)"}}
+            <button onClick={()=>navigate("/login")}
+              className="px-8 py-4 border text-[11px] font-medium tracking-[.18em] uppercase transition-all duration-300 flex items-center gap-2.5"
+              style={{borderColor:"rgba(255,255,255,.3)",color:"rgba(255,255,255,.9)",backdropFilter:"blur(4px)"}}
               onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--em)";e.currentTarget.style.color="var(--em)";}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,.25)";e.currentTarget.style.color="rgba(255,255,255,.85)";}}>
-              View Plans
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,.3)";e.currentTarget.style.color="rgba(255,255,255,.9)";}}>
+              <LogIn size={14} /> Login
             </button>
           </div>
 
@@ -197,32 +180,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ════════ 3 PILLARS ════════ */}
-      <Section>
+      {/* ════════ 3 PILLARS (glass over continuous bg) ════════ */}
+      <Section glass>
         <div className="grid md:grid-cols-3 gap-6">
           {PILLARS.map((p,i)=>(
             <Reveal key={i} delay={i*.12}>
-              <div className="card-hover h-full p-8 border" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(255,255,255,.02)"}}>
-                <div className="w-14 h-14 border flex items-center justify-center mb-5" style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.06)"}}>
+              <div className="card-hover h-full p-8 border" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(8,12,24,.5)"}}>
+                <div className="w-14 h-14 border flex items-center justify-center mb-5" style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.08)"}}>
                   <p.icon size={24} style={{color:"var(--em)"}} />
                 </div>
                 <h3 className="serif text-2xl font-light mb-3">{p.title}</h3>
-                <p className="text-sm font-light leading-relaxed" style={{color:"rgba(255,255,255,.45)"}}>{p.text}</p>
+                <p className="text-sm font-light leading-relaxed" style={{color:"rgba(255,255,255,.5)"}}>{p.text}</p>
               </div>
             </Reveal>
           ))}
         </div>
       </Section>
 
-      {/* ════════ PART OF SOMETHING BIGGER ════════ */}
-      <Section>
+      {/* ════════ PART OF SOMETHING BIGGER (own image) ════════ */}
+      <SolidSection>
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <Reveal>
             <p className="text-[10px] font-semibold tracking-[.3em] uppercase mb-4" style={{color:"var(--em)"}}>Part of something bigger</p>
             <h2 className="serif font-light mb-6" style={{fontSize:"clamp(28px,4vw,46px)",lineHeight:1.08}}>
               The world of investing, <em className="gradtext" style={{fontStyle:"italic"}}>made easier.</em>
             </h2>
-            <p className="text-sm font-light leading-relaxed mb-6" style={{color:"rgba(255,255,255,.45)"}}>
+            <p className="text-sm font-light leading-relaxed mb-6" style={{color:"rgba(255,255,255,.5)"}}>
               The global financial market attracts millions of people with a shared dream of financial freedom. MexicaTrading combines technical expertise with a dedicated team and a passion for helping people improve their lives — on a platform built to be secure, simple, and transparent.
             </p>
             <button onClick={()=>navigate("/register")}
@@ -233,29 +216,29 @@ export default function Home() {
           <Reveal delay={.15}>
             <div className="relative aspect-video border overflow-hidden" style={{borderColor:"rgba(16,185,129,.2)"}}>
               <div className="absolute inset-0 bg-cover bg-center kb" style={{backgroundImage:"url(https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80)"}} />
-              <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.75),rgba(16,185,129,.25))"}} />
+              <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.6),rgba(16,185,129,.22))"}} />
               <div className="relative h-full flex items-center justify-center text-center">
                 <div>
                   <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center" style={{background:"linear-gradient(135deg,var(--em),var(--teal))"}}>
                     <TrendingUp size={28} className="text-white" />
                   </div>
                   <p className="serif text-xl font-light text-white">MexicaTrading</p>
-                  <p className="text-[10px] tracking-[.2em] uppercase mt-1" style={{color:"rgba(255,255,255,.6)"}}>Secure · Transparent · Global</p>
+                  <p className="text-[10px] tracking-[.2em] uppercase mt-1" style={{color:"rgba(255,255,255,.65)"}}>Secure · Transparent · Global</p>
                 </div>
               </div>
             </div>
           </Reveal>
         </div>
-      </Section>
+      </SolidSection>
 
-      {/* ════════ PLANS ════════ */}
-      <Section>
+      {/* ════════ PLANS (glass) ════════ */}
+      <Section glass>
         <Heading kicker="Investment Plans" title="A perfect plan" accent="for everyone" />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
           {PLANS.map((p,i)=>(
             <Reveal key={i} delay={i*.1}>
               <div className="card-hover relative h-full p-7 border flex flex-col"
-                style={{borderColor:p.popular?"rgba(16,185,129,.4)":"rgba(255,255,255,.08)",background:p.popular?"rgba(16,185,129,.05)":"rgba(255,255,255,.02)"}}>
+                style={{borderColor:p.popular?"rgba(16,185,129,.4)":"rgba(255,255,255,.08)",background:p.popular?"rgba(16,185,129,.08)":"rgba(8,12,24,.5)"}}>
                 {p.popular && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-[8px] font-bold tracking-[.2em] uppercase text-white" style={{background:"linear-gradient(135deg,var(--em),var(--teal))"}}>
                     Most Popular
@@ -263,13 +246,13 @@ export default function Home() {
                 )}
                 <p className="text-[10px] font-semibold tracking-[.2em] uppercase mb-1" style={{color:"rgba(255,255,255,.4)"}}>{p.name}</p>
                 <p className="serif text-2xl font-light mb-5 gradtext">{p.rate}</p>
-                <div className="space-y-1 mb-5 text-sm" style={{color:"rgba(255,255,255,.55)"}}>
+                <div className="space-y-1 mb-5 text-sm" style={{color:"rgba(255,255,255,.6)"}}>
                   <p><span className="text-white/30">Min:</span> {p.min}</p>
                   <p><span className="text-white/30">Max:</span> {p.max}</p>
                 </div>
                 <div className="space-y-2 mb-6 flex-1">
                   {p.feat.map((f,j)=>(
-                    <div key={j} className="flex items-center gap-2 text-xs" style={{color:"rgba(255,255,255,.5)"}}>
+                    <div key={j} className="flex items-center gap-2 text-xs" style={{color:"rgba(255,255,255,.55)"}}>
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{background:"var(--em)"}} /> {f}
                     </div>
                   ))}
@@ -282,86 +265,114 @@ export default function Home() {
             </Reveal>
           ))}
         </div>
-        <p className="text-center text-[11px] mt-6" style={{color:"rgba(255,255,255,.25)"}}>
+        <p className="text-center text-[11px] mt-6" style={{color:"rgba(255,255,255,.3)"}}>
           * Returns vary by plan. All investing carries risk — please invest responsibly.
         </p>
       </Section>
 
-      {/* ════════ PARALLAX BAND ════════ */}
+      {/* ════════ PARALLAX QUOTE BAND (own image) ════════ */}
       <section className="relative">
         <div className="parallax absolute inset-0" style={{backgroundImage:"url(https://images.unsplash.com/photo-1591994843349-f415893b3a6b?auto=format&fit=crop&w=1920&q=80)"}} />
-        <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.7),rgba(16,185,129,.25))"}} />
+        <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.65),rgba(16,185,129,.25))"}} />
         <div className="relative z-10 px-6 py-28 text-center max-w-3xl mx-auto">
           <Reveal>
-            <Quote size={32} className="mx-auto mb-6" style={{color:"rgba(255,255,255,.5)"}} />
-            <h2 className="serif font-light" style={{fontSize:"clamp(26px,4vw,44px)",lineHeight:1.15,textShadow:"0 2px 24px rgba(0,0,0,.5)"}}>
+            <Quote size={32} className="mx-auto mb-6" style={{color:"rgba(255,255,255,.6)"}} />
+            <h2 className="serif font-light" style={{fontSize:"clamp(26px,4vw,44px)",lineHeight:1.15,textShadow:"0 2px 24px rgba(0,0,0,.55)"}}>
               "The journey to financial freedom begins with a single, <em className="gradtext" style={{fontStyle:"italic"}}>confident step.</em>"
             </h2>
-            <p className="text-[11px] tracking-[.25em] uppercase mt-6" style={{color:"rgba(255,255,255,.6)"}}>— The MexicaTrading Team</p>
+            <p className="text-[11px] tracking-[.25em] uppercase mt-6" style={{color:"rgba(255,255,255,.7)"}}>— The MexicaTrading Team</p>
           </Reveal>
         </div>
       </section>
 
-      {/* ════════ LIVE ACTIVITY ════════ */}
-      <Section>
+      {/* ════════ LIVE ACTIVITY (glass) ════════ */}
+      <Section glass>
         <Heading kicker="Live Activity" title="Real-time" accent="transactions" />
         <div className="grid md:grid-cols-2 gap-6 mt-12">
           <ActivityTable title="Latest Deposits" rows={deposits} positive />
           <ActivityTable title="Latest Withdrawals" rows={withdraws} />
         </div>
-        <p className="text-center text-[10px] mt-4" style={{color:"rgba(255,255,255,.2)"}}>
+        <p className="text-center text-[10px] mt-4" style={{color:"rgba(255,255,255,.25)"}}>
           Live activity feed · names partially hidden for privacy
         </p>
       </Section>
 
-      {/* ════════ HOW IT WORKS ════════ */}
-      <Section>
+      {/* ════════ HOW IT WORKS (glass) ════════ */}
+      <Section glass>
         <Heading kicker="Get Started" title="Begin in" accent="4 simple steps" />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
           {STEPS.map((s,i)=>(
             <Reveal key={i} delay={i*.1}>
-              <div className="relative text-center p-7 border h-full card-hover" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(255,255,255,.02)"}}>
-                <span className="serif text-5xl font-light absolute top-3 right-4" style={{color:"rgba(16,185,129,.15)"}}>{i+1}</span>
-                <div className="w-14 h-14 border flex items-center justify-center mx-auto mb-4" style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.06)"}}>
+              <div className="relative text-center p-7 border h-full card-hover" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(8,12,24,.5)"}}>
+                <span className="serif text-5xl font-light absolute top-3 right-4" style={{color:"rgba(16,185,129,.18)"}}>{i+1}</span>
+                <div className="w-14 h-14 border flex items-center justify-center mx-auto mb-4" style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.08)"}}>
                   <s.icon size={22} style={{color:"var(--em)"}} />
                 </div>
                 <h3 className="text-base font-semibold mb-2">{s.title}</h3>
-                <p className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.4)"}}>{s.text}</p>
+                <p className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.45)"}}>{s.text}</p>
               </div>
             </Reveal>
           ))}
         </div>
       </Section>
 
-      {/* ════════ FEATURES ════════ */}
-      <Section>
+      {/* ════════ FEATURES (glass) ════════ */}
+      <Section glass>
         <Heading kicker="Why MexicaTrading" title="Something" accent="different." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
           {FEATURES.map((f,i)=>(
             <Reveal key={i} delay={i*.1}>
-              <div className="card-hover h-full p-7 border" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(255,255,255,.02)"}}>
-                <div className="w-12 h-12 border flex items-center justify-center mb-4" style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.06)"}}>
+              <div className="card-hover h-full p-7 border" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(8,12,24,.5)"}}>
+                <div className="w-12 h-12 border flex items-center justify-center mb-4" style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.08)"}}>
                   <f.icon size={20} style={{color:"var(--em)"}} />
                 </div>
                 <h3 className="text-base font-semibold mb-2">{f.title}</h3>
-                <p className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.4)"}}>{f.text}</p>
+                <p className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.45)"}}>{f.text}</p>
               </div>
             </Reveal>
           ))}
         </div>
       </Section>
 
-      {/* ════════ TESTIMONIALS ════════ */}
-      <Section>
+      {/* ════════ TRUST / SECURITY BADGE (glass) ════════ */}
+      <Section glass>
+        <Heading kicker="Trust & Security" title="Built on" accent="trust." />
+        <Reveal delay={.1}>
+          <div className="max-w-md mx-auto mt-10 mb-12 p-6 border text-center" style={{borderColor:"rgba(16,185,129,.3)",background:"rgba(16,185,129,.06)"}}>
+            <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{background:"linear-gradient(135deg,var(--em),var(--teal))"}}>
+              <BadgeCheck size={30} className="text-white" />
+            </div>
+            <p className="serif text-2xl font-light mb-1">MexicaTrading</p>
+            <p className="text-[10px] tracking-[.25em] uppercase mb-3" style={{color:"var(--em)"}}>Secure & Verified Platform</p>
+            <p className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.5)"}}>
+              Your security is our highest priority. Our platform is protected with strong encryption and continuous monitoring to keep your funds and information safe.
+            </p>
+          </div>
+        </Reveal>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+          {TRUST.map((t,i)=>(
+            <Reveal key={i} delay={i*.1}>
+              <div className="card-hover h-full p-6 border text-center" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(8,12,24,.5)"}}>
+                <div className="w-12 h-12 border flex items-center justify-center mx-auto mb-3" style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.08)"}}>
+                  <t.icon size={20} style={{color:"var(--em)"}} />
+                </div>
+                <h3 className="text-sm font-semibold mb-1.5">{t.title}</h3>
+                <p className="text-[11px] font-light leading-relaxed" style={{color:"rgba(255,255,255,.4)"}}>{t.text}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </Section>
+
+      {/* ════════ TESTIMONIALS (glass) ════════ */}
+      <Section glass>
         <Heading kicker="Testimonials" title="What our members" accent="are saying" />
         <div className="max-w-2xl mx-auto mt-12">
           <AnimatePresence mode="wait">
-            <motion.div key={testi}
-              initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}
-              transition={{duration:.5}}
-              className="p-9 border text-center" style={{borderColor:"rgba(16,185,129,.2)",background:"rgba(255,255,255,.02)"}}>
+            <motion.div key={testi} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}} transition={{duration:.5}}
+              className="p-9 border text-center" style={{borderColor:"rgba(16,185,129,.2)",background:"rgba(8,12,24,.5)"}}>
               <Quote size={28} className="mx-auto mb-5" style={{color:"rgba(16,185,129,.4)"}} />
-              <p className="serif text-xl font-light leading-relaxed mb-6" style={{color:"rgba(255,255,255,.7)"}}>
+              <p className="serif text-xl font-light leading-relaxed mb-6" style={{color:"rgba(255,255,255,.75)"}}>
                 "{TESTIMONIALS[testi].text}"
               </p>
               <div className="flex items-center justify-center gap-1 mb-3">
@@ -390,7 +401,7 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ════════ FINAL CTA ════════ */}
+      {/* ════════ FINAL CTA (own parallax image) ════════ */}
       <Section>
         <Reveal>
           <div className="relative text-center p-12 border overflow-hidden" style={{borderColor:"rgba(16,185,129,.25)"}}>
@@ -401,35 +412,44 @@ export default function Home() {
               <h2 className="serif font-light mb-4" style={{fontSize:"clamp(28px,5vw,52px)",lineHeight:1.05,textShadow:"0 2px 20px rgba(0,0,0,.5)"}}>
                 Ready to <em className="gradtext" style={{fontStyle:"italic"}}>begin?</em>
               </h2>
-              <p className="text-sm font-light max-w-md mx-auto mb-8" style={{color:"rgba(255,255,255,.7)"}}>
+              <p className="text-sm font-light max-w-md mx-auto mb-8" style={{color:"rgba(255,255,255,.72)"}}>
                 Join MexicaTrading today and take your first step toward financial growth. No minimum, secure platform, friendly 24/7 support.
               </p>
-              <button onClick={()=>navigate("/register")}
-                className="btn-prime px-9 py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white inline-flex items-center gap-3">
-                Create Free Account <ArrowRight size={15} />
-              </button>
+              <div className="flex items-center justify-center gap-4 flex-wrap">
+                <button onClick={()=>navigate("/register")}
+                  className="btn-prime px-9 py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white inline-flex items-center gap-3">
+                  Create Free Account <ArrowRight size={15} />
+                </button>
+                <button onClick={()=>navigate("/login")}
+                  className="px-9 py-4 border text-[11px] font-medium tracking-[.18em] uppercase transition-all duration-300 inline-flex items-center gap-2.5"
+                  style={{borderColor:"rgba(255,255,255,.3)",color:"rgba(255,255,255,.9)"}}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--em)";e.currentTarget.style.color="var(--em)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,.3)";e.currentTarget.style.color="rgba(255,255,255,.9)";}}>
+                  <LogIn size={14}/> Login
+                </button>
+              </div>
             </div>
           </div>
         </Reveal>
       </Section>
 
       {/* ════════ FOOTER ════════ */}
-      <footer className="border-t px-6 py-12" style={{borderColor:"rgba(255,255,255,.06)"}}>
+      <footer className="relative border-t px-6 py-12 glass" style={{borderColor:"rgba(255,255,255,.06)"}}>
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <p className="serif text-2xl font-light gradtext">Mexica<em className="not-italic text-white">Trading</em></p>
-              <p className="text-xs mt-1" style={{color:"rgba(255,255,255,.3)"}}>Trusted global investment platform</p>
+              <p className="text-xs mt-1" style={{color:"rgba(255,255,255,.35)"}}>Trusted global investment platform</p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] tracking-wider uppercase" style={{color:"rgba(255,255,255,.4)"}}>
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] tracking-wider uppercase" style={{color:"rgba(255,255,255,.45)"}}>
               {[["About","/"],["Plans","/plans"],["Terms","/terms"],["Privacy","/privacy"],["Login","/login"]].map(([l,to],i)=>(
                 <button key={i} onClick={()=>navigate(to)} className="transition-colors hover:text-emerald-400">{l}</button>
               ))}
             </div>
           </div>
           <div className="mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3" style={{borderColor:"rgba(255,255,255,.05)"}}>
-            <p className="text-[10px]" style={{color:"rgba(255,255,255,.25)"}}>© {new Date().getFullYear()} MexicaTrading. All Rights Reserved.</p>
-            <p className="text-[10px] max-w-md text-center sm:text-right" style={{color:"rgba(255,255,255,.2)"}}>
+            <p className="text-[10px]" style={{color:"rgba(255,255,255,.3)"}}>© {new Date().getFullYear()} MexicaTrading. All Rights Reserved.</p>
+            <p className="text-[10px] max-w-md text-center sm:text-right" style={{color:"rgba(255,255,255,.25)"}}>
               Investing involves risk. Please invest responsibly and only what you can afford.
             </p>
           </div>
@@ -440,16 +460,26 @@ export default function Home() {
 }
 
 /* ─────────── Helpers ─────────── */
-function Section({ children }) {
-  return <section className="relative px-6 py-20 max-w-6xl mx-auto">{children}</section>;
+/* Glass section: see-through so the continuous fixed bg shows behind it */
+function Section({ children, glass }) {
+  return (
+    <section className={`relative px-6 py-20 ${glass ? "glass" : ""}`}>
+      <div className="max-w-6xl mx-auto">{children}</div>
+    </section>
+  );
+}
+/* Solid section: hides the bg with a near-opaque panel (for its own image area) */
+function SolidSection({ children }) {
+  return (
+    <section className="relative px-6 py-20" style={{background:"rgba(8,12,24,.92)"}}>
+      <div className="max-w-6xl mx-auto">{children}</div>
+    </section>
+  );
 }
 
 function Reveal({ children, delay=0 }) {
   return (
-    <motion.div
-      initial={{opacity:0,y:30}}
-      whileInView={{opacity:1,y:0}}
-      viewport={{once:true,margin:"-60px"}}
+    <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:"-60px"}}
       transition={{duration:.7,delay,ease:[.22,1,.36,1]}}>
       {children}
     </motion.div>
@@ -471,7 +501,7 @@ function Heading({ kicker, title, accent }) {
 
 function ActivityTable({ title, rows, positive }) {
   return (
-    <div className="border" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(255,255,255,.02)"}}>
+    <div className="border" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(8,12,24,.6)"}}>
       <div className="px-5 py-3 border-b flex items-center gap-2" style={{borderColor:"rgba(255,255,255,.06)"}}>
         <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:positive?"var(--em)":"#14b8a6"}} />
         <p className="text-[10px] font-semibold tracking-[.2em] uppercase" style={{color:"rgba(255,255,255,.5)"}}>{title}</p>
@@ -479,18 +509,14 @@ function ActivityTable({ title, rows, positive }) {
       <div className="divide-y" style={{borderColor:"rgba(255,255,255,.04)"}}>
         <AnimatePresence initial={false}>
           {rows.map((r)=>(
-            <motion.div key={r.id}
-              initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}}
-              transition={{duration:.4}}
+            <motion.div key={r.id} initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}} transition={{duration:.4}}
               className="flex items-center justify-between px-5 py-3">
               <div className="flex items-center gap-3">
                 <span className="text-lg">{r.flag}</span>
                 <span className="text-sm" style={{color:"rgba(255,255,255,.6)"}}>{r.name}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold" style={{color:positive?"var(--em)":"#14b8a6"}}>
-                  ${r.amount.toLocaleString()}
-                </span>
+                <span className="text-sm font-semibold" style={{color:positive?"var(--em)":"#14b8a6"}}>${r.amount.toLocaleString()}</span>
                 <span className="text-[10px] px-1.5 py-0.5 border" style={{borderColor:"rgba(255,255,255,.1)",color:"rgba(255,255,255,.35)"}}>{r.coin}</span>
               </div>
             </motion.div>
