@@ -18,11 +18,11 @@ const SLIDES = [
 
 /* Continuous fixed backgrounds — rotate through these (trading / people / finance) */
 const PAGE_BGS = [
-  "https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1920&q=80", // crypto data
-  "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1920&q=80", // business handshake
-  "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1920&q=80", // team working
-  "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1920&q=80", // trader screens
-  "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1920&q=80", // financial district
+  "https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1920&q=80",
+  "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1920&q=80",
+  "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1920&q=80",
+  "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1920&q=80",
+  "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1920&q=80",
 ];
 
 const PILLARS = [
@@ -133,7 +133,6 @@ export default function Home() {
         .kb{animation:kenburns 7s ease-out forwards;}
         .parallax{background-attachment:fixed;background-size:cover;background-position:center;}
         @media (max-width:768px){.parallax{background-attachment:scroll;}}
-        /* glass panel — see-through so the bright continuous bg shows behind it */
         .glass{background:rgba(8,12,24,.4);backdrop-filter:blur(2px);}
       `}</style>
 
@@ -147,7 +146,6 @@ export default function Home() {
             <div className="parallax absolute inset-0" style={{ backgroundImage:`url(${PAGE_BGS[pageBg]})` }} />
           </motion.div>
         </AnimatePresence>
-        {/* lighter overlay so the photo is clearly visible */}
         <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.55),rgba(8,12,24,.62))" }} />
         <div className="grid-bg absolute inset-0 opacity-25" />
       </div>
@@ -538,6 +536,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* ════════ LIVE ACTIVITY POPUPS (bottom-left, home page only) ════════ */}
+      <LiveActivity />
     </div>
   );
 }
@@ -601,7 +602,6 @@ function ActivityTable({ title, rows, positive }) {
           ))}
         </AnimatePresence>
       </div>
-      <LiveActivity />
     </div>
   );
 }
