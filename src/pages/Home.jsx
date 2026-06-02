@@ -15,8 +15,14 @@ const SLIDES = [
   { tag: "A brand new horizon",         head: "Trade. Earn.",       accent: "Prosper.",            img: "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1920&q=80" },
 ];
 
-/* Continuous fixed background shown behind the whole page */
-const PAGE_BG = "https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1920&q=80";
+/* Continuous fixed backgrounds — rotate through these (trading / people / finance) */
+const PAGE_BGS = [
+  "https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1920&q=80", // crypto data
+  "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1920&q=80", // business handshake
+  "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1920&q=80", // team working
+  "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1920&q=80", // trader screens
+  "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1920&q=80", // financial district
+];
 
 const PILLARS = [
   { icon: Clock, title: "The Right Timing", text: "We align opportunities using advanced market analysis. In a fast-moving market, timing is everything — and we help you act with confidence." },
@@ -46,7 +52,6 @@ const STEPS = [
   { icon: TrendingUp, title: "Earn",     text: "Choose a plan and watch your investment grow." },
 ];
 
-/* Trust badges (no fake license numbers — genuine signals only) */
 const TRUST = [
   { icon: Lock,       title: "Bank-Level Encryption", text: "All data is protected with strong end-to-end encryption." },
   { icon: ShieldCheck,title: "Secure Platform",        text: "Layered security safeguards your account around the clock." },
@@ -78,10 +83,12 @@ export default function Home() {
   const navigate = useNavigate();
   const [slide, setSlide] = useState(0);
   const [testi, setTesti] = useState(0);
+  const [pageBg, setPageBg] = useState(0);
   const [deposits, setDeposits]   = useState(() => Array.from({length:8}, genRow));
   const [withdraws, setWithdraws] = useState(() => Array.from({length:8}, genRow));
 
   useEffect(() => { const t = setInterval(() => setSlide(s => (s+1) % SLIDES.length), 5500); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setPageBg(s => (s+1) % PAGE_BGS.length), 7000); return () => clearInterval(t); }, []);
   useEffect(() => { const t = setInterval(() => setTesti(s => (s+1) % TESTIMONIALS.length), 6000); return () => clearInterval(t); }, []);
   useEffect(() => {
     const t  = setInterval(() => setDeposits(d => [genRow(), ...d.slice(0,7)]), 3500);
@@ -111,21 +118,26 @@ export default function Home() {
         .kb{animation:kenburns 7s ease-out forwards;}
         .parallax{background-attachment:fixed;background-size:cover;background-position:center;}
         @media (max-width:768px){.parallax{background-attachment:scroll;}}
-        /* glass panel sits over the continuous bg so plain sections stay readable */
-        .glass{background:rgba(8,12,24,.55);backdrop-filter:blur(2px);}
+        /* glass panel — see-through so the bright continuous bg shows behind it */
+        .glass{background:rgba(8,12,24,.4);backdrop-filter:blur(2px);}
       `}</style>
 
       {/* Top shimmer */}
       <div className="fixed top-0 left-0 right-0 z-50 h-[2px]"><div className="top-line h-full w-full" /></div>
 
-      {/* ════════ CONTINUOUS FIXED BACKGROUND (behind whole page) ════════ */}
-      <div className="fixed inset-0 -z-10">
-        <div className="parallax absolute inset-0" style={{ backgroundImage:`url(${PAGE_BG})` }} />
-        <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.82),rgba(8,12,24,.9))" }} />
-        <div className="grid-bg absolute inset-0 opacity-30" />
+      {/* ════════ CONTINUOUS FIXED BACKGROUND (rotates, brighter) ════════ */}
+      <div className="fixed inset-0 -z-10 bg-[#080c18]">
+        <AnimatePresence mode="sync">
+          <motion.div key={pageBg} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:1.6}} className="absolute inset-0">
+            <div className="parallax absolute inset-0" style={{ backgroundImage:`url(${PAGE_BGS[pageBg]})` }} />
+          </motion.div>
+        </AnimatePresence>
+        {/* lighter overlay so the photo is clearly visible */}
+        <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.55),rgba(8,12,24,.62))" }} />
+        <div className="grid-bg absolute inset-0 opacity-25" />
       </div>
 
-      {/* ════════ HERO (own bright photo slider) ════════ */}
+      {/* ════════ HERO ════════ */}
       <section className="relative min-h-[90vh] flex items-center justify-center px-6">
         <div className="absolute inset-0 overflow-hidden">
           <AnimatePresence mode="sync">
@@ -133,8 +145,7 @@ export default function Home() {
               <div className="parallax absolute inset-0 kb" style={{ backgroundImage:`url(${SLIDES[slide].img})` }} />
             </motion.div>
           </AnimatePresence>
-          {/* brighter overlays so the photo shows clearly */}
-          <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.45),rgba(8,12,24,.55) 65%,rgba(8,12,24,.8) 100%)" }} />
+          <div className="absolute inset-0" style={{ background:"linear-gradient(180deg,rgba(8,12,24,.4),rgba(8,12,24,.5) 65%,rgba(8,12,24,.75) 100%)" }} />
           <div className="absolute inset-0" style={{ background:"radial-gradient(circle at 30% 40%,rgba(16,185,129,.15),transparent 60%)" }} />
           <div className="grid-bg absolute inset-0 opacity-40" />
         </div>
@@ -146,14 +157,14 @@ export default function Home() {
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:"var(--em)"}} />
                 {SLIDES[slide].tag}
               </div>
-              <h1 className="serif font-light mb-6" style={{fontSize:"clamp(40px,8vw,78px)",lineHeight:1.02,textShadow:"0 2px 30px rgba(0,0,0,.55)"}}>
+              <h1 className="serif font-light mb-6" style={{fontSize:"clamp(40px,8vw,78px)",lineHeight:1.02,textShadow:"0 2px 30px rgba(0,0,0,.6)"}}>
                 {SLIDES[slide].head}<br />
                 <em className="gradtext" style={{fontStyle:"italic"}}>{SLIDES[slide].accent}</em>
               </h1>
             </motion.div>
           </AnimatePresence>
 
-          <p className="text-sm sm:text-base font-light max-w-xl mx-auto mb-9" style={{color:"rgba(255,255,255,.65)",textShadow:"0 1px 12px rgba(0,0,0,.55)"}}>
+          <p className="text-sm sm:text-base font-light max-w-xl mx-auto mb-9" style={{color:"rgba(255,255,255,.7)",textShadow:"0 1px 12px rgba(0,0,0,.6)"}}>
             A secure, transparent investment platform trusted by people worldwide. Start your journey toward financial growth — with no minimum and friendly 24/7 support.
           </p>
 
@@ -180,7 +191,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ════════ 3 PILLARS (glass over continuous bg) ════════ */}
+      {/* ════════ 3 PILLARS ════════ */}
       <Section glass>
         <div className="grid md:grid-cols-3 gap-6">
           {PILLARS.map((p,i)=>(
@@ -231,7 +242,7 @@ export default function Home() {
         </div>
       </SolidSection>
 
-      {/* ════════ PLANS (glass) ════════ */}
+      {/* ════════ PLANS ════════ */}
       <Section glass>
         <Heading kicker="Investment Plans" title="A perfect plan" accent="for everyone" />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
@@ -273,7 +284,7 @@ export default function Home() {
       {/* ════════ PARALLAX QUOTE BAND (own image) ════════ */}
       <section className="relative">
         <div className="parallax absolute inset-0" style={{backgroundImage:"url(https://images.unsplash.com/photo-1591994843349-f415893b3a6b?auto=format&fit=crop&w=1920&q=80)"}} />
-        <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.65),rgba(16,185,129,.25))"}} />
+        <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(8,12,24,.6),rgba(16,185,129,.25))"}} />
         <div className="relative z-10 px-6 py-28 text-center max-w-3xl mx-auto">
           <Reveal>
             <Quote size={32} className="mx-auto mb-6" style={{color:"rgba(255,255,255,.6)"}} />
@@ -285,7 +296,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ════════ LIVE ACTIVITY (glass) ════════ */}
+      {/* ════════ LIVE ACTIVITY ════════ */}
       <Section glass>
         <Heading kicker="Live Activity" title="Real-time" accent="transactions" />
         <div className="grid md:grid-cols-2 gap-6 mt-12">
@@ -297,7 +308,7 @@ export default function Home() {
         </p>
       </Section>
 
-      {/* ════════ HOW IT WORKS (glass) ════════ */}
+      {/* ════════ HOW IT WORKS ════════ */}
       <Section glass>
         <Heading kicker="Get Started" title="Begin in" accent="4 simple steps" />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
@@ -316,7 +327,7 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ════════ FEATURES (glass) ════════ */}
+      {/* ════════ FEATURES ════════ */}
       <Section glass>
         <Heading kicker="Why MexicaTrading" title="Something" accent="different." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
@@ -334,22 +345,54 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ════════ TRUST / SECURITY BADGE (glass) ════════ */}
+      {/* ════════ CERTIFICATE OF TRUST (original, safe) ════════ */}
       <Section glass>
-        <Heading kicker="Trust & Security" title="Built on" accent="trust." />
+        <Heading kicker="Trust & Security" title="Our commitment" accent="to you." />
+
         <Reveal delay={.1}>
-          <div className="max-w-md mx-auto mt-10 mb-12 p-6 border text-center" style={{borderColor:"rgba(16,185,129,.3)",background:"rgba(16,185,129,.06)"}}>
-            <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{background:"linear-gradient(135deg,var(--em),var(--teal))"}}>
-              <BadgeCheck size={30} className="text-white" />
+          <div className="max-w-2xl mx-auto mt-12 relative overflow-hidden"
+            style={{border:"1px solid rgba(16,185,129,.35)",background:"linear-gradient(160deg,rgba(8,12,24,.95),rgba(16,185,129,.05))"}}>
+            <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2" style={{borderColor:"var(--em)"}} />
+            <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2" style={{borderColor:"var(--em)"}} />
+            <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2" style={{borderColor:"var(--em)"}} />
+            <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2" style={{borderColor:"var(--em)"}} />
+
+            <div className="px-8 py-10 text-center relative">
+              <div className="relative w-20 h-20 mx-auto mb-5">
+                <div className="absolute inset-0 rounded-full animate-pulse" style={{background:"radial-gradient(circle,rgba(16,185,129,.4),transparent 70%)"}} />
+                <div className="relative w-20 h-20 rounded-full flex items-center justify-center" style={{background:"linear-gradient(135deg,var(--em),var(--teal))",boxShadow:"0 0 30px rgba(16,185,129,.4)"}}>
+                  <BadgeCheck size={38} className="text-white" />
+                </div>
+              </div>
+
+              <p className="text-[10px] tracking-[.35em] uppercase mb-3" style={{color:"var(--em)"}}>Certificate of Trust</p>
+              <h3 className="serif font-light mb-1" style={{fontSize:"clamp(28px,5vw,42px)"}}>
+                Mexica<em className="not-italic gradtext">Trading</em>
+              </h3>
+              <p className="text-[11px] tracking-[.2em] uppercase mb-6" style={{color:"rgba(255,255,255,.4)"}}>Secure &amp; Verified Investment Platform</p>
+
+              <div className="w-16 h-px mx-auto mb-6" style={{background:"linear-gradient(90deg,transparent,var(--em),transparent)"}} />
+
+              <p className="text-sm font-light leading-relaxed max-w-md mx-auto mb-7" style={{color:"rgba(255,255,255,.6)"}}>
+                This certifies that MexicaTrading operates as a secure, transparent investment platform, committed to protecting every member's funds and data through strong encryption, continuous monitoring, and dedicated 24/7 support.
+              </p>
+
+              <div className="flex items-center justify-center gap-8 flex-wrap text-center">
+                <div>
+                  <p className="text-[9px] tracking-[.2em] uppercase mb-1" style={{color:"rgba(255,255,255,.35)"}}>Registered Office</p>
+                  <p className="text-xs font-medium" style={{color:"rgba(255,255,255,.7)"}}>Mexico City, CDMX, Mexico</p>
+                </div>
+                <div className="w-px h-8 hidden sm:block" style={{background:"rgba(255,255,255,.15)"}} />
+                <div>
+                  <p className="text-[9px] tracking-[.2em] uppercase mb-1" style={{color:"rgba(255,255,255,.35)"}}>Support</p>
+                  <p className="text-xs font-medium" style={{color:"rgba(255,255,255,.7)"}}>Available 24/7</p>
+                </div>
+              </div>
             </div>
-            <p className="serif text-2xl font-light mb-1">MexicaTrading</p>
-            <p className="text-[10px] tracking-[.25em] uppercase mb-3" style={{color:"var(--em)"}}>Secure & Verified Platform</p>
-            <p className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.5)"}}>
-              Your security is our highest priority. Our platform is protected with strong encryption and continuous monitoring to keep your funds and information safe.
-            </p>
           </div>
         </Reveal>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mt-10">
           {TRUST.map((t,i)=>(
             <Reveal key={i} delay={i*.1}>
               <div className="card-hover h-full p-6 border text-center" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(8,12,24,.5)"}}>
@@ -364,7 +407,7 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ════════ TESTIMONIALS (glass) ════════ */}
+      {/* ════════ TESTIMONIALS ════════ */}
       <Section glass>
         <Heading kicker="Testimonials" title="What our members" accent="are saying" />
         <div className="max-w-2xl mx-auto mt-12">
@@ -460,7 +503,6 @@ export default function Home() {
 }
 
 /* ─────────── Helpers ─────────── */
-/* Glass section: see-through so the continuous fixed bg shows behind it */
 function Section({ children, glass }) {
   return (
     <section className={`relative px-6 py-20 ${glass ? "glass" : ""}`}>
@@ -468,7 +510,6 @@ function Section({ children, glass }) {
     </section>
   );
 }
-/* Solid section: hides the bg with a near-opaque panel (for its own image area) */
 function SolidSection({ children }) {
   return (
     <section className="relative px-6 py-20" style={{background:"rgba(8,12,24,.92)"}}>
@@ -476,7 +517,6 @@ function SolidSection({ children }) {
     </section>
   );
 }
-
 function Reveal({ children, delay=0 }) {
   return (
     <motion.div initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:"-60px"}}
@@ -485,7 +525,6 @@ function Reveal({ children, delay=0 }) {
     </motion.div>
   );
 }
-
 function Heading({ kicker, title, accent }) {
   return (
     <Reveal>
@@ -498,7 +537,6 @@ function Heading({ kicker, title, accent }) {
     </Reveal>
   );
 }
-
 function ActivityTable({ title, rows, positive }) {
   return (
     <div className="border" style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(8,12,24,.6)"}}>
