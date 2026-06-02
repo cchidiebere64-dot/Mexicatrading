@@ -1,20 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 
 /*
   Floating WhatsApp support button — BOTTOM-RIGHT.
-  Tap the button to open the card; tap anywhere else on the screen to close it.
-  Drop <WhatsAppButton /> once in your App and it appears on every page.
+  • Gently bounces every few seconds to catch attention.
+  • A little speech bubble pops up now and then with friendly/playful messages.
+  • Tap the button to open the card; tap anywhere else to close it.
 */
 
 const WHATSAPP_NUMBER = "447353370690"; // +44 7353 370690 (no +, no spaces)
 const DEFAULT_MESSAGE = "Hi dear, I'd love some help getting started with MexicaTrading 😊";
 
+/* Playful + friendly rotating bubble messages */
+const BUBBLES = [
+  "👋 Need help?",
+  "Let's chat 😊",
+  "Hey! Got a question?",
+  "We're online now!",
+  "Don't be shy 👋",
+  "Chat with us 💬",
+  "Here to help you 🤝",
+];
+
 export default function WhatsAppButton() {
   const [open, setOpen] = useState(false);
+  const [bubble, setBubble] = useState(null);
+  const [bounce, setBounce] = useState(false);
 
   const link = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
+
+  /* Periodic bounce + speech bubble (only when card is closed) */
+  useEffect(() => {
+    if (open) { setBubble(null); return; }
+
+    let bubbleHide, bubbleShow, bounceStop;
+
+    const cycle = () => {
+      // bounce
+      setBounce(true);
+      bounceStop = setTimeout(() => setBounce(false), 1200);
+      // show a random bubble
+      const msg = BUBBLES[Math.floor(Math.random() * BUBBLES.length)];
+      setBubble(msg);
+      bubbleHide = setTimeout(() => setBubble(null), 4000);
+    };
+
+    // first nudge after 4s, then repeat every ~12s
+    bubbleShow = setTimeout(cycle, 4000);
+    const interval = setInterval(cycle, 12000);
+
+    return () => { clearTimeout(bubbleShow); clearTimeout(bubbleHide); clearTimeout(bounceStop); clearInterval(interval); };
+  }, [open]);
 
   return (
     <>
@@ -25,6 +62,14 @@ export default function WhatsAppButton() {
           100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
         }
         .wa-pulse { animation: waPulse 2.4s ease-out infinite; }
+        @keyframes waBounce {
+          0%,100% { transform: translateY(0); }
+          25%     { transform: translateY(-12px); }
+          45%     { transform: translateY(0); }
+          60%     { transform: translateY(-6px); }
+          75%     { transform: translateY(0); }
+        }
+        .wa-bounce { animation: waBounce 1.2s ease-in-out; }
       `}</style>
 
       {/* Invisible full-screen layer — tapping it closes the card */}
@@ -54,9 +99,7 @@ export default function WhatsAppButton() {
               className="w-[300px] overflow-hidden shadow-2xl rounded-2xl"
               style={{ background:"rgba(13,17,32,.98)", border:"1px solid rgba(16,185,129,.3)", backdropFilter:"blur(24px)" }}>
 
-              {/* header */}
               <div className="relative px-5 py-5 flex items-center gap-3 overflow-hidden" style={{ background:"linear-gradient(135deg,#10b981,#14b8a6)" }}>
-                {/* soft glow accent */}
                 <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full" style={{ background:"rgba(255,255,255,.15)" }} />
                 <div className="relative w-11 h-11 rounded-full bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
                   <MessageCircle size={21} className="text-white" />
@@ -69,7 +112,6 @@ export default function WhatsAppButton() {
                 </div>
               </div>
 
-              {/* body */}
               <div className="px-5 py-5">
                 <div className="px-4 py-3 mb-4 text-sm leading-relaxed rounded-xl"
                   style={{ background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", color:"rgba(255,255,255,.65)" }}>
@@ -88,24 +130,45 @@ export default function WhatsAppButton() {
           )}
         </AnimatePresence>
 
-        {/* Floating button */}
-        <button
-          onClick={() => setOpen(o => !o)}
-          aria-label="WhatsApp support"
-          className={`relative w-15 h-15 rounded-full flex items-center justify-center text-white shadow-xl transition-transform duration-300 hover:scale-105 active:scale-95 ${open ? "" : "wa-pulse"}`}
-          style={{ width:60, height:60, background:"linear-gradient(135deg,#10b981,#14b8a6)" }}>
-          <AnimatePresence mode="wait">
-            {open ? (
-              <motion.span key="x" initial={{ rotate:-90, opacity:0 }} animate={{ rotate:0, opacity:1 }} exit={{ rotate:90, opacity:0 }} transition={{ duration:.2 }}>
-                <X size={24} />
-              </motion.span>
-            ) : (
-              <motion.span key="chat" initial={{ rotate:90, opacity:0 }} animate={{ rotate:0, opacity:1 }} exit={{ rotate:-90, opacity:0 }} transition={{ duration:.2 }}>
-                <MessageCircle size={27} />
-              </motion.span>
+        {/* Button row: speech bubble + button */}
+        <div className="flex items-center gap-2.5">
+          {/* Speech bubble */}
+          <AnimatePresence>
+            {bubble && !open && (
+              <motion.div
+                initial={{ opacity:0, x:14, scale:.85 }}
+                animate={{ opacity:1, x:0, scale:1 }}
+                exit={{ opacity:0, x:14, scale:.85 }}
+                transition={{ duration:.3, ease:[0.22,1,0.36,1] }}
+                onClick={() => setOpen(true)}
+                className="relative cursor-pointer px-4 py-2.5 rounded-2xl rounded-br-sm shadow-xl whitespace-nowrap text-sm font-medium"
+                style={{ background:"#fff", color:"#0e1320" }}>
+                {bubble}
+                {/* little tail */}
+                <span className="absolute -right-1 bottom-2 w-3 h-3 rotate-45" style={{ background:"#fff" }} />
+              </motion.div>
             )}
           </AnimatePresence>
-        </button>
+
+          {/* Floating button */}
+          <button
+            onClick={() => setOpen(o => !o)}
+            aria-label="WhatsApp support"
+            className={`relative rounded-full flex items-center justify-center text-white shadow-xl transition-transform duration-300 hover:scale-105 active:scale-95 ${open ? "" : "wa-pulse"} ${bounce && !open ? "wa-bounce" : ""}`}
+            style={{ width:60, height:60, background:"linear-gradient(135deg,#10b981,#14b8a6)" }}>
+            <AnimatePresence mode="wait">
+              {open ? (
+                <motion.span key="x" initial={{ rotate:-90, opacity:0 }} animate={{ rotate:0, opacity:1 }} exit={{ rotate:90, opacity:0 }} transition={{ duration:.2 }}>
+                  <X size={24} />
+                </motion.span>
+              ) : (
+                <motion.span key="chat" initial={{ rotate:90, opacity:0 }} animate={{ rotate:0, opacity:1 }} exit={{ rotate:-90, opacity:0 }} transition={{ duration:.2 }}>
+                  <MessageCircle size={27} />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
       </div>
     </>
   );
