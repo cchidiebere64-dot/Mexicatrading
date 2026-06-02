@@ -6,6 +6,7 @@ import {
   UserPlus, LogIn, Wallet, TrendingUp, ChevronLeft, ChevronRight, Quote, Star,
   Lock, BadgeCheck, Globe, Server
 } from "lucide-react";
+import LiveActivity from "../components/LiveActivity.jsx";
 
 /* ─────────── Hero slides (Unsplash CDN — free for commercial use) ─────────── */
 const SLIDES = [
@@ -600,6 +601,7 @@ function ActivityTable({ title, rows, positive }) {
           ))}
         </AnimatePresence>
       </div>
+      <LiveActivity />
     </div>
   );
 }
