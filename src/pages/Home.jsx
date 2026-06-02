@@ -66,9 +66,23 @@ const TESTIMONIALS = [
   { name: "Aisha B.",  country: "Ghana",        text: "Simple to use and reliable. The referral program is a nice bonus and the whole experience feels professional." },
 ];
 
-const FIRST_NAMES = ["John","Maria","Ahmed","Chen","Daniel","Aisha","Carlos","Priya","Liam","Sofia","Kwame","Yuki","Omar","Elena","David","Grace"];
-const FLAGS = ["🇳🇬","🇲🇽","🇿🇦","🇬🇭","🇰🇪","🇧🇷","🇮🇳","🇵🇭","🇪🇬","🇺🇸","🇬🇧","🇨🇦","🇩🇪","🇫🇷"];
-const COINS = ["BTC","USDT","ETH"];
+const FIRST_NAMES = [
+  "John","Maria","Ahmed","Chen","Daniel","Aisha","Carlos","Priya","Liam","Sofia",
+  "Kwame","Yuki","Omar","Elena","David","Grace","Fatima","Lucas","Ngozi","Hassan",
+  "Mei","Diego","Amara","Yusuf","Olga","Tunde","Ravi","Lena","Pablo","Zainab",
+  "Kenji","Rosa","Emeka","Layla","Marco","Chidi","Hana","Andre","Bisi","Ibrahim",
+  "Nadia","Felix","Sade","Tariq","Ines","Kofi","Mira","Pedro","Aaliyah","Sergei",
+  "Wei","Juana","Bashir","Lin","Ada","Karim","Esther","Mateo","Halima","Viktor",
+  "Sun","Carmen","Femi","Rania","Hugo","Chioma","Akira","Lola","Samuel","Yara",
+  "Dmitri","Bianca","Musa","Nia","Thiago","Salma","Ken","Adaeze","Rafael","Dunia",
+];
+const FLAGS = [
+  "🇳🇬","🇲🇽","🇿🇦","🇬🇭","🇰🇪","🇧🇷","🇮🇳","🇵🇭","🇪🇬","🇺🇸",
+  "🇬🇧","🇨🇦","🇩🇪","🇫🇷","🇪🇸","🇮🇹","🇨🇳","🇯🇵","🇰🇷","🇹🇷",
+  "🇦🇪","🇸🇦","🇮🇩","🇵🇰","🇧🇩","🇻🇳","🇹🇭","🇵🇹","🇳🇱","🇸🇪",
+  "🇨🇭","🇦🇷","🇨🇴","🇨🇱","🇵🇪","🇷🇺","🇺🇦","🇵🇱","🇬🇷","🇲🇦",
+];
+const COINS = ["BTC","USDT","ETH","BNB","SOL","USDC","XRP","TRX"];
 const mask = (n) => n[0] + "***" + (n.length > 4 ? n[n.length-1] : "");
 const randItem = (a) => a[Math.floor(Math.random()*a.length)];
 const genRow = () => ({
