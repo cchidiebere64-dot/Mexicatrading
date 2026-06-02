@@ -66,23 +66,9 @@ const TESTIMONIALS = [
   { name: "Aisha B.",  country: "Ghana",        text: "Simple to use and reliable. The referral program is a nice bonus and the whole experience feels professional." },
 ];
 
-const FIRST_NAMES = [
-  "John","Maria","Ahmed","Chen","Daniel","Aisha","Carlos","Priya","Liam","Sofia",
-  "Kwame","Yuki","Omar","Elena","David","Grace","Fatima","Lucas","Ngozi","Hassan",
-  "Mei","Diego","Amara","Yusuf","Olga","Tunde","Ravi","Lena","Pablo","Zainab",
-  "Kenji","Rosa","Emeka","Layla","Marco","Chidi","Hana","Andre","Bisi","Ibrahim",
-  "Nadia","Felix","Sade","Tariq","Ines","Kofi","Mira","Pedro","Aaliyah","Sergei",
-  "Wei","Juana","Bashir","Lin","Ada","Karim","Esther","Mateo","Halima","Viktor",
-  "Sun","Carmen","Femi","Rania","Hugo","Chioma","Akira","Lola","Samuel","Yara",
-  "Dmitri","Bianca","Musa","Nia","Thiago","Salma","Ken","Adaeze","Rafael","Dunia",
-];
-const FLAGS = [
-  "🇳🇬","🇲🇽","🇿🇦","🇬🇭","🇰🇪","🇧🇷","🇮🇳","🇵🇭","🇪🇬","🇺🇸",
-  "🇬🇧","🇨🇦","🇩🇪","🇫🇷","🇪🇸","🇮🇹","🇨🇳","🇯🇵","🇰🇷","🇹🇷",
-  "🇦🇪","🇸🇦","🇮🇩","🇵🇰","🇧🇩","🇻🇳","🇹🇭","🇵🇹","🇳🇱","🇸🇪",
-  "🇨🇭","🇦🇷","🇨🇴","🇨🇱","🇵🇪","🇷🇺","🇺🇦","🇵🇱","🇬🇷","🇲🇦",
-];
-const COINS = ["BTC","USDT","ETH","BNB","SOL","USDC","XRP","TRX"];
+const FIRST_NAMES = ["John","Maria","Ahmed","Chen","Daniel","Aisha","Carlos","Priya","Liam","Sofia","Kwame","Yuki","Omar","Elena","David","Grace"];
+const FLAGS = ["🇳🇬","🇲🇽","🇿🇦","🇬🇭","🇰🇪","🇧🇷","🇮🇳","🇵🇭","🇪🇬","🇺🇸","🇬🇧","🇨🇦","🇩🇪","🇫🇷"];
+const COINS = ["BTC","USDT","ETH"];
 const mask = (n) => n[0] + "***" + (n.length > 4 ? n[n.length-1] : "");
 const randItem = (a) => a[Math.floor(Math.random()*a.length)];
 const genRow = () => ({
@@ -152,7 +138,7 @@ export default function Home() {
       </div>
 
       {/* ════════ HERO ════════ */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-6">
+      <section className="relative min-h-[90vh] flex items-center justify-center px-6 py-24">
         <div className="absolute inset-0 overflow-hidden">
           <AnimatePresence mode="sync">
             <motion.div key={slide} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:1.2}} className="absolute inset-0">
@@ -179,7 +165,7 @@ export default function Home() {
           </AnimatePresence>
 
           <p className="text-sm sm:text-base font-light max-w-xl mx-auto mb-9" style={{color:"rgba(255,255,255,.7)",textShadow:"0 1px 12px rgba(0,0,0,.6)"}}>
-            A secure, transparent investment platform trusted by people worldwide. Start your journey toward financial growth — with no minimum and friendly 24/7 support.
+            <span className="font-semibold text-white">MexicaTrading is a secure global investment platform where everyday people grow their money with confidence.</span> Invest in trusted plans, track your earnings in real time, and withdraw your profits fast — all on one simple, transparent platform built for you.
           </p>
 
           <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -200,6 +186,31 @@ export default function Home() {
             {SLIDES.map((_,i)=>(
               <button key={i} onClick={()=>setSlide(i)} className="h-1.5 rounded-full transition-all duration-400"
                 style={{width:i===slide?28:8,background:i===slide?"var(--em)":"rgba(255,255,255,.3)"}} />
+            ))}
+          </div>
+
+          {/* Benefit pills */}
+          <div className="flex items-center justify-center gap-2.5 flex-wrap mt-9">
+            {["No Minimum","Fast Withdrawals","Bank-Level Security"].map((b,i)=>(
+              <span key={i} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[10px] font-medium tracking-wider uppercase"
+                style={{border:"1px solid rgba(16,185,129,.3)",background:"rgba(16,185,129,.06)",color:"rgba(255,255,255,.75)",backdropFilter:"blur(4px)"}}>
+                <ShieldCheck size={11} style={{color:"var(--em)"}} /> {b}
+              </span>
+            ))}
+          </div>
+
+          {/* Trust row — big stats */}
+          <div className="flex items-center justify-center gap-x-8 gap-y-3 flex-wrap mt-8">
+            {[
+              ["50,000+","Members"],
+              ["$25M+","Paid Out"],
+              ["90+","Countries"],
+              ["24/7","Support"],
+            ].map(([big,small],i)=>(
+              <div key={i} className="text-center">
+                <p className="serif text-3xl font-light gradtext leading-none">{big}</p>
+                <p className="text-[9px] tracking-[.2em] uppercase mt-1.5" style={{color:"rgba(255,255,255,.45)"}}>{small}</p>
+              </div>
             ))}
           </div>
         </div>
