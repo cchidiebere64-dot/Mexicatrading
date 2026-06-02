@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 
 /*
-  Floating WhatsApp support button.
-  Positioned BOTTOM-LEFT so it never overlaps the Tawk.to live chat
-  widget (which sits bottom-right).
+  Floating WhatsApp support button — BOTTOM-RIGHT.
+  Live activity popups sit bottom-left, so nothing overlaps.
   Drop <WhatsAppButton /> once in your App and it appears on every page.
 */
 
@@ -28,8 +27,8 @@ export default function WhatsAppButton() {
         .wa-pulse { animation: waPulse 2.4s ease-out infinite; }
       `}</style>
 
-      {/* BOTTOM-LEFT — clear of the bottom-right Tawk.to widget */}
-      <div className="fixed bottom-6 left-6 z-[9998] flex flex-col items-start gap-3" style={{ fontFamily:"'Montserrat',sans-serif" }}>
+      {/* BOTTOM-RIGHT */}
+      <div className="fixed bottom-6 right-6 z-[9998] flex flex-col items-end gap-3" style={{ fontFamily:"'Montserrat',sans-serif" }}>
 
         {/* Popup card */}
         <AnimatePresence>
