@@ -1,12 +1,36 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import mexicanLogo from "../assets/mexican.png";
 import { useState, useEffect } from "react";
-import { X, Menu, LayoutDashboard, LogOut, ChevronRight, Settings } from "lucide-react";
+import { X, Menu, LayoutDashboard, LogOut, ChevronRight, Settings, MessageCircle } from "lucide-react";
 import LanguageSelector from "./LanguageSelector.jsx";
 import { useTranslation } from "react-i18next";
 
 // Pages considered "outside the app"
 const OUTSIDE_PAGES = ["/", "/login", "/register"];
+
+// Opens the Tawk.to chat widget
+const openChat = () => {
+  try {
+    if (window.Tawk_API && typeof window.Tawk_API.maximize === "function") {
+      window.Tawk_API.showWidget();
+      window.Tawk_API.maximize();
+    } else {
+      // Fallback if Tawk hasn't loaded yet — keep trying
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (window.Tawk_API && typeof window.Tawk_API.maximize === "function") {
+          window.Tawk_API.showWidget();
+          window.Tawk_API.maximize();
+          clearInterval(interval);
+        }
+        if (attempts > 20) clearInterval(interval); // give up after 10s
+      }, 500);
+    }
+  } catch (e) {
+    console.warn("Tawk.to not ready:", e);
+  }
+};
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -104,6 +128,15 @@ export default function Navbar() {
                 </Link>
               )
             )}
+
+            {/* 💬 Chat Support — Desktop */}
+            <button
+              onClick={openChat}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-emerald-400/80 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+            >
+              <MessageCircle size={15} />
+              Chat Support
+            </button>
           </nav>
 
           {/* DESKTOP RIGHT */}
@@ -268,6 +301,21 @@ export default function Navbar() {
                   </button>
                 </>
               )}
+
+              {/* 💬 Chat Support — Mobile (inside drawer) */}
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  setTimeout(openChat, 300); // slight delay so drawer closes first
+                }}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all mt-1"
+              >
+                <span className="flex items-center gap-2">
+                  <MessageCircle size={15} />
+                  Chat Support
+                </span>
+                <ChevronRight size={14} className="opacity-40" />
+              </button>
             </nav>
 
             {/* Bottom Actions */}
