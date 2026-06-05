@@ -5,9 +5,17 @@ import {
   Users, Search, X, DollarSign, ShieldOff, Shield,
   KeyRound, Trash2, RefreshCw, ChevronRight, AlertTriangle,
   MessageSquare, Send, Phone, Globe, Calendar, BadgeCheck,
+  Copy, Check, Mail,
 } from "lucide-react";
 
 const API_URL = "https://mexicatradingbackend.onrender.com/api";
+
+/* Friendly welcome message pre-filled when you WhatsApp a user */
+const waMessage = (name) =>
+  `Hi ${name || "dear"} 👋 Welcome to MexicaTrading! I'm reaching out from our support team. I noticed you recently registered — is there anything I can help you with to get started? We're happy to guide you with funding, investing, or any questions you may have 😊`;
+
+/* Turn a phone number into a clean wa.me format (digits only) */
+const toWaNumber = (phone) => (phone || "").replace(/[^0-9]/g, "");
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -25,6 +33,8 @@ export default function AdminUsers() {
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [msgSubject, setMsgSubject] = useState("");
   const [msgBody, setMsgBody] = useState("");
+
+  const [copied, setCopied] = useState(""); // "phone" | "email" | ""
 
   const token = sessionStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}` };
@@ -58,6 +68,17 @@ export default function AdminUsers() {
   const showMessage = (text, type = "success") => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  };
+
+  /* Copy helper */
+  const copyText = async (text, which) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(which);
+      setTimeout(() => setCopied(""), 1800);
+    } catch {
+      showMessage("Couldn't copy. Please copy manually.", "error");
+    }
   };
 
   const updateBalance = async (type) => {
@@ -221,6 +242,7 @@ export default function AdminUsers() {
                   setAmount("");
                   setMsgSubject("");
                   setMsgBody("");
+                  setCopied("");
                 }}
                   className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-all w-fit">
                   Manage <ChevronRight size={12} />
@@ -256,22 +278,67 @@ export default function AdminUsers() {
                 </button>
               </div>
 
-              {/* USER INFO PANEL */}
-              <div className="grid grid-cols-2 gap-2 mb-5">
+              {/* ── CONTACT: WhatsApp + Email (clickable + copyable) ── */}
+              <div className="space-y-2 mb-4">
+                {/* Phone / WhatsApp */}
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <Phone size={10} /> Phone
+                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1">
+                    <Phone size={10} /> Phone · WhatsApp
                   </p>
-                  <p className="text-white text-xs font-semibold truncate">
-                    {selectedUser.phone || <span className="text-white/30">Not provided</span>}
-                  </p>
+                  {selectedUser.phone ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <a
+                        href={`https://wa.me/${toWaNumber(selectedUser.phone)}?text=${encodeURIComponent(waMessage(selectedUser.name))}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm font-semibold truncate transition">
+                        <MessageSquare size={14} className="shrink-0" />
+                        <span className="truncate">{selectedUser.phone}</span>
+                      </a>
+                      <button onClick={() => copyText(selectedUser.phone, "phone")}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+                        {copied === "phone" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-white/30 text-xs">Not provided</p>
+                  )}
+                  {selectedUser.phone && (
+                    <p className="text-white/25 text-[10px] mt-1.5">Tap the number to message on WhatsApp</p>
+                  )}
                 </div>
+
+                {/* Email */}
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
+                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1">
+                    <Mail size={10} /> Email
+                  </p>
+                  {selectedUser.email ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <a
+                        href={`mailto:${selectedUser.email}?subject=${encodeURIComponent("MexicaTrading Support")}&body=${encodeURIComponent("Hi " + (selectedUser.name || "dear") + ",\n\n")}`}
+                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-semibold truncate transition">
+                        <Mail size={14} className="shrink-0" />
+                        <span className="truncate">{selectedUser.email}</span>
+                      </a>
+                      <button onClick={() => copyText(selectedUser.email, "email")}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+                        {copied === "email" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-white/30 text-xs">Not provided</p>
+                  )}
+                </div>
+              </div>
+
+              {/* USER INFO PANEL (country, joined, status) */}
+              <div className="grid grid-cols-3 gap-2 mb-5">
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
                   <p className="text-white/30 text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
                     <Globe size={10} /> Country
                   </p>
                   <p className="text-white text-xs font-semibold truncate">
-                    {selectedUser.country || <span className="text-white/30">Not provided</span>}
+                    {selectedUser.country || <span className="text-white/30">—</span>}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
@@ -285,7 +352,7 @@ export default function AdminUsers() {
                     <BadgeCheck size={10} /> Status
                   </p>
                   <p className={`text-xs font-semibold ${selectedUser.isVerified ? "text-emerald-400" : "text-yellow-400"}`}>
-                    {selectedUser.isVerified ? "✓ Verified" : "⏳ Unverified"}
+                    {selectedUser.isVerified ? "✓ Verified" : "⏳ Pending"}
                   </p>
                 </div>
               </div>
@@ -337,11 +404,11 @@ export default function AdminUsers() {
                   {selectedUser.freezeWithdrawals ? "Unfreeze Withdrawals" : "Freeze Withdrawals"}
                 </button>
 
-                {/* Send Message */}
+                {/* Send Message (in-app) */}
                 {!showMessageForm ? (
                   <button onClick={() => setShowMessageForm(true)}
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500/15 border border-blue-500/25 text-blue-400 text-sm font-semibold hover:bg-blue-500/25 transition-all">
-                    <MessageSquare size={15} /> Send Message to User
+                    <MessageSquare size={15} /> Send In-App Message
                   </button>
                 ) : (
                   <div className="space-y-2 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
