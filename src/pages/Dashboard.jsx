@@ -6,7 +6,7 @@ import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Calendar, ChevronRight, BarChart2, Clock,
   RefreshCw, X, Gift, Copy, Check, MessageSquare,
-  Sparkles, ArrowUpRight, ArrowDownRight, Eye, EyeOff,
+  Sparkles, ArrowUpRight, ArrowDownRight, Eye, EyeOff, Receipt,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
@@ -506,6 +506,13 @@ export default function Dashboard() {
               className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
               <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
             </button>
+
+            {/* HISTORY — icon only */}
+            <button onClick={() => navigate("/history")} aria-label="Transaction history"
+              className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+              <Receipt size={14} />
+            </button>
+
             <button onClick={() => navigate("/messages")}
               className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
               <MessageSquare size={14} />
@@ -659,12 +666,14 @@ export default function Dashboard() {
         </div>
 
         {/* QUICK ACTIONS */}
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-3 gap-2.5">
           {[
             { icon: <ArrowDownCircle size={18} />, label: L.deposit, path: "/deposit", color: "from-emerald-500/20 to-emerald-500/5 text-emerald-400 border-emerald-500/25" },
             { icon: <TrendingUp size={18} />,      label: L.invest,  path: "/plans",   color: "from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25" },
             { icon: <ArrowUpCircle size={18} />,   label: L.withdraw,path: "/withdraw",color: "from-purple-500/20 to-purple-500/5 text-purple-400 border-purple-500/25" },
+            /* ── Messages quick action — commented out (message icon stays in the header above) ──
             { icon: <MessageSquare size={18} />,   label: L.messages,path: "/messages",color: "from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25", badge: unreadMessages },
+            */
           ].map((action, i) => (
             <button key={i} onClick={() => navigate(action.path)}
               className={`relative aspect-[4/3] rounded-2xl border bg-gradient-to-br ${action.color} hover:scale-[1.02] transition flex flex-col items-center justify-center gap-1.5 group`}>
