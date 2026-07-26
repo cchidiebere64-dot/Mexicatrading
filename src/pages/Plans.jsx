@@ -404,9 +404,9 @@ export default function Plans() {
               style={{background:"linear-gradient(160deg,#0d1525,#080c18)",border:"1px solid rgba(255,255,255,.1)"}}>
 
               {/* Modal header */}
-              <div className="relative px-6 py-5 border-b overflow-hidden" style={{borderColor:"rgba(255,255,255,.07)",background:`linear-gradient(135deg,${style.cardGlow || "rgba(16,185,129,.06)"},transparent)`}}>
+              <div className="relative px-6 py-5 border-b overflow-hidden" style={{borderColor:"rgba(255,255,255,.07)",background:`linear-gradient(135deg,${activeStyle.cardGlow || "rgba(16,185,129,.06)"},transparent)`}}>
                 {/* shimmer line */}
-                <div className="absolute top-0 left-0 right-0 h-[1px]" style={{background:`linear-gradient(90deg,transparent,${activeStyle.accentText.replace("text-","").replace("-400","")},transparent)`}} />
+                <div className="absolute top-0 left-0 right-0 h-[1px]" style={{background:"linear-gradient(90deg,transparent,rgba(16,185,129,.6),transparent)"}} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center ${activeStyle.iconBg}`}>
