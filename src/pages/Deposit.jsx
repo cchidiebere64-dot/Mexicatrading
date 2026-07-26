@@ -214,6 +214,7 @@ export default function Deposit() {
                 <div className="flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/[0.02] p-4">
                   <Info size={14} className="text-white/30 shrink-0 mt-0.5" />
                   <div className="text-[11px] text-white/40 leading-relaxed space-y-1.5">
+                    <p>Your payment will appear on your bank statement as <span className="text-white/70 font-medium">PROWAVE GLOBAL VENTURE</span> — this is our registered payment merchant name.</p>
                     <p>Payments are charged in <span className="text-white/70 font-medium">USD</span>. If your card is in another currency, your bank converts it automatically — the amount on your statement may differ slightly, and your bank may add its own international fee.</p>
                     <p>Use the <span className="text-white/70 font-medium">same email</span> as your MexicaTrading account on the payment page so we can match your payment.</p>
                   </div>
