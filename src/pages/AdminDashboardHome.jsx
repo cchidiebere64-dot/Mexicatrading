@@ -1,35 +1,19 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users, TrendingUp, ArrowDownCircle, ArrowUpCircle,
-  Activity, Clock, RefreshCw, Wrench, CheckCircle, AlertTriangle, X,
+  Users, Package, ArrowDownCircle, ArrowUpCircle,
+  RefreshCw, Wrench, ChevronRight, X,
 } from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, EmptyState, Banner, LedgerRow } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
-
-function StatCard({ label, value, icon, color, prefix = "", delay = 0 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-      className="p-5 rounded-2xl border border-white/8 bg-white/[0.03] hover:border-white/15 transition-all"
-    >
-      <div className="flex items-start justify-between mb-4">
-        <p className="text-white/40 text-xs uppercase tracking-widest font-semibold">{label}</p>
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
-          {icon}
-        </div>
-      </div>
-      <p className="text-2xl font-bold text-white">
-        {prefix}{typeof value === "number" ? value.toLocaleString() : value}
-      </p>
-    </motion.div>
-  );
-}
+const c = T.color;
 
 export default function AdminDashboardHome() {
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState({
     users: 0, plans: 0, deposits: 0, withdrawals: 0,
     pendingDeposits: 0, pendingWithdrawals: 0, recentActivity: [],
@@ -38,7 +22,6 @@ export default function AdminDashboardHome() {
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fix stuck investments state
   const [fixLoading, setFixLoading] = useState(false);
   const [fixResult, setFixResult] = useState(null);
   const [confirmFix, setConfirmFix] = useState(false);
@@ -95,226 +78,210 @@ export default function AdminDashboardHome() {
 
   useEffect(() => { fetchStats(); }, []);
 
-  if (loading)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-        <p className="text-white/30 text-sm animate-pulse">Loading dashboard...</p>
-      </div>
-    );
+  const num = (v) => Number(v || 0).toLocaleString();
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(undefined, {
+    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+  }) : "—";
 
-  if (error)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-red-400 text-sm">{error}</p>
-        <button onClick={fetchStats} className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm hover:bg-emerald-500/30 transition">
-          Retry
-        </button>
+  const pendingTotal = stats.pendingDeposits + stats.pendingWithdrawals;
+
+  if (loading) return (
+    <div className="ui flex flex-col items-center justify-center gap-4" style={{ height: 260 }}>
+      <ThemeStyles />
+      <Spinner size={26} />
+      <p className="mono" style={{ fontSize: T.size.xs, letterSpacing: ".2em", textTransform: "uppercase", color: c.text3 }}>
+        Loading
+      </p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
+      <div style={{ border: `1px solid ${c.line}`, borderLeft: `2px solid ${c.loss}`, padding: T.space.xxl }}>
+        <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: c.loss, marginBottom: 8 }}>
+          Connection
+        </p>
+        <h2 className="display" style={{ fontSize: T.size.xl, marginBottom: 10 }}>Couldn't load the dashboard</h2>
+        <p style={{ fontSize: T.size.sm, color: c.text3, lineHeight: 1.7, marginBottom: T.space.xl }}>{error}</p>
+        <Button variant="outline" onClick={fetchStats}>Try again</Button>
       </div>
-    );
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
         <div>
-          <h1 className="text-xl font-bold text-white">Overview</h1>
-          <p className="text-white/30 text-xs mt-0.5">Real-time platform statistics</p>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Overview</p>
+          <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Dashboard</h1>
         </div>
-        <button
-          onClick={fetchStats}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm transition-all"
-        >
+        <button onClick={fetchStats} disabled={refreshing} aria-label="Refresh"
+          className="flex items-center justify-center shrink-0"
+          style={{ width: 36, height: 36, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
           <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-          Refresh
         </button>
       </div>
 
-      {/* STAT CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Users" value={stats.users} icon={<Users size={16} className="text-blue-400" />} color="bg-blue-500/10 border border-blue-500/20" delay={0} />
-        <StatCard label="Active Plans" value={stats.plans} icon={<TrendingUp size={16} className="text-emerald-400" />} color="bg-emerald-500/10 border border-emerald-500/20" delay={0.1} />
-        <StatCard label="Total Deposits" value={stats.deposits} prefix="$" icon={<ArrowDownCircle size={16} className="text-green-400" />} color="bg-green-500/10 border border-green-500/20" delay={0.2} />
-        <StatCard label="Total Withdrawals" value={stats.withdrawals} prefix="$" icon={<ArrowUpCircle size={16} className="text-red-400" />} color="bg-red-500/10 border border-red-500/20" delay={0.3} />
-      </div>
+      {/* ══ NEEDS YOU ══ */}
+      <div style={{
+        background: c.paper, color: c.paperInk, marginBottom: T.space.xl,
+      }}>
+        <div style={{ height: 3, background: pendingTotal > 0 ? "#A8752F" : "#2F6E48" }} />
+        <div style={{ padding: T.space.xxl }}>
+          <p className="mono" style={{
+            fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase",
+            color: "rgba(14,16,19,.5)", marginBottom: 10,
+          }}>
+            Awaiting your action
+          </p>
 
-      {/* ── MAINTENANCE TOOL: Fix Stuck Investments ────────────────── */}
-      <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
-            <Wrench size={18} className="text-amber-400" />
-          </div>
-          <div className="flex-1">
-            <p className="text-white font-semibold text-sm">Fix Stuck Investments</p>
-            <p className="text-white/40 text-xs mt-0.5 mb-3 leading-relaxed">
-              Credits users whose matured plans never paid out. Safe to run anytime — has double-payment protection.
-            </p>
+          {pendingTotal === 0 ? (
+            <>
+              <h2 className="display" style={{ fontSize: 30, lineHeight: 1.05, marginBottom: 8 }}>
+                Nothing pending
+              </h2>
+              <p style={{ fontSize: T.size.sm, color: "rgba(14,16,19,.6)", lineHeight: 1.7 }}>
+                All deposits and withdrawals are processed.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="display tabular" style={{ fontSize: 44, lineHeight: 1, marginBottom: T.space.lg }}>
+                {pendingTotal} {pendingTotal === 1 ? "request" : "requests"}
+              </h2>
 
-            {!confirmFix && !fixResult && (
-              <button
-                onClick={() => setConfirmFix(true)}
-                className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400 text-xs font-semibold transition flex items-center gap-2"
-              >
-                <Wrench size={12} /> Run Fix Now
-              </button>
-            )}
-
-            {confirmFix && !fixResult && (
-              <div className="space-y-2">
-                <p className="text-amber-400 text-xs font-semibold">⚠️ Are you sure?</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={runFixStuckInvestments}
-                    disabled={fixLoading}
-                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-2"
-                  >
-                    {fixLoading ? (
-                      <><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
-                    ) : (
-                      <>Yes, Run Fix</>
-                    )}
+              <div style={{ borderTop: "1px solid rgba(14,16,19,.14)" }}>
+                {[
+                  ["Deposits to approve", stats.pendingDeposits, "/admin/deposits"],
+                  ["Withdrawals to pay", stats.pendingWithdrawals, "/admin/withdrawals"],
+                ].map(([label, value, path], i) => (
+                  <button key={i} onClick={() => navigate(path)}
+                    className="w-full flex items-center justify-between"
+                    style={{
+                      padding: "12px 0",
+                      borderBottom: i === 0 ? "1px solid rgba(14,16,19,.09)" : "none",
+                      textAlign: "left",
+                    }}>
+                    <span style={{ fontSize: T.size.sm, color: "rgba(14,16,19,.65)" }}>{label}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="mono tabular" style={{
+                        fontSize: T.size.base, fontWeight: 700,
+                        color: value > 0 ? "#A8752F" : "rgba(14,16,19,.35)",
+                      }}>
+                        {value}
+                      </span>
+                      <ChevronRight size={13} style={{ color: "rgba(14,16,19,.35)" }} />
+                    </span>
                   </button>
-                  <button
-                    onClick={() => setConfirmFix(false)}
-                    disabled={fixLoading}
-                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 text-xs font-semibold transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                ))}
               </div>
-            )}
-
-            <AnimatePresence>
-              {fixResult && (
-                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
-                  className={`p-3 rounded-xl border ${fixResult.success ? "bg-emerald-500/10 border-emerald-500/25" : "bg-red-500/10 border-red-500/25"}`}>
-                  <div className="flex items-start gap-2">
-                    {fixResult.success ? <CheckCircle size={14} className="text-emerald-400 mt-0.5 shrink-0" /> : <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />}
-                    <div className="flex-1">
-                      <p className={`text-xs font-bold ${fixResult.success ? "text-emerald-400" : "text-red-400"}`}>
-                        {fixResult.message}
-                      </p>
-                      {fixResult.success && (
-                        <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
-                          <div className="bg-white/5 rounded-lg p-2">
-                            <p className="text-white/40 uppercase tracking-wider font-bold">Total</p>
-                            <p className="text-white font-bold text-sm">{fixResult.totalExpired}</p>
-                          </div>
-                          <div className="bg-emerald-500/10 rounded-lg p-2">
-                            <p className="text-white/40 uppercase tracking-wider font-bold">Fixed</p>
-                            <p className="text-emerald-400 font-bold text-sm">{fixResult.fixed}</p>
-                          </div>
-                          <div className="bg-blue-500/10 rounded-lg p-2">
-                            <p className="text-white/40 uppercase tracking-wider font-bold">Already Paid</p>
-                            <p className="text-blue-400 font-bold text-sm">{fixResult.alreadyPaid}</p>
-                          </div>
-                        </div>
-                      )}
-                      {fixResult.details && fixResult.details.length > 0 && (
-                        <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
-                          {fixResult.details.map((d, i) => (
-                            <div key={i} className="text-[11px] text-white/60 bg-white/5 rounded-lg px-2 py-1 flex justify-between">
-                              <span className="truncate">{d.email}</span>
-                              <span className="text-emerald-400 font-bold">+${d.total}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <button onClick={() => setFixResult(null)} className="mt-2 text-white/40 hover:text-white text-[11px] underline">
-                        Dismiss
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* PENDING ALERTS */}
-      {(stats.pendingDeposits > 0 || stats.pendingWithdrawals > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {stats.pendingDeposits > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-4 p-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/5">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center">
-                <ArrowDownCircle size={18} className="text-yellow-400" />
+      {/* ══ TOTALS ══ */}
+      <p className="eyebrow" style={{ marginBottom: T.space.md }}>Platform</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4" style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+        {[
+          ["Members", num(stats.users), Users, "/admin/users"],
+          ["Plans", num(stats.plans), Package, "/admin/plans"],
+          ["Deposits", num(stats.deposits), ArrowDownCircle, "/admin/deposits"],
+          ["Withdrawals", num(stats.withdrawals), ArrowUpCircle, "/admin/withdrawals"],
+        ].map(([label, value, Icon, path], i) => (
+          <button key={i} onClick={() => navigate(path)}
+            className="text-left hover-fill"
+            style={{
+              padding: T.space.lg,
+              borderLeft: i % 2 === 1 ? `1px solid ${c.line}` : "none",
+              borderTop: i > 1 ? `1px solid ${c.line}` : "none",
+              transition: "background .2s",
+            }}
+            >
+            <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+              <p className="eyebrow">{label}</p>
+              <Icon size={12} style={{ color: c.text4 }} />
+            </div>
+            <p className="mono tabular" style={{ fontSize: T.size.lg, color: c.text }}>{value}</p>
+          </button>
+        ))}
+      </div>
+
+      {/* ══ RECENT ACTIVITY ══ */}
+      <p className="eyebrow" style={{ marginBottom: T.space.md }}>Recent activity</p>
+      {stats.recentActivity.length === 0 ? (
+        <EmptyState icon={<RefreshCw size={20} />} title="No activity yet"
+          text="Deposits, withdrawals and investments will appear here as they happen." />
+      ) : (
+        <div style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+          {stats.recentActivity.slice(0, 10).map((a, i, arr) => (
+            <div key={i}
+              className="flex items-center justify-between gap-3"
+              style={{
+                padding: T.space.lg,
+                borderBottom: i < arr.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+              }}>
+              <div style={{ minWidth: 0 }}>
+                <p className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>
+                  {a.user || a.name || "Member"}
+                </p>
+                <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>
+                  {a.action || a.type || "Activity"}{a.date ? ` · ${fmtDate(a.date)}` : ""}
+                </p>
               </div>
-              <div>
-                <p className="text-yellow-400 font-semibold text-sm">{stats.pendingDeposits} Pending Deposit{stats.pendingDeposits !== 1 ? "s" : ""}</p>
-                <p className="text-white/30 text-xs">Awaiting your approval</p>
-              </div>
-            </motion.div>
-          )}
-          {stats.pendingWithdrawals > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-4 p-4 rounded-2xl border border-orange-500/20 bg-orange-500/5">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center">
-                <ArrowUpCircle size={18} className="text-orange-400" />
-              </div>
-              <div>
-                <p className="text-orange-400 font-semibold text-sm">{stats.pendingWithdrawals} Pending Withdrawal{stats.pendingWithdrawals !== 1 ? "s" : ""}</p>
-                <p className="text-white/30 text-xs">Awaiting your approval</p>
-              </div>
-            </motion.div>
-          )}
+              {a.amount != null && (
+                <span className="mono tabular shrink-0" style={{ fontSize: T.size.sm, color: c.text2 }}>
+                  ${Number(a.amount).toLocaleString()}
+                </span>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* RECENT ACTIVITY */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white/60 uppercase tracking-widest">Recent Activity</h2>
-          <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live
+      {/* ══ MAINTENANCE ══ */}
+      <p className="eyebrow" style={{ marginBottom: T.space.md }}>Maintenance</p>
+
+      {fixResult && (
+        <div style={{ marginBottom: T.space.md }}>
+          <Banner tone={fixResult.success === false ? "loss" : "gain"}
+            title={fixResult.message || "Done"}
+            text={fixResult.fixed != null ? `${fixResult.fixed} investment(s) corrected` : undefined} />
+        </div>
+      )}
+
+      <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg }}>
+        <div className="flex items-start gap-3" style={{ marginBottom: T.space.md }}>
+          <Wrench size={15} style={{ color: c.text3, flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <p style={{ fontSize: T.size.sm, color: c.text }}>Fix stuck investments</p>
+            <p style={{ fontSize: T.size.xs, color: c.text4, marginTop: 3, lineHeight: 1.6 }}>
+              Completes any investment that passed its maturity date without being closed by the cron job.
+            </p>
           </div>
         </div>
 
-        {!stats.recentActivity || stats.recentActivity.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-              <Activity size={20} className="text-white/20" />
-            </div>
-            <p className="text-white/40 text-sm">No recent activity yet</p>
-          </div>
+        {!confirmFix ? (
+          <Button variant="quiet" full onClick={() => setConfirmFix(true)}>
+            Run the fix
+          </Button>
         ) : (
-          <div className="rounded-2xl border border-white/8 overflow-hidden">
-            <div className="grid grid-cols-4 px-4 py-3 bg-white/[0.03] border-b border-white/8">
-              {["User", "Action", "Details", "Time"].map((h) => (
-                <p key={h} className="text-white/30 text-xs font-semibold uppercase tracking-widest">{h}</p>
-              ))}
-            </div>
-            <div className="divide-y divide-white/5">
-              {stats.recentActivity.map((activity, i) => (
-                <motion.div
-                  key={activity._id || i}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="grid grid-cols-4 px-4 py-3.5 hover:bg-white/[0.02] transition-all items-center"
-                >
-                  <p className="text-white text-sm font-medium truncate">{activity?.user?.name || "Unknown"}</p>
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold w-fit ${
-                    activity?.action?.includes("Deposit") ? "bg-emerald-500/15 text-emerald-400"
-                    : activity?.action?.includes("Withdrawal") ? "bg-red-500/15 text-red-400"
-                    : "bg-blue-500/15 text-blue-400"
-                  }`}>
-                    {activity?.action || "N/A"}
-                  </span>
-                  <p className="text-white/40 text-xs truncate pr-4">{activity?.details || "—"}</p>
-                  <div className="flex items-center gap-1.5 text-white/30 text-xs">
-                    <Clock size={11} />
-                    {activity?.createdAt
-                      ? new Date(activity.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-                      : "—"}
-                  </div>
-                </motion.div>
-              ))}
+          <div style={{ border: `1px solid rgba(192,138,62,.3)`, background: "rgba(192,138,62,.05)", padding: T.space.lg }}>
+            <p style={{ fontSize: T.size.sm, color: c.brass, marginBottom: 8 }}>Run now?</p>
+            <p style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.7, marginBottom: T.space.lg }}>
+              This credits matured investments to member balances. Safe to run, but it does move money —
+              only run it if plans are genuinely stuck.
+            </p>
+            <div className="grid grid-cols-2" style={{ gap: 8 }}>
+              <Button variant="quiet" onClick={() => setConfirmFix(false)}>Cancel</Button>
+              <Button onClick={runFixStuckInvestments} disabled={fixLoading}
+                icon={fixLoading ? <Spinner size={12} tone="#fff" /> : <Wrench size={12} />}>
+                {fixLoading ? "Running" : "Run"}
+              </Button>
             </div>
           </div>
         )}
