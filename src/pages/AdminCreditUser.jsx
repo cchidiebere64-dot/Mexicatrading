@@ -1,9 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, DollarSign, ArrowRight, CreditCard } from "lucide-react";
+import { Mail, ArrowRight, CreditCard, AlertTriangle } from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, Banner, inputStyle, LedgerRow } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 export default function AdminCreditUser() {
   const [email, setEmail] = useState("");
@@ -11,6 +13,7 @@ export default function AdminCreditUser() {
   const [type, setType] = useState("credit");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [confirming, setConfirming] = useState(false);
 
   const token = sessionStorage.getItem("adminToken");
 
@@ -19,10 +22,16 @@ export default function AdminCreditUser() {
     setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
 
-  const handleSubmit = async (e) => {
+  const review = (e) => {
     e.preventDefault();
-    setLoading(true);
+    if (!email.trim()) return showMessage("Enter the member's email address.", "error");
+    if (!amount || parseFloat(amount) <= 0) return showMessage("Enter a valid amount.", "error");
+    setMessage({ text: "", type: "" });
+    setConfirming(true);
+  };
 
+  const handleSubmit = async () => {
+    setLoading(true);
     try {
       const res = await axios.post(
         `${API_URL}/api/admin/credit-user`,
@@ -32,151 +41,153 @@ export default function AdminCreditUser() {
       showMessage(res.data?.message || "Balance updated successfully!");
       setEmail("");
       setAmount("");
+      setConfirming(false);
     } catch (error) {
       showMessage(error.response?.data?.error || "Failed to update balance. Try again.", "error");
+      setConfirming(false);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="space-y-6">
+  const money = (v) => Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const isCredit = type === "credit";
 
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-white">Credit / Deduct User</h1>
-        <p className="text-white/30 text-xs mt-0.5">Manually adjust a user's account balance</p>
+  const tabStyle = (active, tone) => ({
+    flex: 1,
+    padding: "13px 0",
+    fontFamily: "'IBM Plex Mono',monospace",
+    fontSize: T.size.tiny,
+    letterSpacing: ".16em",
+    textTransform: "uppercase",
+    background: active ? (tone === "gain" ? "rgba(63,143,95,.1)" : "rgba(180,85,63,.1)") : "transparent",
+    color: active ? (tone === "gain" ? c.gain : c.loss) : c.text3,
+    borderBottom: `2px solid ${active ? (tone === "gain" ? c.gain : c.loss) : "transparent"}`,
+    transition: "color .2s, background .2s",
+  });
+
+  return (
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
+
+      {/* ── Header ── */}
+      <div style={{ marginBottom: T.space.xl }}>
+        <p className="eyebrow" style={{ marginBottom: 6 }}>Manual adjustment</p>
+        <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Credit or deduct</h1>
+        <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 8, lineHeight: 1.7, maxWidth: 420 }}>
+          Adjust a member's balance directly by email address.
+        </p>
       </div>
 
-      <div className="max-w-lg">
+      <div style={{ maxWidth: 460 }}>
 
-        {/* Message */}
-        <AnimatePresence>
-          {message.text && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className={`mb-5 p-4 rounded-xl text-sm text-center font-medium border ${
-                message.type === "success"
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                  : "bg-red-500/10 border-red-500/20 text-red-400"
-              }`}
-            >
-              {message.text}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {message.text && (
+          <div style={{ marginBottom: T.space.lg }}>
+            <Banner tone={message.type === "success" ? "gain" : "loss"} title={message.text} />
+          </div>
+        )}
 
-        {/* Card */}
-        <div className="bg-white/[0.03] border border-white/8 rounded-3xl p-8 space-y-5">
+        {/* ══ CONFIRM ══ */}
+        {confirming ? (
+          <div style={{
+            border: `1px solid ${c.line}`,
+            borderLeft: `2px solid ${isCredit ? c.gain : c.loss}`,
+            padding: T.space.xl,
+          }}>
+            <p className="mono" style={{
+              fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase",
+              color: isCredit ? c.gain : c.loss, marginBottom: 8,
+            }}>
+              Confirm adjustment
+            </p>
+            <h3 className="display" style={{ fontSize: T.size.xl, marginBottom: T.space.lg }}>
+              {isCredit ? "Add" : "Remove"} ${money(amount)}
+            </h3>
 
-          {/* Icon */}
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center">
-              <CreditCard size={20} className="text-blue-400" />
+            <div style={{ borderTop: `1px solid ${c.line}`, marginBottom: T.space.lg }}>
+              <LedgerRow label="Member" value={email} />
+              <LedgerRow label="Action" value={isCredit ? "Credit" : "Deduct"}
+                accent={isCredit ? c.gain : c.loss} />
+              <LedgerRow label="Amount" value={`$${money(amount)}`} last />
             </div>
-            <div>
-              <p className="text-white font-semibold text-sm">Balance Adjustment</p>
-              <p className="text-white/30 text-xs">Credit or deduct from any user account</p>
+
+            <div className="flex items-start gap-2.5"
+              style={{ background: "rgba(192,138,62,.06)", borderLeft: `2px solid ${c.brass}`, padding: T.space.md, marginBottom: T.space.xl }}>
+              <AlertTriangle size={13} style={{ color: c.brass, flexShrink: 0, marginTop: 2 }} />
+              <p style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.65 }}>
+                Check the email carefully. This moves real money and can't be undone from here — you'd have to
+                reverse it manually.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2" style={{ gap: 8 }}>
+              <Button variant="quiet" onClick={() => setConfirming(false)} disabled={loading}>
+                Back
+              </Button>
+              <Button variant={isCredit ? "primary" : "danger"} onClick={handleSubmit} disabled={loading}
+                icon={loading ? <Spinner size={12} tone={isCredit ? "#fff" : c.loss} /> : null}>
+                {loading ? "Working" : isCredit ? "Credit" : "Deduct"}
+              </Button>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+        /* ══ FORM ══ */
+        ) : (
+          <div style={{ border: `1px solid ${c.line}` }}>
 
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                User Email
-              </label>
-              <div className="relative group">
-                <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                <input
-                  type="email"
-                  placeholder="Enter user email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25 text-white"
-                />
-              </div>
+            {/* type tabs */}
+            <div className="flex" style={{ borderBottom: `1px solid ${c.line}` }}>
+              <button type="button" onClick={() => setType("credit")} style={tabStyle(isCredit, "gain")}>
+                Credit
+              </button>
+              <button type="button" onClick={() => setType("deduct")} style={tabStyle(!isCredit, "loss")}>
+                Deduct
+              </button>
             </div>
 
-            {/* Amount */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                Amount (USD)
-              </label>
-              <div className="relative group">
-                <DollarSign size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                <input
-                  type="number"
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                  min="0"
-                  step="0.01"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25 text-white"
-                />
-              </div>
-            </div>
+            <form onSubmit={review} style={{ padding: T.space.xl }}>
 
-            {/* Type Toggle */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                Action Type
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setType("credit")}
-                  className={`py-3 rounded-xl text-sm font-semibold border transition-all ${
-                    type === "credit"
-                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
-                      : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10"
-                  }`}
-                >
-                  + Credit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setType("deduct")}
-                  className={`py-3 rounded-xl text-sm font-semibold border transition-all ${
-                    type === "deduct"
-                      ? "bg-red-500/20 border-red-500/40 text-red-400"
-                      : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10"
-                  }`}
-                >
-                  − Deduct
-                </button>
+              <div style={{ marginBottom: T.space.lg }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>Member email</p>
+                <div style={{ position: "relative" }}>
+                  <Mail size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    placeholder="member@example.com" required
+                    className="mono"
+                    style={{ ...inputStyle, paddingLeft: 38, fontSize: T.size.xs }} />
+                </div>
+                <p style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 6 }}>
+                  Must match their registered address exactly.
+                </p>
               </div>
-            </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`group w-full py-3.5 rounded-xl font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
-                type === "credit"
-                  ? "bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20"
-                  : "bg-red-500 hover:bg-red-400 shadow-red-500/20"
-              }`}
-            >
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  {type === "credit" ? "Credit User" : "Deduct from User"}
-                  <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
-        </div>
+              <div style={{ marginBottom: T.space.xl }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>Amount</p>
+                <div style={{ position: "relative" }}>
+                  <span className="mono" style={{
+                    position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
+                    color: c.text3, fontSize: T.size.base,
+                  }}>$</span>
+                  <input type="number" step="0.01" min="0" value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00" required
+                    className="mono tabular"
+                    style={{ ...inputStyle, paddingLeft: 30, fontSize: T.size.lg }} />
+                </div>
+              </div>
+
+              <Button type="submit" full variant={isCredit ? "primary" : "danger"}
+                icon={<CreditCard size={13} />}>
+                Review {isCredit ? "credit" : "deduction"} <ArrowRight size={13} />
+              </Button>
+            </form>
+          </div>
+        )}
+
+        <p style={{ fontSize: T.size.xs, color: c.text4, lineHeight: 1.7, marginTop: T.space.lg }}>
+          For adjustments tied to a specific member you already have open, the Users page has the same
+          controls without needing to retype an email.
+        </p>
       </div>
     </div>
   );
