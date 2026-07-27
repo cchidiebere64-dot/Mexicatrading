@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  DollarSign, Wallet, ChevronDown, AlertTriangle, ArrowUpCircle, TrendingUp,
-  ShieldCheck, Clock, Plus, Trash2, Check, Lock, ArrowLeft, KeyRound, X,
+  DollarSign, Wallet, ChevronDown, AlertTriangle, TrendingUp,
+  ShieldCheck, Clock, Plus, Trash2, Check, Lock, ArrowLeft, X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import {
+  T, PageShell, Panel, Button, Field, inputStyle,
+  LedgerRow, Banner, EmptyState, Spinner, StatusPill,
+} from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 const METHODS = [
   { value: "USDT", label: "USDT (TRC20)", desc: "Tether on TRON network" },
@@ -36,7 +40,7 @@ export default function Withdraw() {
   const [booting, setBooting] = useState(true);
   const [message, setMessage] = useState({ text: "", type: "", code: "" });
 
-  // add-wallet modal
+  // add-wallet sheet
   const [addOpen, setAddOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newMethod, setNewMethod] = useState("USDT");
@@ -46,7 +50,7 @@ export default function Withdraw() {
   const [addBusy, setAddBusy] = useState(false);
   const [addErr, setAddErr] = useState("");
 
-  // pin setup modal
+  // pin sheet
   const [pinOpen, setPinOpen] = useState(false);
   const [currentPin, setCurrentPin] = useState("");
   const [newPin, setNewPin] = useState("");
@@ -69,9 +73,7 @@ export default function Withdraw() {
     try {
       const res = await axios.get(`${API_URL}/api/withdrawals/fees`, auth);
       if (res.data?.fees) setFees(res.data.fees);
-    } catch {
-      /* fall back to default */
-    }
+    } catch { /* fall back to default */ }
   };
 
   useEffect(() => {
@@ -85,15 +87,15 @@ export default function Withdraw() {
   const fee = selectedWallet ? feeFor(selectedWallet.method) : 0;
   const amt = parseFloat(amount) || 0;
   const net = Math.max(0, +(amt - fee).toFixed(2));
-
+  const money = (v) => Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const shortAddr = (a) => (a && a.length > 16 ? `${a.slice(0, 8)}…${a.slice(-6)}` : a);
 
   /* ── add a saved address ── */
   const addWallet = async () => {
     setAddErr("");
-    if (!newAddress.trim()) return setAddErr("Please enter your wallet address.");
+    if (!newAddress.trim()) return setAddErr("Enter your wallet address.");
     if (newAddress.trim() !== confirmAddress.trim())
-      return setAddErr("The two addresses don't match. Please check carefully.");
+      return setAddErr("The two addresses don't match. Check carefully.");
     setAddBusy(true);
     try {
       const res = await axios.post(`${API_URL}/api/wallets`,
@@ -114,7 +116,7 @@ export default function Withdraw() {
       await axios.delete(`${API_URL}/api/wallets/${id}`, auth);
       if (selectedWallet?._id === id) setSelectedWallet(null);
       loadWallets();
-    } catch (err) {
+    } catch {
       setMessage({ text: "Couldn't remove that address.", type: "error", code: "" });
     }
   };
@@ -143,10 +145,10 @@ export default function Withdraw() {
   const goReview = (e) => {
     e.preventDefault();
     setMessage({ text: "", type: "", code: "" });
-    if (!selectedWallet) return setMessage({ text: "Please choose a withdrawal address.", type: "error", code: "" });
+    if (!selectedWallet) return setMessage({ text: "Choose a withdrawal address.", type: "error", code: "" });
     if (!selectedWallet.isReady)
-      return setMessage({ text: `This address becomes available in about ${selectedWallet.hoursLeft} hour(s).`, type: "error", code: "" });
-    if (!amt || amt <= 0) return setMessage({ text: "Please enter a valid amount.", type: "error", code: "" });
+      return setMessage({ text: `That address becomes available in about ${selectedWallet.hoursLeft} hour(s).`, type: "error", code: "" });
+    if (!amt || amt <= 0) return setMessage({ text: "Enter a valid amount.", type: "error", code: "" });
     if (amt <= fee) return setMessage({ text: `Amount must be more than the $${fee} network fee.`, type: "error", code: "" });
     if (!hasPin) { setPinOpen(true); return; }
     setStep("review");
@@ -179,505 +181,477 @@ export default function Withdraw() {
     }
   };
 
-  /* ══════════ special full-screen states ══════════ */
-  const renderSpecialMessage = () => {
-    const c = message.code;
+  const clearMsg = () => setMessage({ text: "", type: "", code: "" });
 
-    if (c === "NO_BALANCE") return (
-      <Special emoji="💰" title="No Balance Yet"
-        text="You don't have any balance yet. Make your first deposit to start investing and growing your wealth."
-        action={{ label: "Make a Deposit", icon: <DollarSign size={16} />, onClick: () => navigate("/deposit"), cls: "bg-emerald-500 hover:bg-emerald-400" }} />
-    );
+  /* ══════════ special states ══════════ */
+  const renderSpecial = () => {
+    const code = message.code;
 
-    if (c === "NO_INVESTMENT") return (
-      <Special emoji="📈" title="Invest First to Withdraw"
-        text="You have a balance but haven't invested yet. Choose a plan, earn your profits, then withdraw your earnings!"
-        extra={
-          <div className="w-full p-4 rounded-xl bg-blue-500/8 border border-blue-500/20 text-left">
-            <p className="text-blue-400 text-xs font-semibold mb-2">How it works:</p>
-            <div className="space-y-1.5">
-              <p className="text-white/50 text-xs">✅ Choose an investment plan</p>
-              <p className="text-white/50 text-xs">✅ Wait for your plan to mature</p>
-              <p className="text-white/50 text-xs">✅ Withdraw your principal + profit</p>
-            </div>
-          </div>
-        }
-        action={{ label: "Browse Investment Plans", icon: <TrendingUp size={16} />, onClick: () => navigate("/plans"), cls: "bg-blue-500 hover:bg-blue-400" }} />
-    );
+    const map = {
+      NO_BALANCE: {
+        label: "No funds", title: "Nothing to withdraw yet",
+        text: "Make your first deposit to start investing and growing your balance.",
+        action: { label: "Make a deposit", onClick: () => navigate("/deposit") },
+      },
+      NO_INVESTMENT: {
+        label: "Not invested", title: "Invest before withdrawing",
+        text: "You have a balance but haven't invested yet. Choose a plan, earn your profit, then withdraw.",
+        steps: ["Choose an investment plan", "Wait for the plan to mature", "Withdraw principal plus profit"],
+        action: { label: "Browse plans", onClick: () => navigate("/plans") },
+      },
+      INSUFFICIENT_BALANCE: {
+        label: "Balance", title: "Insufficient balance", text: message.text,
+        action: { label: "Make a deposit", onClick: () => navigate("/deposit") },
+        secondary: { label: "Try another amount", onClick: clearMsg },
+      },
+      FROZEN: {
+        label: "Suspended", title: "Withdrawals suspended", text: message.text, tone: "loss",
+        link: { href: "mailto:support@mexicatrading.com", label: "Contact support" },
+      },
+      KYC_REQUIRED: {
+        label: "Verification", title: "Identity verification required", text: message.text,
+        steps: ["A government-issued ID (passport or national ID)", "A selfie holding your ID", "Approval usually within 24 hours"],
+        action: { label: "Verify identity", onClick: () => navigate("/kyc") },
+        secondary: { label: "Withdraw a smaller amount", onClick: clearMsg },
+      },
+      KYC_PENDING: {
+        label: "Under review", title: "Verification in progress",
+        text: "Your documents are being reviewed, usually within 24 hours. We'll email you once approved.",
+        tone: "brass",
+      },
+      KYC_REJECTED: {
+        label: "Rejected", title: "Verification rejected", tone: "loss",
+        text: "Your documents were rejected. Please resubmit clear photos of your ID and selfie.",
+        action: { label: "Resubmit documents", onClick: () => navigate("/kyc") },
+      },
+      NO_PIN: {
+        label: "Security", title: "Set up your withdrawal PIN", text: message.text,
+        action: { label: "Create PIN", onClick: () => { clearMsg(); setPinOpen(true); } },
+      },
+      WALLET_COOLDOWN: {
+        label: "Security hold", title: "Address not ready yet", text: message.text, tone: "brass",
+        secondary: { label: "Back", onClick: clearMsg },
+      },
+    };
 
-    if (c === "INSUFFICIENT_BALANCE") return (
-      <Special emoji="💸" title="Insufficient Balance" text={message.text}
-        action={{ label: "Make a Deposit", icon: <DollarSign size={16} />, onClick: () => navigate("/deposit"), cls: "bg-emerald-500 hover:bg-emerald-400" }}
-        secondary={{ label: "Try a Different Amount", onClick: () => setMessage({ text: "", type: "", code: "" }) }} />
-    );
-
-    if (c === "FROZEN") return (
-      <Special emoji="🔒" title="Withdrawals Suspended" text={message.text}
-        link={{ href: "mailto:support@mexicatrading.com", label: "📧 Contact Support" }} />
-    );
-
-    if (c === "KYC_REQUIRED") return (
-      <Special emoji="🪪" title="Identity Verification Required" text={message.text}
-        extra={
-          <div className="w-full p-4 rounded-xl bg-purple-500/8 border border-purple-500/20 text-left">
-            <p className="text-purple-400 text-xs font-semibold mb-2">What you need:</p>
-            <div className="space-y-1.5">
-              <p className="text-white/50 text-xs">📄 A government-issued ID (passport or national ID)</p>
-              <p className="text-white/50 text-xs">🤳 A selfie holding your ID</p>
-              <p className="text-white/50 text-xs">⚡ Approval takes less than 24 hours</p>
-            </div>
-          </div>
-        }
-        action={{ label: "Verify My Identity", icon: <ShieldCheck size={16} />, onClick: () => navigate("/kyc"), cls: "bg-purple-500 hover:bg-purple-400" }}
-        secondary={{ label: "Withdraw Smaller Amount", onClick: () => setMessage({ text: "", type: "", code: "" }) }} />
-    );
-
-    if (c === "KYC_PENDING") return (
-      <Special emoji="⏳" title="Verification Under Review"
-        text="Your identity documents are being reviewed. This usually takes less than 24 hours. You will receive an email once approved."
-        extra={
-          <div className="w-full p-4 rounded-xl bg-yellow-500/8 border border-yellow-500/20 flex items-center gap-3">
-            <Clock size={16} className="text-yellow-400 shrink-0" />
-            <p className="text-yellow-400/80 text-xs">Contact support@mexicatrading.com for urgent assistance</p>
-          </div>
-        } />
-    );
-
-    if (c === "KYC_REJECTED") return (
-      <Special emoji="❌" title="Verification Rejected"
-        text="Your identity verification was rejected. Please resubmit clear photos of your ID and selfie."
-        action={{ label: "Resubmit Documents", icon: <ShieldCheck size={16} />, onClick: () => navigate("/kyc"), cls: "bg-red-500 hover:bg-red-400" }} />
-    );
-
-    if (c === "NO_PIN") return (
-      <Special emoji="🔐" title="Set Up Your Withdrawal PIN" text={message.text}
-        action={{ label: "Create PIN", icon: <KeyRound size={16} />, onClick: () => { setMessage({ text: "", type: "", code: "" }); setPinOpen(true); }, cls: "bg-emerald-500 hover:bg-emerald-400" }} />
-    );
-
-    if (c === "WALLET_COOLDOWN") return (
-      <Special emoji="⏱️" title="Address Not Ready Yet" text={message.text}
-        secondary={{ label: "Back", onClick: () => setMessage({ text: "", type: "", code: "" }) }} />
-    );
+    const s = map[code] || {
+      label: "Failed", title: "Withdrawal failed", text: message.text, tone: "loss",
+      action: { label: "Try again", onClick: clearMsg },
+    };
+    const fg = { loss: c.loss, brass: c.brass }[s.tone] || c.gain;
 
     return (
-      <Special emoji="⚠️" title="Withdrawal Failed" text={message.text}
-        action={{ label: "Try Again", onClick: () => setMessage({ text: "", type: "", code: "" }), cls: "bg-emerald-500 hover:bg-emerald-400" }} />
+      <Panel>
+        <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: fg, marginBottom: 8 }}>
+          {s.label}
+        </p>
+        <h2 className="display" style={{ fontSize: T.size.xl, marginBottom: 10 }}>{s.title}</h2>
+        <p style={{ fontSize: T.size.sm, color: c.text2, lineHeight: 1.7 }}>{s.text}</p>
+
+        {s.steps && (
+          <div style={{ marginTop: T.space.xl, borderTop: `1px solid ${c.line}` }}>
+            {s.steps.map((step, i) => (
+              <div key={i} className="flex gap-3" style={{ padding: "12px 0", borderBottom: `1px solid ${c.lineSoft}` }}>
+                <span className="mono tabular" style={{ fontSize: T.size.xs, color: fg, minWidth: 16 }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span style={{ fontSize: T.size.sm, color: c.text2 }}>{step}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ marginTop: T.space.xl, display: "flex", flexDirection: "column", gap: 8 }}>
+          {s.action && <Button full onClick={s.action.onClick}>{s.action.label}</Button>}
+          {s.link && (
+            <a href={s.link.href} className="mono"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 22px",
+                fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase",
+                border: `1px solid rgba(180,85,63,.4)`, color: c.loss,
+              }}>
+              {s.link.label}
+            </a>
+          )}
+          {s.secondary && <Button variant="quiet" full onClick={s.secondary.onClick}>{s.secondary.label}</Button>}
+        </div>
+      </Panel>
     );
   };
 
-  return (
-    <div className="min-h-screen bg-[#080c18] text-white flex justify-center items-start pt-24 pb-16 px-4">
+  const sheetWrap = {
+    background: c.panel,
+    border: `1px solid ${c.line}`,
+    maxHeight: "90vh",
+    overflowY: "auto",
+  };
 
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
+  return (
+    <PageShell width={560}>
+
+      {/* ── Header ── */}
+      <div style={{ marginBottom: T.space.xl }}>
+        <p className="eyebrow" style={{ marginBottom: 6 }}>Cash out</p>
+        <h1 className="display" style={{ fontSize: T.size.xxl, lineHeight: 1.05 }}>
+          {t("withdraw.title", "Withdraw")}
+        </h1>
+        <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 8 }}>
+          {t("withdraw.subtitle", "Send funds to a saved address. Processed within 24 hours.")}
+        </p>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative z-10 w-full max-w-lg">
-
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {t("withdraw.secure")}
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("withdraw.title")}</h2>
-          <p className="text-white/40 text-sm mt-2">{t("withdraw.subtitle")}</p>
-        </div>
-
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-
-          {booting ? (
-            <div className="flex justify-center py-10">
-              <div className="w-9 h-9 border-4 border-emerald-500/25 border-t-emerald-400 rounded-full animate-spin" />
+      {booting ? (
+        <Panel>
+          <div className="flex justify-center" style={{ padding: T.space.xxl }}><Spinner size={26} /></div>
+        </Panel>
+      ) : message.code ? (
+        renderSpecial()
+      ) : (
+        <>
+          {message.text && (
+            <div style={{ marginBottom: T.space.lg }}>
+              <Banner tone={message.type === "success" ? "gain" : "loss"} title={message.text} />
             </div>
-          ) : message.code ? (
-            renderSpecialMessage()
-          ) : (
-            <>
-              <AnimatePresence>
-                {message.text && (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    className={`mb-6 p-4 rounded-xl text-sm text-center font-medium border ${
-                      message.type === "success"
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : "bg-red-500/10 border-red-500/20 text-red-400"
-                    }`}>
-                    {message.text}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* ════════ STEP 1 — FORM ════════ */}
-              {step === "form" && (
-                <form onSubmit={goReview} className="space-y-5">
-
-                  {/* Saved addresses */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Withdraw To</label>
-                      <button type="button" onClick={() => setAddOpen(true)}
-                        className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition">
-                        <Plus size={12} /> Add Address
-                      </button>
-                    </div>
-
-                    {wallets.length === 0 ? (
-                      <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-6 text-center">
-                        <Wallet size={22} className="text-white/20 mx-auto mb-2" />
-                        <p className="text-white/50 text-sm mb-1">No saved addresses</p>
-                        <p className="text-white/25 text-xs mb-4">
-                          For your security, withdrawals only go to addresses you've saved.
-                        </p>
-                        <button type="button" onClick={() => setAddOpen(true)}
-                          className="px-5 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/25 transition">
-                          Add Your First Address
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {wallets.map((w) => {
-                          const active = selectedWallet?._id === w._id;
-                          return (
-                            <div key={w._id}
-                              onClick={() => w.isReady && setSelectedWallet(w)}
-                              className={`rounded-2xl border p-4 transition-all ${
-                                !w.isReady
-                                  ? "border-white/8 bg-white/[0.02] opacity-60 cursor-not-allowed"
-                                  : active
-                                    ? "border-emerald-500/40 bg-emerald-500/10 cursor-pointer"
-                                    : "border-white/8 bg-white/[0.02] hover:border-white/20 cursor-pointer"
-                              }`}>
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-semibold text-white truncate">{w.label}</p>
-                                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/8 border border-white/10 text-white/50 font-bold uppercase tracking-wider shrink-0">
-                                      {w.method}
-                                    </span>
-                                    {active && <Check size={13} className="text-emerald-400 shrink-0" />}
-                                  </div>
-                                  <p className="text-[11px] font-mono text-white/35 truncate">{shortAddr(w.address)}</p>
-                                  {!w.isReady && (
-                                    <p className="text-[10px] text-yellow-400/80 mt-1.5 flex items-center gap-1">
-                                      <Clock size={9} /> Available in ~{w.hoursLeft}h (security hold)
-                                    </p>
-                                  )}
-                                </div>
-                                <button type="button"
-                                  onClick={(e) => { e.stopPropagation(); removeWallet(w._id); }}
-                                  className="shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-red-400 transition">
-                                  <Trash2 size={13} />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Amount */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">{t("withdraw.amount")}</label>
-                    <div className="relative group">
-                      <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                      <input type="number" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00"
-                        className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25"
-                        required />
-                    </div>
-                  </div>
-
-                  {/* Live fee preview */}
-                  {selectedWallet && amt > 0 && (
-                    <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4 space-y-2">
-                      <Row label="Amount" value={`$${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
-                      <Row label={`Network fee (${selectedWallet.method})`} value={`−$${fee.toFixed(2)}`} />
-                      <div className="pt-2 border-t border-white/8">
-                        <Row label="You receive" value={`$${net.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} bold />
-                      </div>
-                      <p className="text-[10px] text-white/25 pt-1">
-                        MexicaTrading charges no withdrawal fee — this is the blockchain network cost only.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex items-start gap-3 p-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/5">
-                    <AlertTriangle size={15} className="text-yellow-400 mt-0.5 shrink-0" />
-                    <p className="text-white/40 text-xs leading-relaxed">
-                      Crypto transfers cannot be reversed. Double-check your address before confirming — funds sent to a wrong address are lost permanently.
-                    </p>
-                  </div>
-
-                  <button type="submit"
-                    className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
-                    <ArrowUpCircle size={16} /> Continue
-                  </button>
-
-                  {/* PIN status */}
-                  <button type="button" onClick={() => setPinOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 text-[11px] text-white/30 hover:text-white/60 transition pt-1">
-                    <Lock size={11} />
-                    {hasPin ? "Change withdrawal PIN" : "Set up withdrawal PIN"}
-                  </button>
-                </form>
-              )}
-
-              {/* ════════ STEP 2 — REVIEW ════════ */}
-              {step === "review" && selectedWallet && (
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
-                  <button onClick={() => setStep("form")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition">
-                    <ArrowLeft size={14} /> Back
-                  </button>
-
-                  <div className="text-center">
-                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">You will receive</p>
-                    <p className="text-4xl font-bold text-emerald-400">${net.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-5 space-y-3">
-                    <Row label="Amount" value={`$${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
-                    <Row label="Network fee" value={`−$${fee.toFixed(2)}`} />
-                    <Row label="Method" value={selectedWallet.method} />
-                    <Row label="To" value={selectedWallet.label} />
-                    <div className="pt-3 border-t border-white/8">
-                      <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1.5">Address</p>
-                      <p className="font-mono text-xs text-white/70 break-all leading-relaxed">{selectedWallet.address}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/5">
-                    <AlertTriangle size={15} className="text-yellow-400 mt-0.5 shrink-0" />
-                    <p className="text-white/45 text-xs leading-relaxed">
-                      Check the first and last characters of the address above against your wallet. This cannot be undone.
-                    </p>
-                  </div>
-
-                  <button onClick={() => setStep("pin")}
-                    className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20">
-                    Confirm Details
-                  </button>
-                </motion.div>
-              )}
-
-              {/* ════════ STEP 3 — PIN ════════ */}
-              {step === "pin" && (
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
-                  <button onClick={() => setStep("review")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition">
-                    <ArrowLeft size={14} /> Back
-                  </button>
-
-                  <div className="text-center py-2">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                      <Lock size={22} className="text-emerald-400" />
-                    </div>
-                    <p className="text-white font-bold mb-1">Enter your withdrawal PIN</p>
-                    <p className="text-white/40 text-xs">Confirming ${net.toFixed(2)} to {selectedWallet?.label}</p>
-                  </div>
-
-                  <input type="password" inputMode="numeric" maxLength={6} value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                    placeholder="••••"
-                    className="w-full py-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-center text-2xl tracking-[0.5em] font-bold placeholder:text-white/20" />
-
-                  <button onClick={submit} disabled={loading || pin.length < 4}
-                    className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
-                    {loading
-                      ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Submitting…</>
-                      : <><ArrowUpCircle size={16} /> Submit Withdrawal</>}
-                  </button>
-                </motion.div>
-              )}
-            </>
           )}
-        </div>
 
-        <div className="flex items-center justify-center gap-6 mt-6 text-white/20 text-xs">
-          <span>🔒 {t("common.sslSecured")}</span>
-          <span>·</span>
-          <span>⚡ {t("common.fastProcessing")}</span>
-          <span>·</span>
-          <span>🛡️ {t("common.fundsProtected")}</span>
-        </div>
-      </motion.div>
+          {/* ════════ STEP 1 — FORM ════════ */}
+          {step === "form" && (
+            <form onSubmit={goReview}>
 
-      {/* ════════ ADD ADDRESS MODAL ════════ */}
-      <AnimatePresence>
-        {addOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4">
-            <div className="absolute inset-0" onClick={() => setAddOpen(false)} />
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              className="relative w-full sm:max-w-md bg-[#0e1422] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 z-10 shadow-2xl max-h-[90vh] overflow-y-auto">
-
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold">Add Withdrawal Address</h3>
-                <button onClick={() => setAddOpen(false)} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition">
-                  <X size={15} />
+              {/* Saved addresses */}
+              <div className="flex items-end justify-between" style={{ marginBottom: T.space.md }}>
+                <div>
+                  <p className="eyebrow" style={{ marginBottom: 4 }}>Destination</p>
+                  <h3 className="display" style={{ fontSize: T.size.lg }}>Saved addresses</h3>
+                </div>
+                <button type="button" onClick={() => setAddOpen(true)}
+                  className="mono flex items-center gap-1"
+                  style={{ fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase", color: c.gain }}>
+                  <Plus size={12} /> Add
                 </button>
               </div>
 
-              {addErr && (
-                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">{addErr}</div>
+              {wallets.length === 0 ? (
+                <EmptyState
+                  icon={<Wallet size={20} />}
+                  title="No saved addresses"
+                  text="For your security, withdrawals only go to addresses you've saved in advance."
+                  action={{ label: "Add your first address", onClick: () => setAddOpen(true) }}
+                />
+              ) : (
+                <div style={{ border: `1px solid ${c.line}` }}>
+                  {wallets.map((w, i) => {
+                    const active = selectedWallet?._id === w._id;
+                    return (
+                      <div key={w._id}
+                        onClick={() => w.isReady && setSelectedWallet(w)}
+                        className={w.isReady ? "hover-fill" : ""}
+                        style={{
+                          padding: T.space.lg,
+                          borderBottom: i < wallets.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                          borderLeft: active ? `2px solid ${c.gain}` : "2px solid transparent",
+                          background: active ? "rgba(63,143,95,.07)" : "transparent",
+                          opacity: w.isReady ? 1 : 0.5,
+                          cursor: w.isReady ? "pointer" : "not-allowed",
+                          transition: "background .2s",
+                        }}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div className="flex items-center gap-2" style={{ marginBottom: 4 }}>
+                              <span style={{ fontSize: T.size.sm, color: c.text }} className="truncate">{w.label}</span>
+                              <StatusPill tone={active ? "gain" : "neutral"}>{w.method}</StatusPill>
+                              {active && <Check size={13} style={{ color: c.gain, flexShrink: 0 }} />}
+                            </div>
+                            <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4 }}>
+                              {shortAddr(w.address)}
+                            </p>
+                            {!w.isReady && (
+                              <p className="mono flex items-center gap-1" style={{ fontSize: T.size.tiny, color: c.brass, marginTop: 6 }}>
+                                <Clock size={9} /> Security hold — available in ~{w.hoursLeft}h
+                              </p>
+                            )}
+                          </div>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); removeWallet(w._id); }}
+                            aria-label="Remove address"
+                            className="w-8 h-8 flex items-center justify-center shrink-0"
+                            style={{ background: c.fill, color: c.text4 }}>
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
 
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Label</label>
-                  <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="e.g. My Binance USDT"
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Method</label>
-                  <div className="relative">
-                    <button type="button" onClick={() => setMethodOpen(!methodOpen)}
-                      className="w-full text-left px-4 py-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between text-sm">
-                      <div className="flex flex-col">
-                        <span className="text-white font-medium">{METHODS.find(m => m.value === newMethod)?.label}</span>
-                        <span className="text-white/30 text-xs">{METHODS.find(m => m.value === newMethod)?.desc}</span>
-                      </div>
-                      <ChevronDown size={16} className={`text-white/25 transition-transform ${methodOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    <AnimatePresence>
-                      {methodOpen && (
-                        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                          className="absolute top-full mt-2 w-full bg-[#0e1422] border border-white/10 rounded-2xl overflow-hidden z-20 shadow-2xl">
-                          {METHODS.map((m) => (
-                            <button key={m.value} type="button" onClick={() => { setNewMethod(m.value); setMethodOpen(false); }}
-                              className={`w-full text-left px-4 py-3 flex flex-col gap-0.5 hover:bg-white/5 transition border-b border-white/5 last:border-0 ${newMethod === m.value ? "bg-emerald-500/10" : ""}`}>
-                              <span className={`text-sm font-medium ${newMethod === m.value ? "text-emerald-400" : "text-white"}`}>{m.label}</span>
-                              <span className="text-white/30 text-xs">{m.desc}</span>
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+              {/* Amount */}
+              <div style={{ marginTop: T.space.xl }}>
+                <Field label={t("withdraw.amount", "Amount")}>
+                  <div style={{ position: "relative" }}>
+                    <span className="mono" style={{
+                      position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
+                      color: c.text3, fontSize: T.size.base,
+                    }}>$</span>
+                    <input type="number" inputMode="decimal" value={amount}
+                      onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required
+                      className="mono tabular"
+                      style={{ ...inputStyle, paddingLeft: 30, fontSize: T.size.lg }}
+                      onFocus={(e) => (e.target.style.borderColor = "rgba(63,143,95,.5)")}
+                      onBlur={(e) => (e.target.style.borderColor = c.line)} />
                   </div>
-                </div>
+                </Field>
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Address</label>
-                  <input value={newAddress} onChange={(e) => setNewAddress(e.target.value)}
-                    placeholder={newMethod === "Bank" ? "Account number" : "Paste your wallet address"}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm font-mono placeholder:text-white/25" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Confirm Address</label>
-                  <input value={confirmAddress} onChange={(e) => setConfirmAddress(e.target.value)}
-                    placeholder="Paste it again"
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm font-mono placeholder:text-white/25" />
-                  {newAddress && confirmAddress && newAddress.trim() === confirmAddress.trim() && (
-                    <p className="text-emerald-400 text-[11px] flex items-center gap-1"><Check size={11} /> Addresses match</p>
-                  )}
-                </div>
-
-                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-yellow-500/5 border border-yellow-500/20">
-                  <Clock size={14} className="text-yellow-400 shrink-0 mt-0.5" />
-                  <p className="text-white/40 text-[11px] leading-relaxed">
-                    For your security, this address can't be used for withdrawals for <span className="text-white/70 font-medium">{cooldownHours} hours</span> after saving. This protects your funds if your account is ever compromised.
+              {/* Fee preview */}
+              {selectedWallet && amt > 0 && (
+                <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg, marginBottom: T.space.lg }}>
+                  <LedgerRow label="Amount" value={`$${money(amt)}`} />
+                  <LedgerRow label={`Network fee · ${selectedWallet.method}`} value={`−$${money(fee)}`} />
+                  <LedgerRow label="You receive" value={`$${money(net)}`} accent={c.gain} last />
+                  <p style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 10, lineHeight: 1.6 }}>
+                    MexicaTrading charges no withdrawal fee. This is the blockchain network cost only.
                   </p>
                 </div>
+              )}
 
-                <button onClick={addWallet} disabled={addBusy}
-                  className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 transition-all font-semibold text-sm flex items-center justify-center gap-2">
-                  {addBusy ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving…</> : "Save Address"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ════════ PIN MODAL ════════ */}
-      <AnimatePresence>
-        {pinOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4">
-            <div className="absolute inset-0" onClick={() => setPinOpen(false)} />
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              className="relative w-full sm:max-w-sm bg-[#0e1422] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 z-10 shadow-2xl">
-
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold">{hasPin ? "Change PIN" : "Set Withdrawal PIN"}</h3>
-                <button onClick={() => setPinOpen(false)} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition">
-                  <X size={15} />
-                </button>
+              <div style={{ marginBottom: T.space.lg }}>
+                <Banner tone="brass" title="Crypto transfers cannot be reversed"
+                  text="Check your address carefully — funds sent to a wrong address are lost permanently." />
               </div>
 
-              <p className="text-white/40 text-xs mb-5 leading-relaxed">
-                Your PIN is required every time you withdraw. Choose 4–6 digits you'll remember, and don't share it with anyone — our team will never ask for it.
+              <Button type="submit" full>Continue</Button>
+
+              <button type="button" onClick={() => setPinOpen(true)}
+                className="mono w-full flex items-center justify-center gap-2"
+                style={{ marginTop: T.space.md, fontSize: T.size.tiny, letterSpacing: ".12em", textTransform: "uppercase", color: c.text4, padding: 8 }}>
+                <Lock size={11} /> {hasPin ? "Change withdrawal PIN" : "Set up withdrawal PIN"}
+              </button>
+            </form>
+          )}
+
+          {/* ════════ STEP 2 — REVIEW ════════ */}
+          {step === "review" && selectedWallet && (
+            <>
+              <button onClick={() => setStep("form")}
+                className="mono flex items-center gap-2"
+                style={{ fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase", color: c.text3, marginBottom: T.space.lg }}>
+                <ArrowLeft size={12} /> Back
+              </button>
+
+              <Panel>
+                <p className="eyebrow" style={{ marginBottom: 8 }}>You will receive</p>
+                <p className="display tabular" style={{ fontSize: 42, color: c.gain, lineHeight: 1, marginBottom: T.space.xl }}>
+                  ${money(net)}
+                </p>
+
+                <div style={{ borderTop: `1px solid ${c.line}` }}>
+                  <LedgerRow label="Amount" value={`$${money(amt)}`} />
+                  <LedgerRow label="Network fee" value={`−$${money(fee)}`} />
+                  <LedgerRow label="Method" value={selectedWallet.method} />
+                  <LedgerRow label="Destination" value={selectedWallet.label} last />
+                </div>
+
+                <div style={{ marginTop: T.space.lg, paddingTop: T.space.lg, borderTop: `1px solid ${c.line}` }}>
+                  <p className="eyebrow" style={{ marginBottom: 8 }}>Address</p>
+                  <p className="mono" style={{ fontSize: T.size.xs, color: c.text2, wordBreak: "break-all", lineHeight: 1.8 }}>
+                    {selectedWallet.address}
+                  </p>
+                </div>
+              </Panel>
+
+              <div style={{ marginTop: T.space.lg, marginBottom: T.space.lg }}>
+                <Banner tone="brass" title="Check the address before confirming"
+                  text="Compare the first and last characters against your wallet. This cannot be undone." />
+              </div>
+
+              <Button full onClick={() => setStep("pin")}>Confirm details</Button>
+            </>
+          )}
+
+          {/* ════════ STEP 3 — PIN ════════ */}
+          {step === "pin" && (
+            <>
+              <button onClick={() => setStep("review")}
+                className="mono flex items-center gap-2"
+                style={{ fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase", color: c.text3, marginBottom: T.space.lg }}>
+                <ArrowLeft size={12} /> Back
+              </button>
+
+              <Panel>
+                <p className="eyebrow" style={{ marginBottom: 8 }}>Authorise</p>
+                <h2 className="display" style={{ fontSize: T.size.xl, marginBottom: 6 }}>Enter your PIN</h2>
+                <p style={{ fontSize: T.size.sm, color: c.text3, marginBottom: T.space.xl }}>
+                  Confirming <span className="mono tabular" style={{ color: c.gain }}>${money(net)}</span> to {selectedWallet?.label}
+                </p>
+
+                <input type="password" inputMode="numeric" maxLength={6} value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} placeholder="••••"
+                  className="mono tabular"
+                  style={{ ...inputStyle, textAlign: "center", fontSize: 26, letterSpacing: ".5em", padding: "18px 14px" }}
+                  onFocus={(e) => (e.target.style.borderColor = "rgba(63,143,95,.5)")}
+                  onBlur={(e) => (e.target.style.borderColor = c.line)} />
+
+                <Button full onClick={submit} disabled={loading || pin.length < 4}
+                  style={{ marginTop: T.space.lg, opacity: loading || pin.length < 4 ? .5 : 1 }}
+                  icon={loading ? <Spinner size={13} tone="#fff" /> : null}>
+                  {loading ? "Submitting" : "Submit withdrawal"}
+                </Button>
+              </Panel>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ── Trust strip ── */}
+      <div className="flex items-center justify-center gap-5 mono"
+        style={{ marginTop: T.space.xl, fontSize: T.size.micro, letterSpacing: ".14em", textTransform: "uppercase", color: c.text4 }}>
+        <span>PIN protected</span>
+        <span>·</span>
+        <span>Saved addresses only</span>
+        <span>·</span>
+        <span>24h processing</span>
+      </div>
+
+      {/* ════════ ADD ADDRESS SHEET ════════ */}
+      {addOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(8,9,11,.86)" }}>
+          <div className="absolute inset-0" onClick={() => setAddOpen(false)} />
+          <div className="relative w-full sm:max-w-md z-10" style={sheetWrap}>
+
+            <div className="flex items-center justify-between" style={{ padding: T.space.xl, borderBottom: `1px solid ${c.line}` }}>
+              <div>
+                <p className="eyebrow" style={{ marginBottom: 4 }}>New destination</p>
+                <h3 className="display" style={{ fontSize: T.size.lg }}>Add address</h3>
+              </div>
+              <button onClick={() => setAddOpen(false)} className="w-8 h-8 flex items-center justify-center"
+                style={{ background: c.fill, color: c.text3 }}>
+                <X size={14} />
+              </button>
+            </div>
+
+            <div style={{ padding: T.space.xl }}>
+              {addErr && (
+                <div style={{ marginBottom: T.space.lg }}>
+                  <Banner tone="loss" title={addErr} />
+                </div>
+              )}
+
+              <Field label="Label">
+                <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)}
+                  placeholder="e.g. My Binance USDT" style={inputStyle} />
+              </Field>
+
+              <Field label="Network">
+                <div style={{ position: "relative" }}>
+                  <button type="button" onClick={() => setMethodOpen(!methodOpen)}
+                    className="w-full flex items-center justify-between" style={{ ...inputStyle, textAlign: "left" }}>
+                    <span style={{ fontSize: T.size.sm }}>{METHODS.find(m => m.value === newMethod)?.label}</span>
+                    <ChevronDown size={15} style={{ color: c.text4, transform: methodOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+                  </button>
+                  {methodOpen && (
+                    <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20, background: c.panelAlt, border: `1px solid ${c.line}`, marginTop: 2 }}>
+                      {METHODS.map((m, i) => (
+                        <button key={m.value} type="button"
+                          onClick={() => { setNewMethod(m.value); setMethodOpen(false); }}
+                          className="w-full text-left hover-fill"
+                          style={{
+                            padding: T.space.md,
+                            borderBottom: i < METHODS.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                            background: newMethod === m.value ? "rgba(63,143,95,.08)" : "transparent",
+                          }}>
+                          <p style={{ fontSize: T.size.sm, color: newMethod === m.value ? c.gain : c.text }}>{m.label}</p>
+                          <p style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>{m.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Field>
+
+              <Field label="Address">
+                <input value={newAddress} onChange={(e) => setNewAddress(e.target.value)}
+                  placeholder={newMethod === "Bank" ? "Account number" : "Paste your wallet address"}
+                  className="mono" style={{ ...inputStyle, fontSize: T.size.xs }} />
+              </Field>
+
+              <Field label="Confirm address"
+                hint={newAddress && confirmAddress && newAddress.trim() === confirmAddress.trim() ? "Addresses match" : "Paste it a second time"}>
+                <input value={confirmAddress} onChange={(e) => setConfirmAddress(e.target.value)}
+                  placeholder="Paste it again"
+                  className="mono" style={{ ...inputStyle, fontSize: T.size.xs }} />
+              </Field>
+
+              <div style={{ marginBottom: T.space.lg }}>
+                <Banner tone="brass" title={`${cooldownHours}-hour security hold`}
+                  text="New addresses can't be used for withdrawals until the hold clears. This protects your funds if your account is compromised." />
+              </div>
+
+              <Button full onClick={addWallet} disabled={addBusy}
+                icon={addBusy ? <Spinner size={13} tone="#fff" /> : null}>
+                {addBusy ? "Saving" : "Save address"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════ PIN SHEET ════════ */}
+      {pinOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(8,9,11,.86)" }}>
+          <div className="absolute inset-0" onClick={() => setPinOpen(false)} />
+          <div className="relative w-full sm:max-w-sm z-10" style={sheetWrap}>
+
+            <div className="flex items-center justify-between" style={{ padding: T.space.xl, borderBottom: `1px solid ${c.line}` }}>
+              <div>
+                <p className="eyebrow" style={{ marginBottom: 4 }}>Security</p>
+                <h3 className="display" style={{ fontSize: T.size.lg }}>{hasPin ? "Change PIN" : "Set PIN"}</h3>
+              </div>
+              <button onClick={() => setPinOpen(false)} className="w-8 h-8 flex items-center justify-center"
+                style={{ background: c.fill, color: c.text3 }}>
+                <X size={14} />
+              </button>
+            </div>
+
+            <div style={{ padding: T.space.xl }}>
+              <p style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.7, marginBottom: T.space.lg }}>
+                Your PIN is required for every withdrawal. Choose 4–6 digits you'll remember. Our team will never ask you for it.
               </p>
 
               {pinErr && (
-                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">{pinErr}</div>
+                <div style={{ marginBottom: T.space.lg }}>
+                  <Banner tone="loss" title={pinErr} />
+                </div>
               )}
 
-              <div className="space-y-3">
-                {hasPin && (
+              {hasPin && (
+                <Field label="Current PIN">
                   <input type="password" inputMode="numeric" maxLength={6} value={currentPin}
-                    onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ""))} placeholder="Current PIN"
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm text-center tracking-widest placeholder:text-white/25" />
-                )}
+                    onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ""))}
+                    className="mono" style={{ ...inputStyle, textAlign: "center", letterSpacing: ".3em" }} />
+                </Field>
+              )}
+
+              <Field label="New PIN">
                 <input type="password" inputMode="numeric" maxLength={6} value={newPin}
-                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))} placeholder="New PIN (4–6 digits)"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm text-center tracking-widest placeholder:text-white/25" />
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="4–6 digits"
+                  className="mono" style={{ ...inputStyle, textAlign: "center", letterSpacing: ".3em" }} />
+              </Field>
+
+              <Field label="Confirm PIN">
                 <input type="password" inputMode="numeric" maxLength={6} value={confirmPin}
-                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))} placeholder="Confirm PIN"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm text-center tracking-widest placeholder:text-white/25" />
+                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))}
+                  className="mono" style={{ ...inputStyle, textAlign: "center", letterSpacing: ".3em" }} />
+              </Field>
 
-                <button onClick={savePin} disabled={pinBusy}
-                  className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 transition-all font-semibold text-sm flex items-center justify-center gap-2">
-                  {pinBusy ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving…</> : "Save PIN"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ── small helpers ── */
-function Row({ label, value, bold }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className={`text-xs ${bold ? "text-white/60" : "text-white/35"}`}>{label}</span>
-      <span className={bold ? "text-emerald-400 font-bold text-base" : "text-white/80 text-sm font-medium"}>{value}</span>
-    </div>
-  );
-}
-
-function Special({ emoji, title, text, extra, action, secondary, link }) {
-  return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-      className="flex flex-col items-center text-center gap-5 py-4">
-      <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl">{emoji}</div>
-      <div>
-        <p className="text-white font-bold text-lg mb-2">{title}</p>
-        <p className="text-white/50 text-sm leading-relaxed">{text}</p>
-      </div>
-      {extra}
-      {action && (
-        <button onClick={action.onClick}
-          className={`w-full py-3.5 rounded-xl transition-all font-semibold text-sm text-white flex items-center justify-center gap-2 ${action.cls}`}>
-          {action.icon} {action.label}
-        </button>
+              <Button full onClick={savePin} disabled={pinBusy}
+                icon={pinBusy ? <Spinner size={13} tone="#fff" /> : null}>
+                {pinBusy ? "Saving" : "Save PIN"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
-      {link && (
-        <a href={link.href}
-          className="w-full py-3.5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 hover:bg-red-500/25 transition-all font-semibold text-sm flex items-center justify-center gap-2">
-          {link.label}
-        </a>
-      )}
-      {secondary && (
-        <button onClick={secondary.onClick}
-          className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/40 hover:text-white">
-          {secondary.label}
-        </button>
-      )}
-    </motion.div>
+    </PageShell>
   );
 }
