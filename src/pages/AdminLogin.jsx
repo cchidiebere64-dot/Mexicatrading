@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, Banner, inputStyle } from "./system.jsx";
+
+const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -12,7 +16,6 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const API_URL = "https://mexicatradingbackend.onrender.com";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,10 +23,7 @@ export default function AdminLogin() {
     setError("");
 
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, {
-        email,
-        password,
-      });
+      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
 
       if (res.data?.token && (res.data?.isAdmin || res.data?.role === "admin")) {
         sessionStorage.setItem("adminToken", res.data.token);
@@ -46,130 +46,95 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4">
+    <div className="ui min-h-screen flex items-center justify-center px-4 py-16"
+      style={{ background: c.ink, color: c.text }}>
+      <ThemeStyles />
 
-      {/* AMBIENT BACKGROUND */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-200px]" />
-        <div className="absolute w-[400px] h-[400px] bg-blue-500/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
-      </div>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: .5, ease: [.22, 1, .36, 1] }}
+        className="w-full" style={{ maxWidth: 380 }}>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative w-full max-w-md"
-      >
-        {/* CARD */}
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl">
-
-          {/* HEADER */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5">
-              <ShieldCheck size={28} className="text-emerald-400" />
-            </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Admin Access Only
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight mb-1">Admin Portal</h2>
-            <p className="text-white/40 text-sm">MexicaTrading Operations Center</p>
+        {/* ── Header ── */}
+        <div style={{ marginBottom: T.space.xl }}>
+          <div className="flex items-center gap-2" style={{ marginBottom: T.space.lg }}>
+            <ShieldCheck size={15} style={{ color: c.brass }} />
+            <span className="mono" style={{
+              fontSize: T.size.micro, letterSpacing: ".24em",
+              textTransform: "uppercase", color: c.brass,
+            }}>
+              Restricted access
+            </span>
           </div>
 
-          {/* ERROR */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-6 text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 p-3 rounded-xl"
-              >
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* FORM */}
-          <form onSubmit={handleLogin} className="space-y-4">
-
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                Admin Email
-              </label>
-              <div className="relative group">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                <input
-                  type="email"
-                  placeholder="Enter admin email"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="username"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                Password
-              </label>
-              <div className="relative group">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter admin password"
-                  className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
-                >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2"
-            >
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Authenticating...
-                </>
-              ) : (
-                <>
-                  Access Admin Panel
-                  <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
+          <h1 className="display" style={{ fontSize: 34, lineHeight: 1.05 }}>
+            Administrator
+          </h1>
+          <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 10, lineHeight: 1.7 }}>
+            This area manages member funds. Sign in with your administrator account.
+          </p>
         </div>
 
-        {/* SECURITY NOTE */}
-        <div className="flex items-center justify-center gap-2 mt-6 text-white/20 text-xs">
-          <ShieldCheck size={12} />
-          <span>Restricted access — authorized personnel only</span>
+        {error && (
+          <div style={{ marginBottom: T.space.lg }}>
+            <Banner tone="loss" title={error} />
+          </div>
+        )}
+
+        <form onSubmit={handleLogin}>
+
+          <div style={{ marginBottom: T.space.md }}>
+            <p className="eyebrow" style={{ marginBottom: 6 }}>Email</p>
+            <div style={{ position: "relative" }}>
+              <Mail size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@mexicatrading.com"
+                required autoFocus autoComplete="username"
+                style={{ ...inputStyle, paddingLeft: 38 }} />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: T.space.lg }}>
+            <p className="eyebrow" style={{ marginBottom: 6 }}>Password</p>
+            <div style={{ position: "relative" }}>
+              <Lock size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+              <input type={showPassword ? "text" : "password"} value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required autoComplete="current-password"
+                style={{ ...inputStyle, paddingLeft: 38, paddingRight: 44 }} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: c.text4, padding: 4 }}>
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+          </div>
+
+          <Button type="submit" full disabled={loading}
+            style={{ opacity: loading ? .6 : 1 }}
+            icon={loading ? <Spinner size={13} tone="#fff" /> : null}>
+            {loading ? "Verifying" : "Sign in"}
+            {!loading && <ArrowRight size={13} />}
+          </Button>
+        </form>
+
+        {/* ── Security note ── */}
+        <div style={{
+          border: `1px solid ${c.line}`, borderLeft: `2px solid ${c.brass}`,
+          padding: T.space.lg, marginTop: T.space.xl,
+        }}>
+          <p className="eyebrow" style={{ marginBottom: 8 }}>Protected</p>
+          <p style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.7 }}>
+            Five failed attempts lock the account for 30 minutes. Sign-ins from an unfamiliar
+            device or network trigger an email alert.
+          </p>
+        </div>
+
+        <div style={{ marginTop: T.space.xl, textAlign: "center" }}>
+          <Link to="/" className="mono"
+            style={{ fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase", color: c.text4 }}>
+            ← Back to site
+          </Link>
         </div>
       </motion.div>
     </div>
