@@ -1,8 +1,14 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Shield, ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { T, PageShell } from "./system.jsx";
+
+const c = T.color;
+
+/* Keep this in one place so Terms, Privacy and the landing page agree */
+const REGISTERED_ADDRESS = "Mexico City, CDMX, Mexico";
+const SUPPORT_EMAIL = "support@mexicatrading.com";
 
 export default function Terms() {
   const navigate = useNavigate();
@@ -11,93 +17,135 @@ export default function Terms() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const sections = [
-    { title: t("terms.s1Title"), content: t("terms.s1Content") },
-    { title: t("terms.s2Title"), content: t("terms.s2Content") },
-    { title: t("terms.s3Title"), content: t("terms.s3Content") },
-    { title: t("terms.s4Title"), content: t("terms.s4Content") },
-    { title: t("terms.s5Title"), content: t("terms.s5Content") },
-    { title: t("terms.s6Title"), content: t("terms.s6Content") },
-    { title: t("terms.s7Title"), content: t("terms.s7Content") },
-    { title: t("terms.s8Title"), content: t("terms.s8Content") },
-    { title: t("terms.s9Title"), content: t("terms.s9Content") },
+    { title: t("terms.s1Title"),  content: t("terms.s1Content") },
+    { title: t("terms.s2Title"),  content: t("terms.s2Content") },
+    { title: t("terms.s3Title"),  content: t("terms.s3Content") },
+    { title: t("terms.s4Title"),  content: t("terms.s4Content") },
+    { title: t("terms.s5Title"),  content: t("terms.s5Content") },
+    { title: t("terms.s6Title"),  content: t("terms.s6Content") },
+    { title: t("terms.s7Title"),  content: t("terms.s7Content") },
+    { title: t("terms.s8Title"),  content: t("terms.s8Content") },
+    { title: t("terms.s9Title"),  content: t("terms.s9Content") },
     { title: t("terms.s10Title"), content: t("terms.s10Content") },
     { title: t("terms.s11Title"), content: t("terms.s11Content") },
     { title: t("terms.s12Title"), content: t("terms.s12Content") },
   ];
 
   return (
-    <div className="min-h-screen bg-[#080c18] text-white pb-20">
+    <PageShell width={720}>
 
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/6 blur-[150px] rounded-full top-[-200px] left-[-200px]" />
-        <div className="absolute w-[500px] h-[500px] bg-blue-500/4 blur-[140px] rounded-full bottom-[-200px] right-[-200px]" />
-        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
-      </div>
+      <button onClick={() => navigate(-1)}
+        className="mono flex items-center gap-2"
+        style={{ fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase", color: c.text3, marginBottom: T.space.xl }}>
+        <ArrowLeft size={12} /> {t("common.back", "Back")}
+      </button>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 pt-24">
+      {/* ── Masthead ── */}
+      <div style={{ borderBottom: `1px solid ${c.line}`, paddingBottom: T.space.xl, marginBottom: T.space.xl }}>
+        <p className="eyebrow" style={{ marginBottom: 8 }}>{t("common.legal", "Legal")}</p>
+        <h1 className="display" style={{ fontSize: "clamp(30px,6vw,44px)", lineHeight: 1.05 }}>
+          {t("terms.title", "Terms of Service")}
+        </h1>
 
-        {/* Back button */}
-        <button onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition mb-8">
-          <ArrowLeft size={14} /> {t("common.back")}
-        </button>
-
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <Shield size={22} className="text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest">{t("common.legal")}</p>
-              <h1 className="text-2xl font-bold text-white">{t("terms.title")}</h1>
-            </div>
-          </div>
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/8">
-            <p className="text-white/50 text-sm leading-relaxed">
-              {t("terms.lastUpdated")}: <span className="text-white/70">{t("common.updatedDate")}</span>
-              &nbsp;·&nbsp;
-              {t("terms.effectiveDate")}: <span className="text-white/70">{t("common.updatedDate")}</span>
-            </p>
-            <p className="text-white/40 text-sm mt-2 leading-relaxed">{t("terms.subtitle")}</p>
-          </div>
-        </motion.div>
-
-        {/* Sections */}
-        <div className="space-y-6">
-          {sections.map((section, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.4 }}
-              className="p-6 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/12 transition-all">
-              <h2 className="text-white font-bold text-base mb-3 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400 text-xs font-bold flex-shrink-0">
-                  {i + 1}
-                </span>
-                {section.title}
-              </h2>
-              <p className="text-white/50 text-sm leading-relaxed whitespace-pre-line">{section.content}</p>
-            </motion.div>
-          ))}
+        <div className="flex flex-wrap mono" style={{ gap: "6px 20px", marginTop: T.space.lg }}>
+          <span style={{ fontSize: T.size.tiny, color: c.text3 }}>
+            {t("terms.lastUpdated", "Last updated")}{" "}
+            <span style={{ color: c.text2 }}>{t("common.updatedDate", "—")}</span>
+          </span>
+          <span style={{ fontSize: T.size.tiny, color: c.text3 }}>
+            {t("terms.effectiveDate", "Effective")}{" "}
+            <span style={{ color: c.text2 }}>{t("common.updatedDate", "—")}</span>
+          </span>
         </div>
 
-        {/* Footer */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-          className="mt-12 p-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-center">
-          <p className="text-white/60 text-sm mb-3">{t("terms.agreement")}</p>
-          <div className="flex items-center justify-center gap-4 text-sm">
-            <Link to="/privacy" className="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
-              {t("terms.privacyLink")} <ExternalLink size={12} />
+        <p style={{ fontSize: T.size.sm, color: c.text3, lineHeight: 1.75, marginTop: T.space.lg, maxWidth: 560 }}>
+          {t("terms.subtitle", "")}
+        </p>
+      </div>
+
+      {/* ── Contents ── */}
+      <div style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xxl }}>
+        <p className="eyebrow" style={{ padding: `${T.space.md}px ${T.space.lg}px`, borderBottom: `1px solid ${c.lineSoft}` }}>
+          Contents
+        </p>
+        {sections.map((s, i) => (
+          <a key={i} href={`#section-${i + 1}`}
+            className="flex items-baseline gap-3 hover-fill"
+            style={{
+              padding: `9px ${T.space.lg}px`,
+              borderBottom: i < sections.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+              transition: "background .2s",
+            }}>
+            <span className="mono tabular" style={{ fontSize: T.size.tiny, color: c.text4, minWidth: 20 }}>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span style={{ fontSize: T.size.sm, color: c.text2 }}>{s.title}</span>
+          </a>
+        ))}
+      </div>
+
+      {/* ── Sections ── */}
+      {sections.map((section, i) => (
+        <section key={i} id={`section-${i + 1}`}
+          style={{
+            paddingTop: T.space.xl,
+            paddingBottom: T.space.xl,
+            borderTop: `1px solid ${c.lineSoft}`,
+            scrollMarginTop: 90,
+          }}>
+          <div className="flex items-baseline gap-3" style={{ marginBottom: T.space.md }}>
+            <span className="mono tabular" style={{ fontSize: T.size.tiny, color: c.gain, minWidth: 20 }}>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <h2 className="display" style={{ fontSize: T.size.lg, color: c.text }}>{section.title}</h2>
+          </div>
+          <p style={{
+            fontSize: T.size.sm, color: c.text3, lineHeight: 1.85,
+            whiteSpace: "pre-line", paddingLeft: 32, maxWidth: 620,
+          }}>
+            {section.content}
+          </p>
+        </section>
+      ))}
+
+      {/* ── Colophon ── */}
+      <div style={{ borderTop: `1px solid ${c.line}`, paddingTop: T.space.xl, marginTop: T.space.lg }}>
+        <p style={{ fontSize: T.size.sm, color: c.text2, lineHeight: 1.75, marginBottom: T.space.xl, maxWidth: 560 }}>
+          {t("terms.agreement", "By using MexicaTrading you agree to these terms.")}
+        </p>
+
+        <div style={{ border: `1px solid ${c.line}` }}>
+          <div className="flex items-baseline justify-between"
+            style={{ padding: T.space.lg, borderBottom: `1px solid ${c.lineSoft}` }}>
+            <span className="eyebrow">Privacy</span>
+            <Link to="/privacy" className="mono"
+              style={{ fontSize: T.size.xs, color: c.gain }}>
+              {t("terms.privacyLink", "Privacy Policy")} →
             </Link>
-            <span className="text-white/20">·</span>
-            <a href="mailto:support@mexicatrading.com" className="text-emerald-400 hover:text-emerald-300 transition">
-              support@mexicatrading.com
+          </div>
+
+          <div className="flex items-baseline justify-between"
+            style={{ padding: T.space.lg, borderBottom: `1px solid ${c.lineSoft}` }}>
+            <span className="eyebrow">Contact</span>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="mono"
+              style={{ fontSize: T.size.xs, color: c.gain }}>
+              {SUPPORT_EMAIL}
             </a>
           </div>
-          <p className="text-white/25 text-xs mt-4">
-            📍 Calle Hidalgo 247, Col. Centro, Oaxaca de Juárez, Oaxaca 68000, Mexico
-          </p>
-        </motion.div>
 
+          <div style={{ padding: T.space.lg }}>
+            <p className="eyebrow" style={{ marginBottom: 8 }}>Registered address</p>
+            <p style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.7 }}>
+              {REGISTERED_ADDRESS}
+            </p>
+          </div>
+        </div>
+
+        <p style={{ fontSize: T.size.xs, color: c.text4, lineHeight: 1.7, marginTop: T.space.xl }}>
+          Investing involves risk. Nothing on this site constitutes financial advice.
+          Invest responsibly, and only what you can afford to lose.
+        </p>
       </div>
-    </div>
+    </PageShell>
   );
 }
