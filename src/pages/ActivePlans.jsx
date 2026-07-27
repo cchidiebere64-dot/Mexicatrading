@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Activity, CheckCircle, RefreshCw, Search, Clock, TrendingUp, Filter } from "lucide-react";
+import { motion } from "framer-motion";
+import { RefreshCw, Search, TrendingUp } from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, StatusPill, EmptyState, inputStyle } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 export default function ActivePlans() {
   const [investments, setInvestments] = useState([]);
@@ -45,12 +47,12 @@ export default function ActivePlans() {
     setFiltered(result);
   }, [search, filter, investments]);
 
-  const calculateDaysLeft = (endDate) => {
+  const daysLeftOf = (endDate) => {
     const diff = new Date(endDate) - new Date();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
 
-  const calculateProgress = (createdAt, endDate) => {
+  const progressOf = (createdAt, endDate) => {
     const total = new Date(endDate) - new Date(createdAt);
     const elapsed = Date.now() - new Date(createdAt);
     return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
@@ -58,149 +60,162 @@ export default function ActivePlans() {
 
   const active = investments.filter(i => i.status === "active").length;
   const completed = investments.filter(i => i.status === "completed").length;
+  const totalInvested = investments.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const totalProfit = investments.reduce((s, i) => s + (Number(i.profit) || 0), 0);
 
-  if (loading)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-        <p className="text-white/30 text-sm animate-pulse">Loading investments...</p>
-      </div>
-    );
+  const money = (v) => Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (d) => new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+
+  if (loading) return (
+    <div className="ui flex flex-col items-center justify-center gap-4" style={{ height: 260 }}>
+      <ThemeStyles />
+      <Spinner size={26} />
+      <p className="mono" style={{ fontSize: T.size.xs, letterSpacing: ".2em", textTransform: "uppercase", color: c.text3 }}>
+        Loading
+      </p>
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
         <div>
-          <h1 className="text-xl font-bold text-white">Active Plans</h1>
-          <p className="text-white/30 text-xs mt-0.5">{investments.length} total investment records</p>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Portfolio</p>
+          <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Investments</h1>
+          <p className="mono" style={{ fontSize: T.size.xs, color: c.text3, marginTop: 6 }}>
+            {investments.length} records
+          </p>
         </div>
-        <button onClick={fetchInvestments} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm transition-all">
-          <RefreshCw size={14} /> Refresh
+        <button onClick={fetchInvestments} aria-label="Refresh"
+          className="flex items-center justify-center shrink-0"
+          style={{ width: 36, height: 36, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <RefreshCw size={14} />
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 rounded-2xl border bg-emerald-500/10 border-emerald-500/20 flex items-center justify-between">
-          <div>
-            <p className="text-white/40 text-xs uppercase tracking-widest">Active</p>
-            <p className="text-emerald-400 text-2xl font-bold mt-1">{active}</p>
+      {/* ── Totals ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4" style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+        {[
+          ["Active", String(active), c.gain],
+          ["Completed", String(completed), c.text2],
+          ["Invested", `$${money(totalInvested)}`, c.text],
+          ["Profit paid", `+$${money(totalProfit)}`, c.gain],
+        ].map(([label, value, tone], i) => (
+          <div key={i} style={{
+            padding: T.space.lg,
+            borderLeft: i % 2 === 1 ? `1px solid ${c.line}` : "none",
+            borderTop: i > 1 ? `1px solid ${c.line}` : "none",
+          }} className="sm:border-l sm:border-t-0">
+            <p className="eyebrow" style={{ marginBottom: 8 }}>{label}</p>
+            <p className="mono tabular" style={{ fontSize: T.size.base, color: tone }}>{value}</p>
           </div>
-          <Activity size={18} className="text-emerald-400" />
-        </div>
-        <div className="p-4 rounded-2xl border bg-blue-500/10 border-blue-500/20 flex items-center justify-between">
-          <div>
-            <p className="text-white/40 text-xs uppercase tracking-widest">Completed</p>
-            <p className="text-blue-400 text-2xl font-bold mt-1">{completed}</p>
-          </div>
-          <CheckCircle size={18} className="text-blue-400" />
-        </div>
+        ))}
       </div>
 
-      {/* Search + Filter */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25" />
-          <input type="text" placeholder="Search by user or plan..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white" />
-        </div>
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3">
-          <Filter size={14} className="text-white/25" />
-          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-transparent text-white/60 text-sm outline-none py-2 pr-2">
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
+      {/* ── Search ── */}
+      <div style={{ position: "relative", marginBottom: T.space.md }}>
+        <Search size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by user, email or plan"
+          style={{ ...inputStyle, paddingLeft: 36 }} />
       </div>
 
-      {/* Investments List */}
+      {/* ── Filter tabs ── */}
+      <div className="flex" style={{ borderBottom: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+        {[["all", "All"], ["active", "Active"], ["completed", "Completed"]].map(([val, label]) => {
+          const on = filter === val;
+          return (
+            <button key={val} onClick={() => setFilter(val)}
+              className="mono"
+              style={{
+                padding: "11px 16px",
+                fontSize: T.size.tiny,
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+                color: on ? c.gain : c.text3,
+                borderBottom: `2px solid ${on ? c.gain : "transparent"}`,
+                marginBottom: -1,
+                transition: "color .2s",
+              }}>
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── List ── */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-            <TrendingUp size={20} className="text-white/20" />
-          </div>
-          <p className="text-white/40 text-sm">No investments found</p>
-        </div>
+        <EmptyState icon={<TrendingUp size={20} />} title="No investments found"
+          text="Try a different filter or search term." />
       ) : (
-        <div className="space-y-3">
+        <div style={{ border: `1px solid ${c.line}` }}>
           {filtered.map((inv, i) => {
-            const daysLeft = calculateDaysLeft(inv.endDate);
-            const progress = calculateProgress(inv.createdAt, inv.endDate);
+            const daysLeft = daysLeftOf(inv.endDate);
+            const progress = progressOf(inv.createdAt, inv.endDate);
             const isActive = inv.status === "active";
+            const matured = isActive && daysLeft === 0;
 
             return (
-              <motion.div key={inv._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                className={`p-5 rounded-2xl border transition-all ${isActive ? "border-white/8 bg-white/[0.02] hover:border-emerald-500/20" : "border-white/5 bg-white/[0.01] opacity-75"}`}>
+              <motion.div key={inv._id}
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.02, .3) }}
+                style={{
+                  padding: T.space.lg,
+                  borderBottom: i < filtered.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                  borderLeft: `2px solid ${matured ? c.brass : isActive ? c.gain : "transparent"}`,
+                  opacity: isActive ? 1 : .65,
+                }}>
 
-                <div className="flex items-start justify-between flex-wrap gap-4 mb-4">
-                  {/* User Info */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold shrink-0">
-                      {inv.user?.name?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold text-sm">{inv.user?.name || "Unknown"}</p>
-                      <p className="text-white/30 text-xs">{inv.user?.email || "—"}</p>
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${
-                    isActive ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
-                    : "bg-blue-500/15 text-blue-400 border border-blue-500/25"
-                  }`}>
-                    {isActive ? "🟢 Active" : "✅ Completed"}
-                  </span>
-                </div>
-
-                {/* Details */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Plan</p>
-                    <p className="text-white font-semibold text-sm">{inv.plan}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Invested</p>
-                    <p className="text-white font-semibold text-sm">${Number(inv.amount).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Profit</p>
-                    <p className="text-emerald-400 font-bold text-sm">+${Number(inv.profit).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/30 text-xs uppercase tracking-widest mb-1">
-                      {isActive ? "Days Left" : "Completed On"}
+                {/* top row */}
+                <div className="flex items-start justify-between gap-3" style={{ marginBottom: T.space.md }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>
+                      {inv.user?.name || "Unknown user"}
                     </p>
-                    {isActive ? (
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <Clock size={13} className={daysLeft === 0 ? "text-red-400" : "text-white/50"} />
-                        <span className={daysLeft === 0 ? "text-red-400 font-semibold" : "text-white font-semibold"}>
-                          {daysLeft === 0 ? "Matured" : `${daysLeft} days`}
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="text-white/50 text-sm">{new Date(inv.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
-                    )}
+                    <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>
+                      {inv.user?.email || "—"}
+                    </p>
                   </div>
+                  <StatusPill tone={matured ? "brass" : isActive ? "gain" : "neutral"}>
+                    {matured ? "Matured" : isActive ? "Active" : "Completed"}
+                  </StatusPill>
                 </div>
 
-                {/* Progress Bar */}
-                {isActive && (
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs text-white/30">
-                      <span>Progress</span>
-                      <span>{progress}%</span>
+                {/* figures */}
+                <div className="grid grid-cols-2 sm:grid-cols-4"
+                  style={{ borderTop: `1px solid ${c.lineSoft}`, paddingTop: T.space.md, gap: T.space.md }}>
+                  {[
+                    ["Plan", inv.plan, c.text2],
+                    ["Invested", `$${money(inv.amount)}`, c.text],
+                    ["Profit", `+$${money(inv.profit)}`, c.gain],
+                    [isActive ? "Days left" : "Ended",
+                      isActive ? (matured ? "Matured" : `${daysLeft}`) : fmtDate(inv.endDate),
+                      matured ? c.brass : c.text2],
+                  ].map(([label, value, tone], j) => (
+                    <div key={j}>
+                      <p className="eyebrow" style={{ marginBottom: 4 }}>{label}</p>
+                      <p className="mono tabular truncate" style={{ fontSize: T.size.xs, color: tone }}>{value}</p>
                     </div>
-                    <div className="w-full h-1.5 bg-white/8 rounded-full overflow-hidden">
+                  ))}
+                </div>
+
+                {/* progress */}
+                {isActive && (
+                  <div style={{ marginTop: T.space.md }}>
+                    <div className="flex items-baseline justify-between" style={{ marginBottom: 5 }}>
+                      <span className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".16em", textTransform: "uppercase", color: c.text4 }}>
+                        Progress
+                      </span>
+                      <span className="mono tabular" style={{ fontSize: T.size.tiny, color: c.text3 }}>{progress}%</span>
+                    </div>
+                    <div style={{ height: 2, background: c.line }}>
                       <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
-                      />
+                        initial={{ width: 0 }} animate={{ width: `${progress}%` }}
+                        transition={{ duration: .8, ease: "easeOut" }}
+                        style={{ height: "100%", background: matured ? c.brass : c.gain }} />
                     </div>
                   </div>
                 )}
@@ -211,4 +226,4 @@ export default function ActivePlans() {
       )}
     </div>
   );
-                        }
+}
