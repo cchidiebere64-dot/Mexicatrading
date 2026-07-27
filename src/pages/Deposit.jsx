@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   DollarSign, CreditCard, Hash, Copy, Check, ChevronDown, X,
   AlertTriangle, Bitcoin, ExternalLink, Info,
 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import {
+  T, PageShell, Panel, SectionHead, Button, Field, inputStyle,
+  StatusPill, Spinner, Banner,
+} from "../ui/system.jsx";
+
+const API_URL = "https://mexicatradingbackend.onrender.com";
 
 /* Flutterwave payment link (USD, customer enters amount) */
 const CARD_PAYMENT_LINK = "https://flutterwave.com/pay/mexicatrading";
+const MERCHANT_NAME = "PROWAVE GLOBAL VENTURE";
+
+const c = T.color;
 
 export default function Deposit() {
   const { t } = useTranslation();
@@ -23,8 +31,6 @@ export default function Deposit() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
   const [paymentOpened, setPaymentOpened] = useState(false);
-
-  const API_URL = "https://mexicatradingbackend.onrender.com";
 
   useEffect(() => {
     const fetchWallets = async () => {
@@ -106,242 +112,260 @@ export default function Deposit() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#080c18] text-white flex justify-center items-start pt-24 pb-16 px-4">
+  const tabStyle = (active) => ({
+    flex: 1,
+    padding: "14px 0",
+    fontFamily: "'IBM Plex Mono',monospace",
+    fontSize: T.size.tiny,
+    letterSpacing: ".16em",
+    textTransform: "uppercase",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    background: active ? "rgba(63,143,95,.1)" : "transparent",
+    color: active ? c.gain : c.text3,
+    borderBottom: `2px solid ${active ? c.gain : "transparent"}`,
+    transition: "color .2s, background .2s",
+  });
 
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
+  return (
+    <PageShell width={560}>
+
+      {/* ── Header ── */}
+      <div style={{ marginBottom: T.space.xl }}>
+        <p className="eyebrow" style={{ marginBottom: 6 }}>Add funds</p>
+        <h1 className="display" style={{ fontSize: T.size.xxl, lineHeight: 1.05 }}>
+          {t("deposit.title", "Deposit")}
+        </h1>
+        <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 8 }}>
+          {t("deposit.subtitle", "Fund your account to start investing.")}
+        </p>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative z-10 w-full max-w-lg">
+      {/* ── Result message ── */}
+      {message && (
+        <div style={{ marginBottom: T.space.lg }}>
+          <Banner
+            tone={messageType === "success" ? "gain" : "loss"}
+            title={message}
+          />
+        </div>
+      )}
 
-        {/* HEADER */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-widest uppercase mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {t("deposit.secure")}
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("deposit.title")}</h2>
-          <p className="text-white/40 text-sm mt-2">{t("deposit.subtitle")}</p>
+      <Panel pad={false}>
+
+        {/* ── Method tabs ── */}
+        <div className="flex" style={{ borderBottom: `1px solid ${c.line}` }}>
+          <button type="button" onClick={() => switchMethod("crypto")} style={tabStyle(payMethod === "crypto")}>
+            <Bitcoin size={14} /> Crypto
+          </button>
+          <button type="button" onClick={() => switchMethod("card")} style={tabStyle(payMethod === "card")}>
+            <CreditCard size={14} /> Card
+          </button>
         </div>
 
-        {/* CARD */}
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+        <form onSubmit={handleDeposit} style={{ padding: T.space.xl }}>
 
-          <AnimatePresence>
-            {message && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className={`mb-6 p-4 rounded-xl text-sm text-center font-medium border ${messageType === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-                {message}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* ── PAYMENT TYPE TOGGLE ── */}
-          <div className="grid grid-cols-2 gap-2 mb-6 p-1 rounded-2xl bg-white/[0.03] border border-white/8">
-            <button type="button" onClick={() => switchMethod("crypto")}
-              className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all ${
-                payMethod === "crypto"
-                  ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
-                  : "text-white/40 hover:text-white/70"
-              }`}>
-              <Bitcoin size={15} /> Crypto
-            </button>
-            <button type="button" onClick={() => switchMethod("card")}
-              className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all ${
-                payMethod === "card"
-                  ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
-                  : "text-white/40 hover:text-white/70"
-              }`}>
-              <CreditCard size={15} /> Card
-            </button>
-          </div>
-
-          <form onSubmit={handleDeposit} className="space-y-5">
-
-            {/* AMOUNT */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">{t("deposit.amount")}</label>
-              <div className="relative group">
-                <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                <input type="number" inputMode="decimal" min="0" step="0.01" placeholder="0.00"
-                  value={amount} onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25"
-                  required />
-              </div>
+          {/* ── Amount ── */}
+          <Field label={t("deposit.amount", "Amount")}>
+            <div style={{ position: "relative" }}>
+              <span className="mono" style={{
+                position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
+                color: c.text3, fontSize: T.size.base,
+              }}>$</span>
+              <input
+                type="number" inputMode="decimal" min="0" step="0.01" placeholder="0.00"
+                value={amount} onChange={(e) => setAmount(e.target.value)}
+                required
+                className="mono tabular"
+                style={{ ...inputStyle, paddingLeft: 30, fontSize: T.size.lg }}
+                onFocus={(e) => (e.target.style.borderColor = "rgba(63,143,95,.5)")}
+                onBlur={(e) => (e.target.style.borderColor = c.line)}
+              />
             </div>
+          </Field>
 
-            {/* ═══════════ CARD FLOW ═══════════ */}
-            {payMethod === "card" && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          {/* ═══════════ CARD ═══════════ */}
+          {payMethod === "card" && (
+            <>
+              {/* Steps */}
+              <div style={{ border: `1px solid ${c.line}`, marginBottom: T.space.lg }}>
+                <p className="eyebrow" style={{ padding: `${T.space.md}px ${T.space.lg}px`, borderBottom: `1px solid ${c.lineSoft}` }}>
+                  How it works
+                </p>
+                {[
+                  ["Enter the amount above, then open the payment page"],
+                  ["Pay the same amount with your card"],
+                  ["Return here and submit so our team can confirm it"],
+                ].map(([step], i, arr) => (
+                  <div key={i} className="flex gap-3"
+                    style={{
+                      padding: `${T.space.md}px ${T.space.lg}px`,
+                      borderBottom: i < arr.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                    }}>
+                    <span className="mono tabular" style={{ fontSize: T.size.xs, color: c.gain, minWidth: 16 }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span style={{ fontSize: T.size.sm, color: c.text2, lineHeight: 1.6 }}>{step}</span>
+                  </div>
+                ))}
+              </div>
 
-                {/* Steps */}
-                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-                  <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-3">How it works</p>
-                  <ol className="space-y-2.5 text-xs text-white/60 leading-relaxed">
-                    <li className="flex gap-2.5">
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold flex items-center justify-center">1</span>
-                      <span>Enter the amount above, then tap <span className="text-white font-medium">Pay with Card</span></span>
-                    </li>
-                    <li className="flex gap-2.5">
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold flex items-center justify-center">2</span>
-                      <span>Enter the <span className="text-white font-medium">same amount</span> on the payment page and complete your card payment</span>
-                    </li>
-                    <li className="flex gap-2.5">
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold flex items-center justify-center">3</span>
-                      <span>Come back here and tap <span className="text-white font-medium">Submit Deposit</span> so our team can confirm and credit your balance</span>
-                    </li>
-                  </ol>
-                </div>
+              <Button type="button" variant="primary" full onClick={openCardPayment}
+                icon={<CreditCard size={14} />} style={{ marginBottom: T.space.md }}>
+                Open payment page <ExternalLink size={12} style={{ opacity: .7 }} />
+              </Button>
 
-                {/* Pay button */}
-                <button type="button" onClick={openCardPayment}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2.5">
-                  <CreditCard size={16} /> Pay with Card
-                  <ExternalLink size={13} className="opacity-70" />
-                </button>
+              {paymentOpened && (
+                <p className="mono" style={{ fontSize: T.size.xs, color: c.gain, textAlign: "center", marginBottom: T.space.lg }}>
+                  Payment page opened — submit below once you've paid
+                </p>
+              )}
 
-                {paymentOpened && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="text-center text-xs text-emerald-400/80">
-                    ✓ Payment page opened. Once you've paid, submit the deposit below.
-                  </motion.p>
-                )}
-
-                {/* Notes */}
-                <div className="flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/[0.02] p-4">
-                  <Info size={14} className="text-white/30 shrink-0 mt-0.5" />
-                  <div className="text-[11px] text-white/40 leading-relaxed space-y-1.5">
-                    <p>Your payment will appear on your bank statement as <span className="text-white/70 font-medium">PROWAVE GLOBAL VENTURE</span> — this is our registered payment merchant name.</p>
-                    <p>Payments are charged in <span className="text-white/70 font-medium">USD</span>. If your card is in another currency, your bank converts it automatically — the amount on your statement may differ slightly, and your bank may add its own international fee.</p>
-                    <p>Use the <span className="text-white/70 font-medium">same email</span> as your MexicaTrading account on the payment page so we can match your payment.</p>
+              {/* Notes */}
+              <div style={{ background: c.fill, border: `1px solid ${c.line}`, padding: T.space.lg, marginBottom: T.space.lg }}>
+                <div className="flex gap-2.5">
+                  <Info size={13} style={{ color: c.text4, flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.7 }}>
+                    <p style={{ marginBottom: 8 }}>
+                      Your statement will show <span style={{ color: c.text2 }}>{MERCHANT_NAME}</span> — our registered payment merchant.
+                    </p>
+                    <p style={{ marginBottom: 8 }}>
+                      Charged in <span style={{ color: c.text2 }}>USD</span>. If your card is in another currency your bank converts it, so the amount on your statement may differ slightly and your bank may add its own fee.
+                    </p>
+                    <p>
+                      Use the <span style={{ color: c.text2 }}>same email</span> as your MexicaTrading account so we can match the payment.
+                    </p>
                   </div>
                 </div>
-              </motion.div>
-            )}
-
-            {/* ═══════════ CRYPTO FLOW ═══════════ */}
-            {payMethod === "crypto" && (
-              <>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">{t("deposit.method")}</label>
-                  <button type="button" onClick={() => setSelectModalOpen(true)}
-                    className="w-full text-left pl-4 pr-4 py-3.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/8 hover:border-emerald-500/30 focus:outline-none transition-all flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-3">
-                      <Bitcoin size={16} className="text-white/25" />
-                      <span className={selectedWallet ? "text-white" : "text-white/25"}>
-                        {selectedWallet ? selectedWallet.name : t("deposit.selectMethod")}
-                      </span>
-                    </div>
-                    <ChevronDown size={16} className="text-white/25" />
-                  </button>
-                </div>
-
-                <AnimatePresence>
-                  {selectedWallet && (
-                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                      className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5 space-y-4">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle size={16} className="text-yellow-400 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-yellow-400 text-sm font-semibold mb-1">{t("deposit.warning")}</p>
-                          <p className="text-white/50 text-xs leading-relaxed">
-                            Only send <span className="text-white font-medium">{selectedWallet.name}</span> to this address. Sending any other asset will result in permanent loss.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">{t("deposit.walletAddress")}</p>
-                        <div className="flex items-center gap-3 bg-black/30 border border-white/10 rounded-xl p-3">
-                          <span className="break-all font-mono text-xs text-white/70 flex-1">{selectedWallet.address}</span>
-                          <button type="button" onClick={handleCopy}
-                            className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${copied ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-white/10 text-white/60 hover:bg-white/20 border border-white/10"}`}>
-                            {copied ? <Check size={12} /> : <Copy size={12} />}
-                            {copied ? t("deposit.copied") : t("deposit.copy")}
-                          </button>
-                        </div>
-                      </div>
-                      {selectedWallet.caution && <p className="text-white/40 text-xs leading-relaxed">{selectedWallet.caution}</p>}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </>
-            )}
-
-            {/* TRANSACTION ID / REFERENCE */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                {payMethod === "card" ? "Payment Reference" : t("deposit.txid")}{" "}
-                <span className="text-white/20 normal-case">{t("deposit.txidOptional")}</span>
-              </label>
-              <div className="relative group">
-                <Hash size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                <input type="text"
-                  placeholder={payMethod === "card" ? "Reference from your payment receipt" : t("deposit.txidPlaceholder")}
-                  value={txid} onChange={(e) => setTxid(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25" />
               </div>
-            </div>
+            </>
+          )}
 
-            {/* SUBMIT */}
-            <button type="submit" disabled={loading}
-              className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2">
-              {loading ? (
-                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("deposit.submitting")}</>
-              ) : t("deposit.submit")}
-            </button>
-          </form>
-        </div>
-
-        <div className="flex items-center justify-center gap-6 mt-6 text-white/20 text-xs">
-          <span>🔒 {t("common.sslSecured")}</span>
-          <span>·</span>
-          <span>⚡ {t("common.fastProcessing")}</span>
-          <span>·</span>
-          <span>🛡️ {t("common.fundsProtected")}</span>
-        </div>
-      </motion.div>
-
-      {/* WALLET SELECTION MODAL */}
-      <AnimatePresence>
-        {selectModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="absolute inset-0" onClick={() => setSelectModalOpen(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-[#0e1422] border border-white/10 rounded-3xl p-6 z-10 flex flex-col max-h-[85vh] shadow-2xl">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h3 className="text-lg font-bold">Select Payment Method</h3>
-                  <p className="text-white/40 text-xs mt-0.5">Choose your preferred cryptocurrency</p>
-                </div>
-                <button onClick={() => setSelectModalOpen(false)} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition">
-                  <X size={14} className="text-white/50" />
+          {/* ═══════════ CRYPTO ═══════════ */}
+          {payMethod === "crypto" && (
+            <>
+              <Field label={t("deposit.method", "Currency")}>
+                <button type="button" onClick={() => setSelectModalOpen(true)}
+                  className="w-full flex items-center justify-between"
+                  style={{ ...inputStyle, textAlign: "left" }}>
+                  <span style={{ color: selectedWallet ? c.text : c.text4, fontSize: T.size.sm }}>
+                    {selectedWallet ? selectedWallet.name : t("deposit.selectMethod", "Select currency")}
+                  </span>
+                  <ChevronDown size={15} style={{ color: c.text4 }} />
                 </button>
-              </div>
-              <div className="overflow-auto flex-1 space-y-2 pr-1">
-                {wallets.length === 0 ? (
-                  <div className="text-center py-10 text-white/30 text-sm">No payment methods available at this time.</div>
-                ) : (
-                  wallets.map((w) => (
-                    <button key={w._id || w.name} onClick={() => handleSelectWallet(w)}
-                      className="w-full text-left p-4 rounded-xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.07] hover:border-emerald-500/30 transition-all flex flex-col gap-1">
-                      <span className="text-white font-semibold text-sm">{w.name}</span>
-                      <span className="text-white/30 text-xs font-mono truncate">{w.address}</span>
-                    </button>
-                  ))
-                )}
+              </Field>
+
+              {selectedWallet && (
+                <div style={{ marginBottom: T.space.lg }}>
+                  <div style={{ background: "rgba(192,138,62,.07)", borderLeft: `2px solid ${c.brass}`, padding: T.space.lg, marginBottom: 2 }}>
+                    <div className="flex gap-2.5">
+                      <AlertTriangle size={14} style={{ color: c.brass, flexShrink: 0, marginTop: 2 }} />
+                      <p style={{ fontSize: T.size.xs, color: c.text2, lineHeight: 1.7 }}>
+                        Send only <span style={{ color: c.text }}>{selectedWallet.name}</span> to this address. Any other asset will be lost permanently.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg }}>
+                    <p className="eyebrow" style={{ marginBottom: 10 }}>{t("deposit.walletAddress", "Wallet address")}</p>
+                    <p className="mono" style={{ fontSize: T.size.xs, color: c.text2, wordBreak: "break-all", lineHeight: 1.7, marginBottom: T.space.md }}>
+                      {selectedWallet.address}
+                    </p>
+                    <Button type="button" variant={copied ? "outline" : "quiet"} onClick={handleCopy}
+                      icon={copied ? <Check size={12} /> : <Copy size={12} />}>
+                      {copied ? t("deposit.copied", "Copied") : t("deposit.copy", "Copy address")}
+                    </Button>
+                    {selectedWallet.caution && (
+                      <p style={{ fontSize: T.size.xs, color: c.text4, marginTop: T.space.md, lineHeight: 1.6 }}>
+                        {selectedWallet.caution}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── Reference ── */}
+          <Field
+            label={payMethod === "card" ? "Payment reference" : t("deposit.txid", "Transaction ID")}
+            hint="Optional — helps us confirm your payment faster">
+            <div style={{ position: "relative" }}>
+              <Hash size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+              <input
+                type="text"
+                placeholder={payMethod === "card" ? "From your payment receipt" : t("deposit.txidPlaceholder", "Paste transaction hash")}
+                value={txid} onChange={(e) => setTxid(e.target.value)}
+                className="mono"
+                style={{ ...inputStyle, paddingLeft: 36, fontSize: T.size.xs }}
+                onFocus={(e) => (e.target.style.borderColor = "rgba(63,143,95,.5)")}
+                onBlur={(e) => (e.target.style.borderColor = c.line)}
+              />
+            </div>
+          </Field>
+
+          <Button type="submit" variant="primary" full disabled={loading}
+            icon={loading ? <Spinner size={14} tone="#fff" /> : null}>
+            {loading ? t("deposit.submitting", "Submitting") : t("deposit.submit", "Submit deposit")}
+          </Button>
+        </form>
+      </Panel>
+
+      {/* ── Trust strip ── */}
+      <div className="flex items-center justify-center gap-5 mono"
+        style={{ marginTop: T.space.xl, fontSize: T.size.micro, letterSpacing: ".14em", textTransform: "uppercase", color: c.text4 }}>
+        <span>SSL secured</span>
+        <span>·</span>
+        <span>Manual review</span>
+        <span>·</span>
+        <span>24/7 support</span>
+      </div>
+
+      {/* ══ CURRENCY MODAL ══ */}
+      {selectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          style={{ background: "rgba(8,9,11,.86)" }}>
+          <div className="absolute inset-0" onClick={() => setSelectModalOpen(false)} />
+          <div className="relative w-full sm:max-w-md z-10 flex flex-col"
+            style={{ background: c.panel, border: `1px solid ${c.line}`, maxHeight: "85vh" }}>
+
+            <div className="flex items-center justify-between"
+              style={{ padding: T.space.xl, borderBottom: `1px solid ${c.line}` }}>
+              <div>
+                <p className="eyebrow" style={{ marginBottom: 4 }}>Deposit</p>
+                <h3 className="display" style={{ fontSize: T.size.lg }}>Select currency</h3>
               </div>
               <button onClick={() => setSelectModalOpen(false)}
-                className="mt-4 w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 transition text-sm text-white/40 hover:text-white">
-                {t("common.cancel")}
+                className="w-8 h-8 flex items-center justify-center"
+                style={{ background: c.fill, color: c.text3 }}>
+                <X size={14} />
               </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            </div>
+
+            <div className="overflow-auto flex-1">
+              {wallets.length === 0 ? (
+                <p style={{ padding: T.space.xxxl, textAlign: "center", fontSize: T.size.sm, color: c.text3 }}>
+                  No deposit currencies available right now.
+                </p>
+              ) : (
+                wallets.map((w, i) => (
+                  <button key={w._id || w.name} onClick={() => handleSelectWallet(w)}
+                    className="w-full text-left hover-fill transition"
+                    style={{
+                      padding: T.space.lg,
+                      borderBottom: i < wallets.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                    }}>
+                    <p style={{ fontSize: T.size.sm, color: c.text, marginBottom: 3 }}>{w.name}</p>
+                    <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4 }}>{w.address}</p>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </PageShell>
   );
 }
