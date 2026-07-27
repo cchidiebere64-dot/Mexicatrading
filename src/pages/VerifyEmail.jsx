@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, XCircle, Loader } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
+import { T, ThemeStyles, Button, Spinner } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 export default function VerifyEmail() {
   const { t } = useTranslation();
@@ -35,77 +37,81 @@ export default function VerifyEmail() {
   }, [location.search, navigate]);
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white px-4">
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/8 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/6 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-      </div>
+    <div className="ui min-h-screen flex items-center justify-center px-4" style={{ background: c.ink, color: c.text }}>
+      <ThemeStyles />
 
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-        className="relative z-10 w-full max-w-md">
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl text-center">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}
+        className="w-full" style={{ maxWidth: 400 }}>
 
-          {/* LOADING */}
-          {status === "loading" && (
-            <div className="flex flex-col items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <Loader size={36} className="text-emerald-400 animate-spin" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{t("auth.verifyingEmail")}</h2>
-                <p className="text-white/40 text-sm">{t("auth.pleaseWait")}</p>
+        {/* ── LOADING ── */}
+        {status === "loading" && (
+          <div style={{ border: `1px solid ${c.line}`, padding: T.space.xxl }}>
+            <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: c.text3, marginBottom: T.space.lg }}>
+              Verifying
+            </p>
+            <div className="flex items-center gap-3">
+              <Spinner size={18} />
+              <p style={{ fontSize: T.size.sm, color: c.text2 }}>
+                {t("auth.pleaseWait", "Checking your link…")}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── SUCCESS ── */}
+        {status === "success" && (
+          <>
+            <div style={{ background: c.paper, color: c.paperInk }}>
+              <div style={{ height: 3, background: c.gain }} />
+              <div style={{ padding: T.space.xxl }}>
+                <div className="flex items-start justify-between" style={{ marginBottom: T.space.lg }}>
+                  <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: "rgba(14,16,19,.5)" }}>
+                    Verified
+                  </p>
+                  <Check size={20} style={{ color: c.gainDeep }} />
+                </div>
+                <h1 className="display" style={{ fontSize: 32, lineHeight: 1.05, marginBottom: T.space.md }}>
+                  Email confirmed
+                </h1>
+                <p style={{ fontSize: T.size.sm, color: "rgba(14,16,19,.6)", lineHeight: 1.7 }}>
+                  Your account is active. You'll be taken to sign in shortly.
+                </p>
               </div>
             </div>
-          )}
+            <Button full onClick={() => navigate("/login?verified=true")} style={{ marginTop: T.space.lg }}>
+              Sign in now
+            </Button>
+          </>
+        )}
 
-          {/* SUCCESS */}
-          {status === "success" && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <CheckCircle size={40} className="text-emerald-400" />
+        {/* ── ERROR ── */}
+        {status === "error" && (
+          <>
+            <div style={{ border: `1px solid ${c.line}`, borderLeft: `2px solid ${c.loss}`, padding: T.space.xxl }}>
+              <div className="flex items-start justify-between" style={{ marginBottom: T.space.lg }}>
+                <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: c.loss }}>
+                  Link problem
+                </p>
+                <X size={18} style={{ color: c.loss }} />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{t("auth.emailVerifiedTitle")}</h2>
-                <p className="text-white/50 text-sm leading-relaxed">{t("auth.emailVerifiedDesc")}</p>
-              </div>
-              <div className="w-full p-4 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
-                <p className="text-emerald-400/80 text-sm">✅ {t("auth.redirectingToLoginSoon")}</p>
-              </div>
-              <button onClick={() => navigate("/login?verified=true")}
-                className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-semibold text-sm text-white">
-                {t("auth.goToLoginNow")}
-              </button>
-            </motion.div>
-          )}
+              <h1 className="display" style={{ fontSize: 30, lineHeight: 1.05, marginBottom: T.space.md }}>
+                Verification failed
+              </h1>
+              <p style={{ fontSize: T.size.sm, color: c.text3, lineHeight: 1.7 }}>{message}</p>
+            </div>
 
-          {/* ERROR */}
-          {status === "error" && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                <XCircle size={40} className="text-red-400" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{t("auth.verificationFailed")}</h2>
-                <p className="text-white/50 text-sm leading-relaxed">{message}</p>
-              </div>
-              <div className="flex flex-col gap-3 w-full">
-                <button onClick={() => navigate("/login")}
-                  className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition-all font-semibold text-sm text-white">
-                  {t("auth.goToLogin")}
-                </button>
-                <button onClick={() => navigate("/register")}
-                  className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
-                  {t("auth.createNewAccount")}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </div>
+            <div style={{ marginTop: T.space.lg, display: "flex", flexDirection: "column", gap: 8 }}>
+              <Button full onClick={() => navigate("/login")}>Go to sign in</Button>
+              <Button variant="quiet" full onClick={() => navigate("/register")}>Create a new account</Button>
+            </div>
+          </>
+        )}
 
-        <p className="text-center text-white/20 text-xs mt-6">
-          MexicaTrading — {t("auth.tagline")}
+        <p className="mono" style={{
+          fontSize: T.size.micro, letterSpacing: ".18em", textTransform: "uppercase",
+          color: c.text4, textAlign: "center", marginTop: T.space.xl,
+        }}>
+          MexicaTrading
         </p>
       </motion.div>
     </div>
