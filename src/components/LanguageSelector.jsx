@@ -1,17 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Globe, Check, ChevronDown } from "lucide-react";
+import { T } from "../pages/system.jsx";
+
+const c = T.color;
 
 const languages = [
-  { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "es-MX", label: "Español (México)", flag: "🇲🇽" },
-  { code: "es", label: "Español (España)", flag: "🇪🇸" },
-  { code: "fr", label: "Français", flag: "🇫🇷" },
-  { code: "pt", label: "Português", flag: "🇵🇹" },
-  { code: "ar", label: "العربية", flag: "🇦🇪" },
-  { code: "zh", label: "中文", flag: "🇨🇳" },
-  { code: "ru", label: "Русский", flag: "🇷🇺" },
-  { code: "de", label: "Deutsch", flag: "🇩🇪" },
+  { code: "en",    label: "English",           flag: "🇺🇸" },
+  { code: "es-MX", label: "Español (México)",  flag: "🇲🇽" },
+  { code: "es",    label: "Español (España)",  flag: "🇪🇸" },
+  { code: "fr",    label: "Français",          flag: "🇫🇷" },
+  { code: "pt",    label: "Português",         flag: "🇵🇹" },
+  { code: "ar",    label: "العربية",            flag: "🇦🇪" },
+  { code: "zh",    label: "中文",               flag: "🇨🇳" },
+  { code: "ru",    label: "Русский",           flag: "🇷🇺" },
+  { code: "de",    label: "Deutsch",           flag: "🇩🇪" },
 ];
 
 export default function LanguageSelector() {
@@ -22,7 +25,6 @@ export default function LanguageSelector() {
 
   const current = languages.find(l => l.code === i18n.language) || languages[0];
 
-  // ✅ Updated handleSelect — saves to backend
   const handleSelect = async (code) => {
     i18n.changeLanguage(code);
     localStorage.setItem("mexica_language", code);
@@ -98,53 +100,80 @@ export default function LanguageSelector() {
   }, [i18n.language]);
 
   return (
-    <div ref={buttonRef} className="relative">
+    <div ref={buttonRef} className="ui" style={{ position: "relative" }}>
+
+      {/* Trigger */}
       <button
         onClick={handleOpen}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm text-white/60 hover:text-white"
-      >
-        <span className="text-base leading-none">{current.flag}</span>
-        <span className="text-xs font-medium hidden sm:block">{current.label.split(" ")[0]}</span>
-        <ChevronDown size={12} className={`text-white/30 transition-transform ${open ? "rotate-180" : ""}`} />
+        aria-label="Change language"
+        aria-expanded={open}
+        className="flex items-center gap-1.5"
+        style={{
+          padding: "9px 11px",
+          background: open ? "rgba(63,143,95,.08)" : c.fill,
+          border: `1px solid ${open ? "rgba(63,143,95,.3)" : c.line}`,
+          color: open ? c.gain : c.text3,
+          transition: "color .2s, border-color .2s, background .2s",
+        }}>
+        <Globe size={13} style={{ flexShrink: 0 }} />
+        <span className="mono" style={{
+          fontSize: T.size.tiny,
+          letterSpacing: ".14em",
+          textTransform: "uppercase",
+        }}>
+          {current.code.split("-")[0]}
+        </span>
+        <ChevronDown size={11}
+          style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s", opacity: .6 }} />
       </button>
 
+      {/* Dropdown */}
       {open && (
-        <div
-          className="fixed inset-0"
-          style={{ zIndex: 9998 }}
-          onClick={() => setOpen(false)}
-        />
-      )}
+        <div style={{
+          ...dropdownStyle,
+          background: c.panelAlt,
+          border: `1px solid ${c.line}`,
+          boxShadow: "0 12px 40px rgba(0,0,0,.5)",
+          maxHeight: 340,
+          overflowY: "auto",
+        }}>
+          <p className="mono" style={{
+            padding: "10px 14px",
+            fontSize: T.size.micro,
+            letterSpacing: ".24em",
+            textTransform: "uppercase",
+            color: c.text4,
+            borderBottom: `1px solid ${c.line}`,
+          }}>
+            Language
+          </p>
 
-      {open && (
-        <div
-          style={dropdownStyle}
-          className="bg-[#0d1221] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
-        >
-          <div
-            className="p-2 space-y-0.5"
-            style={{ maxHeight: "320px", overflowY: "auto" }}
-          >
-            {languages.map((lang) => (
+          {languages.map((lang, i) => {
+            const active = i18n.language === lang.code;
+            return (
               <button
                 key={lang.code}
                 onClick={() => handleSelect(lang.code)}
-                className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
-                  i18n.language === lang.code
-                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-base leading-none">{lang.flag}</span>
-                  <span className="font-medium text-xs">{lang.label}</span>
-                </div>
-                {i18n.language === lang.code && (
-                  <Check size={13} className="text-emerald-400 shrink-0" />
-                )}
+                className="w-full flex items-center gap-2.5 text-left hover-fill"
+                style={{
+                  padding: "11px 14px",
+                  borderBottom: i < languages.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                  borderLeft: `2px solid ${active ? c.gain : "transparent"}`,
+                  background: active ? "rgba(63,143,95,.07)" : "transparent",
+                  transition: "background .2s",
+                }}>
+                <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{lang.flag}</span>
+                <span className="truncate" style={{
+                  flex: 1,
+                  fontSize: T.size.sm,
+                  color: active ? c.gain : c.text2,
+                }}>
+                  {lang.label}
+                </span>
+                {active && <Check size={12} style={{ color: c.gain, flexShrink: 0 }} />}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
     </div>
