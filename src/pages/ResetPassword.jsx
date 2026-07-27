@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Lock, Eye, EyeOff, ArrowRight, Check, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { T, ThemeStyles, Button, Spinner, Banner, inputStyle } from "./system.jsx";
+
+const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -19,7 +23,6 @@ export default function ResetPassword() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const API_URL = "https://mexicatradingbackend.onrender.com";
 
   const token = searchParams.get("token");
   const id = searchParams.get("id");
@@ -40,7 +43,6 @@ export default function ResetPassword() {
       setMessageType("error");
       return;
     }
-
     if (password !== confirmPassword) {
       setMessage("Passwords do not match. Please try again.");
       setMessageType("error");
@@ -51,9 +53,7 @@ export default function ResetPassword() {
     setMessage("");
 
     try {
-      const res = await axios.post(`${API_URL}/api/auth/reset-password`, {
-        token, id, password,
-      });
+      const res = await axios.post(`${API_URL}/api/auth/reset-password`, { token, id, password });
       setMessage(res.data.message);
       setMessageType("success");
       setSuccess(true);
@@ -66,113 +66,173 @@ export default function ResetPassword() {
     }
   };
 
+  const match = confirmPassword.length > 0 && password === confirmPassword;
+  const field = (valid) => ({
+    ...inputStyle,
+    paddingLeft: 38,
+    paddingRight: 44,
+    borderColor: valid ? "rgba(63,143,95,.4)" : c.line,
+    background: valid ? "rgba(63,143,95,.04)" : c.fill,
+  });
+
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4">
+    <div className="ui min-h-screen flex items-center justify-center px-4 py-16"
+      style={{ background: c.ink, color: c.text }}>
+      <ThemeStyles />
 
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
-      </div>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: .5, ease: [.22, 1, .36, 1] }}
+        className="w-full" style={{ maxWidth: 400 }}>
 
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative w-full max-w-md">
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl">
-
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4 text-2xl">
-              🔑
+        {/* ═══ SUCCESS ═══ */}
+        {success ? (
+          <>
+            <div style={{ background: c.paper, color: c.paperInk }}>
+              <div style={{ height: 3, background: c.gain }} />
+              <div style={{ padding: T.space.xxl }}>
+                <div className="flex items-start justify-between" style={{ marginBottom: T.space.lg }}>
+                  <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: "rgba(14,16,19,.5)" }}>
+                    Password changed
+                  </p>
+                  <Check size={20} style={{ color: c.gainDeep }} />
+                </div>
+                <h1 className="display" style={{ fontSize: 30, lineHeight: 1.05, marginBottom: T.space.md }}>
+                  You're all set
+                </h1>
+                <p style={{ fontSize: T.size.sm, color: "rgba(14,16,19,.6)", lineHeight: 1.7 }}>
+                  {t("reset.success", "Your password has been updated. You'll be taken to sign in shortly.")}
+                </p>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight">{t("reset.title")}</h2>
-            <p className="text-white/40 text-sm mt-2">{t("reset.desc")}</p>
-          </div>
 
-          <AnimatePresence>
+            <Button full onClick={() => navigate("/login")} style={{ marginTop: T.space.lg }}>
+              {t("auth.signIn", "Sign in")} <ArrowRight size={13} />
+            </Button>
+          </>
+
+        /* ═══ BAD LINK ═══ */
+        ) : !tokenValid ? (
+          <>
+            <div style={{ border: `1px solid ${c.line}`, borderLeft: `2px solid ${c.loss}`, padding: T.space.xxl }}>
+              <div className="flex items-start justify-between" style={{ marginBottom: T.space.lg }}>
+                <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: c.loss }}>
+                  Link problem
+                </p>
+                <AlertTriangle size={17} style={{ color: c.loss }} />
+              </div>
+              <h1 className="display" style={{ fontSize: 28, lineHeight: 1.05, marginBottom: T.space.md }}>
+                This link won't work
+              </h1>
+              <p style={{ fontSize: T.size.sm, color: c.text3, lineHeight: 1.7 }}>
+                It's either invalid or has expired. Reset links are valid for one hour — request a fresh one and try again.
+              </p>
+            </div>
+
+            <div style={{ marginTop: T.space.lg, display: "flex", flexDirection: "column", gap: 8 }}>
+              <Link to="/forgot-password" className="mono block text-center"
+                style={{
+                  padding: "14px 0", fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase",
+                  background: c.gain, color: "#fff",
+                }}>
+                Request a new link
+              </Link>
+              <Button variant="quiet" full onClick={() => navigate("/login")}>
+                Back to sign in
+              </Button>
+            </div>
+          </>
+
+        /* ═══ FORM ═══ */
+        ) : (
+          <>
+            <div style={{ marginBottom: T.space.xl }}>
+              <p className="eyebrow" style={{ marginBottom: 8 }}>Account recovery</p>
+              <h1 className="display" style={{ fontSize: 36, lineHeight: 1.02 }}>
+                {t("reset.title", "Set a new password")}
+              </h1>
+              <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 10, lineHeight: 1.6 }}>
+                {t("reset.desc", "Choose a password you haven't used here before.")}
+              </p>
+            </div>
+
             {message && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className={`mb-6 p-4 rounded-xl text-sm text-center font-medium border ${messageType === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-                {message}
-              </motion.div>
+              <div style={{ marginBottom: T.space.lg }}>
+                <Banner tone={messageType === "success" ? "gain" : "loss"} title={message} />
+              </div>
             )}
-          </AnimatePresence>
 
-          {success ? (
-            <div className="text-center space-y-4">
-              <div className="text-5xl">✅</div>
-              <p className="text-white/60 text-sm leading-relaxed">{t("reset.success")}</p>
-              <Link to="/login" className="block text-center py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition text-sm font-semibold shadow-xl shadow-emerald-500/20">
-                {t("auth.signIn")} →
-              </Link>
-            </div>
-          ) : tokenValid ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit}>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">{t("reset.newPassword")}</label>
-                <div className="relative group">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                  <input type={showPassword ? "text" : "password"} placeholder={t("reset.newPassword")}
-                    value={password} onChange={(e) => setPassword(e.target.value)} required
-                    className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25" />
+              <div style={{ marginBottom: T.space.md }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>{t("reset.newPassword", "New password")}</p>
+                <div style={{ position: "relative" }}>
+                  <Lock size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                  <input type={showPassword ? "text" : "password"} value={password}
+                    onChange={(e) => setPassword(e.target.value)} required
+                    placeholder="At least 6 characters"
+                    style={field(password.length >= 6)} />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors">
-                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: c.text4, padding: 4 }}>
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">{t("reset.confirmPassword")}</label>
-                <div className="relative group">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                  <input type={showConfirm ? "text" : "password"} placeholder={t("reset.confirmPassword")}
-                    value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required
-                    className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25" />
+              <div style={{ marginBottom: T.space.md }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>{t("reset.confirmPassword", "Confirm password")}</p>
+                <div style={{ position: "relative" }}>
+                  <Lock size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                  <input type={showConfirm ? "text" : "password"} value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)} required
+                    placeholder="Repeat it"
+                    style={field(match)} />
                   <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors">
-                    {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                    aria-label={showConfirm ? "Hide password" : "Show password"}
+                    style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: c.text4, padding: 4 }}>
+                    {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
-              </div>
-
-              <p className="text-white/25 text-xs">Password must be at least 6 characters long.</p>
-
-              <button type="submit" disabled={loading}
-                className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2">
-                {loading ? (
-                  <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("reset.submitting")}</>
-                ) : (
-                  <>{t("reset.submit")}<ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
+                {confirmPassword.length > 0 && (
+                  <p className="flex items-center gap-1.5" style={{
+                    fontSize: T.size.xs, marginTop: 6,
+                    color: match ? c.gain : c.loss,
+                  }}>
+                    {match
+                      ? <><Check size={11} /> Passwords match</>
+                      : <><AlertTriangle size={11} /> Passwords don't match yet</>}
+                  </p>
                 )}
-              </button>
-            </form>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="text-5xl">❌</div>
-              <p className="text-white/60 text-sm leading-relaxed">This reset link is invalid or has expired. Please request a new password reset link.</p>
-              <Link to="/forgot-password" className="block text-center py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition text-sm font-semibold shadow-xl shadow-emerald-500/20">
-                Request New Link →
-              </Link>
-            </div>
-          )}
-
-          {!success && tokenValid && (
-            <>
-              <div className="flex items-center gap-3 my-6">
-                <div className="flex-1 h-px bg-white/8" />
-                <span className="text-white/20 text-xs">{t("forgot.remembered")}</span>
-                <div className="flex-1 h-px bg-white/8" />
               </div>
-              <Link to="/login" className="block text-center py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
-                {t("common.back")} to {t("auth.signIn")}
-              </Link>
-            </>
-          )}
-        </div>
 
-        <div className="flex items-center justify-center gap-6 mt-6 text-white/20 text-xs">
-          <span>🔒 {t("common.sslSecured")}</span>
+              <Button type="submit" full disabled={loading}
+                style={{ marginTop: T.space.lg, opacity: loading ? .6 : 1 }}
+                icon={loading ? <Spinner size={13} tone="#fff" /> : null}>
+                {loading ? t("reset.submitting", "Updating") : t("reset.submit", "Update password")}
+                {!loading && <ArrowRight size={13} />}
+              </Button>
+            </form>
+
+            <div style={{ marginTop: T.space.xxl }}>
+              <div className="flex items-center gap-3" style={{ marginBottom: T.space.lg }}>
+                <div style={{ flex: 1, borderBottom: `1px solid ${c.line}` }} />
+                <span className="mono" style={{ fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase", color: c.text4 }}>
+                  {t("forgot.remembered", "Remembered it")}
+                </span>
+                <div style={{ flex: 1, borderBottom: `1px solid ${c.line}` }} />
+              </div>
+              <Button variant="quiet" full onClick={() => navigate("/login")}>
+                {t("auth.signIn", "Sign in")}
+              </Button>
+            </div>
+          </>
+        )}
+
+        <div className="flex items-center justify-center gap-5 mono"
+          style={{ marginTop: T.space.xl, fontSize: T.size.micro, letterSpacing: ".14em", textTransform: "uppercase", color: c.text4 }}>
+          <span>SSL secured</span>
           <span>·</span>
-          <span>🛡️ {t("common.dataProtected")}</span>
+          <span>Data protected</span>
         </div>
       </motion.div>
     </div>
