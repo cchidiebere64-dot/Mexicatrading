@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDownToLine, ArrowUpFromLine, TrendingUp } from "lucide-react";
+import { T } from "../pages/system.jsx";
+
+const c = T.color;
 
 /*
   Live activity popups — bottom-LEFT (clear of the WhatsApp button bottom-right).
   Drop <LiveActivity /> on your Home page only.
-  Shows varied messages from a large pool of people.
-  South Africa, Mexico & Zimbabwe appear most often, mixed with others. No Nigeria.
 */
 
 const NAMES = [
@@ -23,36 +24,33 @@ const NAMES = [
 
 /* Weighted countries — SA, Mexico, Zimbabwe appear most. No Nigeria. */
 const COUNTRIES = [
-  // heavy weight (repeated so they show more often)
   ["South Africa","🇿🇦"],["South Africa","🇿🇦"],["South Africa","🇿🇦"],["South Africa","🇿🇦"],
   ["Mexico","🇲🇽"],["Mexico","🇲🇽"],["Mexico","🇲🇽"],["Mexico","🇲🇽"],
   ["Zimbabwe","🇿🇼"],["Zimbabwe","🇿🇼"],["Zimbabwe","🇿🇼"],["Zimbabwe","🇿🇼"],
-  // mix of others (single weight)
   ["Ghana","🇬🇭"],["Kenya","🇰🇪"],["Zambia","🇿🇲"],["Botswana","🇧🇼"],
   ["Brazil","🇧🇷"],["India","🇮🇳"],["USA","🇺🇸"],["UK","🇬🇧"],
   ["Canada","🇨🇦"],["Germany","🇩🇪"],["UAE","🇦🇪"],["Spain","🇪🇸"],
   ["Namibia","🇳🇦"],["Tanzania","🇹🇿"],["Philippines","🇵🇭"],["Turkey","🇹🇷"],
 ];
 
-/* Message styles — mix of "contemplating" and simple */
 const TYPES = [
-  { kind:"deposit",  icon:ArrowDownToLine, color:"#10b981",
+  { kind:"deposit",  icon:ArrowDownToLine, color:c.gain,
     lines:[
-      (n,c,a)=>[`${n} ${c}`, `just deposited ${a}`],
-      (n,c,a)=>[`While you're still contemplating…`, `${n} ${c} deposited ${a}`],
-      (n,c,a)=>[`New deposit received`, `${n} ${c} · ${a}`],
+      (n,co,a)=>[`${n} ${co}`, `deposited ${a}`],
+      (n,co,a)=>[`While you're still contemplating…`, `${n} ${co} deposited ${a}`],
+      (n,co,a)=>[`New deposit received`, `${n} ${co} · ${a}`],
     ]},
-  { kind:"withdraw", icon:ArrowUpFromLine, color:"#14b8a6",
+  { kind:"withdraw", icon:ArrowUpFromLine, color:c.text2,
     lines:[
-      (n,c,a)=>[`${n} ${c}`, `just withdrew ${a}`],
-      (n,c,a)=>[`Someone just got paid 💸`, `${n} ${c} withdrew ${a}`],
-      (n,c,a)=>[`Withdrawal completed`, `${n} ${c} · ${a}`],
+      (n,co,a)=>[`${n} ${co}`, `withdrew ${a}`],
+      (n,co,a)=>[`Someone just got paid`, `${n} ${co} withdrew ${a}`],
+      (n,co,a)=>[`Withdrawal completed`, `${n} ${co} · ${a}`],
     ]},
-  { kind:"invest",   icon:TrendingUp,      color:"#10b981",
+  { kind:"invest",   icon:TrendingUp,      color:c.gain,
     lines:[
-      (n,c,a)=>[`${n} ${c}`, `just invested ${a}`],
-      (n,c,a)=>[`While you're still thinking…`, `${n} ${c} invested ${a}`],
-      (n,c,a)=>[`New investment started`, `${n} ${c} · ${a}`],
+      (n,co,a)=>[`${n} ${co}`, `invested ${a}`],
+      (n,co,a)=>[`While you're still thinking…`, `${n} ${co} invested ${a}`],
+      (n,co,a)=>[`New investment started`, `${n} ${co} · ${a}`],
     ]},
 ];
 
@@ -89,24 +87,43 @@ export default function LiveActivity() {
   }, []);
 
   return (
-    <div className="fixed bottom-6 left-6 z-[9997]" style={{ fontFamily:"'Montserrat',sans-serif" }}>
+    <div className="ui"
+      style={{ position: "fixed", bottom: 24, left: 24, zIndex: 9997, pointerEvents: "none" }}>
       <AnimatePresence>
         {event && (
           <motion.div
             key={event.id}
-            initial={{ opacity:0, x:-40, scale:.95 }}
-            animate={{ opacity:1, x:0, scale:1 }}
-            exit={{ opacity:0, x:-40, scale:.95 }}
-            transition={{ duration:.4, ease:[0.22,1,0.36,1] }}
-            className="flex items-center gap-3 pr-5 pl-3 py-3 shadow-2xl rounded-2xl max-w-[310px]"
-            style={{ background:"rgba(13,17,32,.97)", border:"1px solid rgba(16,185,129,.25)", backdropFilter:"blur(20px)" }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ border:`1px solid ${event.color}55`, background:`${event.color}14` }}>
-              <event.Icon size={18} style={{ color:event.color }} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm leading-tight font-semibold" style={{ color:"rgba(255,255,255,.9)" }}>{event.top}</p>
-              <p className="text-xs mt-0.5" style={{ color:"rgba(255,255,255,.55)" }}>{event.bottom}</p>
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={{ duration: .4, ease: [.22, 1, .36, 1] }}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+              maxWidth: 300,
+              background: c.panel,
+              border: `1px solid ${c.line}`,
+              borderLeft: `2px solid ${event.color}`,
+              padding: "13px 16px",
+              boxShadow: "0 8px 28px rgba(0,0,0,.4)",
+            }}>
+
+            <event.Icon size={14} style={{ color: event.color, flexShrink: 0, marginTop: 2 }} />
+
+            <div style={{ minWidth: 0 }}>
+              <p style={{
+                fontFamily: "'Archivo',system-ui,sans-serif",
+                fontSize: T.size.sm, color: c.text, lineHeight: 1.35,
+              }}>
+                {event.top}
+              </p>
+              <p style={{
+                fontFamily: "'IBM Plex Mono',monospace",
+                fontSize: T.size.tiny, color: c.text3, marginTop: 3, lineHeight: 1.5,
+              }}>
+                {event.bottom}
+              </p>
             </div>
           </motion.div>
         )}
