@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { X, Menu, LayoutDashboard, LogOut, ChevronRight, Settings, MessageCircle } from "lucide-react";
 import LanguageSelector from "./LanguageSelector.jsx";
 import { useTranslation } from "react-i18next";
+import { T } from "../pages/system.jsx";
+
+const c = T.color;
 
 // Pages considered "outside the app"
 const OUTSIDE_PAGES = ["/", "/login", "/register"];
@@ -15,7 +18,6 @@ const openChat = () => {
       window.Tawk_API.showWidget();
       window.Tawk_API.maximize();
     } else {
-      // Fallback if Tawk hasn't loaded yet — keep trying
       let attempts = 0;
       const interval = setInterval(() => {
         attempts++;
@@ -24,7 +26,7 @@ const openChat = () => {
           window.Tawk_API.maximize();
           clearInterval(interval);
         }
-        if (attempts > 20) clearInterval(interval); // give up after 10s
+        if (attempts > 20) clearInterval(interval);
       }, 500);
     }
   } catch (e) {
@@ -55,9 +57,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [location.pathname]);
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
   const handleProtectedNav = (path) => {
     const currentPath = location.pathname;
@@ -74,114 +74,115 @@ export default function Navbar() {
   };
 
   const isActive = (path) => location.pathname === path;
+  const loggedIn = token && !OUTSIDE_PAGES.includes(location.pathname);
+
+  /* Desktop link — active state is an underline rule, not a filled pill */
+  const linkStyle = (active) => ({
+    position: "relative",
+    padding: "20px 14px",
+    fontFamily: "'IBM Plex Mono',monospace",
+    fontSize: T.size.tiny,
+    letterSpacing: ".16em",
+    textTransform: "uppercase",
+    color: active ? c.gain : c.text3,
+    borderBottom: `2px solid ${active ? c.gain : "transparent"}`,
+    marginBottom: -1,
+    transition: "color .2s",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+  });
+
+  const rightBtn = (active, tone) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 7,
+    padding: "9px 13px",
+    fontFamily: "'IBM Plex Mono',monospace",
+    fontSize: T.size.tiny,
+    letterSpacing: ".14em",
+    textTransform: "uppercase",
+    color: tone || (active ? c.gain : c.text3),
+    border: `1px solid ${active ? "rgba(63,143,95,.35)" : c.line}`,
+    background: active ? "rgba(63,143,95,.08)" : "transparent",
+    transition: "color .2s, border-color .2s",
+  });
+
+  const drawerRow = (active) => ({
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "14px 18px",
+    fontSize: T.size.sm,
+    color: active ? c.gain : c.text2,
+    borderBottom: `1px solid ${c.lineSoft}`,
+    borderLeft: `2px solid ${active ? c.gain : "transparent"}`,
+    background: active ? "rgba(63,143,95,.06)" : "transparent",
+    textAlign: "left",
+    transition: "background .2s",
+  });
 
   return (
     <>
-      <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#080c18]/95 backdrop-blur-xl border-b border-white/8 shadow-lg"
-          : "bg-[#080c18]/70 backdrop-blur-lg border-b border-white/5"
-      }`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-5 py-3">
+      <header className="ui" style={{
+        position: "fixed", top: 0, left: 0, width: "100%", zIndex: 50,
+        background: scrolled ? "rgba(14,16,19,.97)" : "rgba(14,16,19,.85)",
+        backdropFilter: "blur(14px)",
+        borderBottom: `1px solid ${scrolled ? c.line : c.lineSoft}`,
+        transition: "background .3s, border-color .3s",
+      }}>
+        <div className="mx-auto flex justify-between items-stretch px-5" style={{ maxWidth: 1200 }}>
 
           {/* LOGO */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="relative">
-              <img
-                src={mexicanLogo}
-                alt="MexicaTrading Logo"
-                className="h-9 w-9 object-contain drop-shadow-[0_0_8px_#10B981] group-hover:drop-shadow-[0_0_14px_#10B981] transition-all"
-              />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
-            <span className="text-white text-base font-bold tracking-tight">
-              Mexica<span className="text-emerald-400">Trading</span>
+          <Link to="/" className="flex items-center gap-2.5" style={{ paddingTop: 14, paddingBottom: 14 }}>
+            <img src={mexicanLogo} alt="MexicaTrading"
+              style={{ height: 30, width: 30, objectFit: "contain" }} />
+            <span className="display" style={{ fontSize: T.size.lg, color: "#fff", lineHeight: 1 }}>
+              MexicaTrading
             </span>
           </Link>
 
           {/* DESKTOP LINKS */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-stretch">
             {navLinks.map((link) =>
               link.protected ? (
-                <button
-                  key={link.to}
-                  onClick={() => handleProtectedNav(link.to)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive(link.to)
-                      ? "text-emerald-400 bg-emerald-500/10"
-                      : "text-white/50 hover:text-white hover:bg-white/5"
-                  }`}
-                >
+                <button key={link.to} onClick={() => handleProtectedNav(link.to)} style={linkStyle(isActive(link.to))}>
                   {link.label}
                 </button>
               ) : (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive(link.to)
-                      ? "text-emerald-400 bg-emerald-500/10"
-                      : "text-white/50 hover:text-white hover:bg-white/5"
-                  }`}
-                >
+                <Link key={link.to} to={link.to} style={linkStyle(isActive(link.to))}>
                   {link.label}
                 </Link>
               )
             )}
-
-            {/* 💬 Chat Support — Desktop */}
-            <button
-              onClick={openChat}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-emerald-400/80 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
-            >
-              <MessageCircle size={15} />
-              Chat Support
+            <button onClick={openChat} style={linkStyle(false)}>
+              <MessageCircle size={13} /> Support
             </button>
           </nav>
 
           {/* DESKTOP RIGHT */}
           <div className="hidden md:flex items-center gap-2">
             <LanguageSelector />
-            {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
+            {loggedIn ? (
               <>
-                <button
-                  onClick={() => handleProtectedNav("/dashboard")}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all"
-                >
-                  <LayoutDashboard size={15} />
-                  {t("nav.dashboard")}
+                <button onClick={() => handleProtectedNav("/dashboard")} style={rightBtn(isActive("/dashboard"))}>
+                  <LayoutDashboard size={13} /> {t("nav.dashboard")}
                 </button>
-                <button
-                  onClick={() => handleProtectedNav("/settings")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
-                    isActive("/settings")
-                      ? "text-emerald-400 bg-emerald-500/10"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Settings size={15} />
-                  {t("nav.settings", "Settings")}
+                <button onClick={() => handleProtectedNav("/settings")} style={rightBtn(isActive("/settings"))}>
+                  <Settings size={13} />
                 </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                >
-                  <LogOut size={15} />
-                  {t("nav.logout")}
+                <button onClick={handleLogout} style={rightBtn(false, c.loss)}>
+                  <LogOut size={13} />
                 </button>
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all"
-                >
-                  {t("nav.signIn")}
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-4 py-2 rounded-lg text-sm bg-emerald-500 hover:bg-emerald-400 text-white font-semibold transition-all shadow-lg shadow-emerald-500/20"
-                >
+                <Link to="/login" style={rightBtn(false)}>{t("nav.signIn")}</Link>
+                <Link to="/register" style={{
+                  ...rightBtn(false),
+                  background: c.gain, color: "#fff", border: `1px solid ${c.gain}`,
+                }}>
                   {t("nav.getStarted")}
                 </Link>
               </>
@@ -189,164 +190,117 @@ export default function Navbar() {
           </div>
 
           {/* MOBILE MENU BUTTON */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all"
-          >
-            {menuOpen ? <X size={18} /> : <Menu size={18} />}
+          <button onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Menu"
+            className="md:hidden flex items-center justify-center"
+            style={{ width: 38, height: 38, alignSelf: "center", border: `1px solid ${c.line}`, color: c.text2, background: c.fill }}>
+            {menuOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
         </div>
       </header>
 
-      {/* MOBILE MENU OVERLAY */}
+      {/* MOBILE DRAWER */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setMenuOpen(false)}
-          />
+        <div className="fixed inset-0 z-40 md:hidden ui">
+          <div className="absolute inset-0" style={{ background: "rgba(8,9,11,.8)" }} onClick={() => setMenuOpen(false)} />
 
-          <div className="absolute top-0 right-0 h-full w-72 bg-[#0e1422] border-l border-white/8 shadow-2xl flex flex-col">
+          <div className="absolute top-0 right-0 h-full flex flex-col"
+            style={{ width: 288, background: c.panel, borderLeft: `1px solid ${c.line}` }}>
 
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
-              <span className="text-white font-bold text-sm">
-                Mexica<span className="text-emerald-400">Trading</span>
-              </span>
-              <button
-                onClick={() => setMenuOpen(false)}
-                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition"
-              >
-                <X size={16} />
+            {/* Drawer header */}
+            <div className="flex items-center justify-between"
+              style={{ padding: "16px 18px", borderBottom: `1px solid ${c.line}` }}>
+              <span className="display" style={{ fontSize: T.size.base, color: "#fff" }}>MexicaTrading</span>
+              <button onClick={() => setMenuOpen(false)} aria-label="Close"
+                className="flex items-center justify-center"
+                style={{ width: 32, height: 32, background: c.fill, color: c.text3 }}>
+                <X size={15} />
               </button>
             </div>
 
-            {/* User info */}
-            {token && !OUTSIDE_PAGES.includes(location.pathname) && user?.name && (
-              <div className="px-5 py-4 border-b border-white/8">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
-                    {user.name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold text-sm">{user.name}</p>
-                    <p className="text-white/30 text-xs">{user.email}</p>
-                  </div>
-                </div>
+            {/* User */}
+            {loggedIn && user?.name && (
+              <div style={{ padding: "16px 18px", borderBottom: `1px solid ${c.line}` }}>
+                <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".2em", textTransform: "uppercase", color: c.text4, marginBottom: 6 }}>
+                  Signed in
+                </p>
+                <p style={{ fontSize: T.size.sm, color: c.text }}>{user.name}</p>
+                <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>{user.email}</p>
               </div>
             )}
 
-            {/* Nav Links */}
-            <nav className="flex flex-col gap-1 px-3 py-4 flex-1 overflow-y-auto">
+            {/* Links */}
+            <nav className="flex-1 overflow-y-auto">
               {navLinks.map((link) =>
                 link.protected ? (
-                  <button
-                    key={link.to}
-                    onClick={() => handleProtectedNav(link.to)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      isActive(link.to)
-                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                        : "text-white/50 hover:text-white hover:bg-white/5"
-                    }`}
-                  >
+                  <button key={link.to} onClick={() => handleProtectedNav(link.to)} style={drawerRow(isActive(link.to))}>
                     {link.label}
-                    <ChevronRight size={14} className="opacity-40" />
+                    <ChevronRight size={13} style={{ opacity: .35 }} />
                   </button>
                 ) : (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      isActive(link.to)
-                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                        : "text-white/50 hover:text-white hover:bg-white/5"
-                    }`}
-                  >
+                  <Link key={link.to} to={link.to} style={drawerRow(isActive(link.to))}>
                     {link.label}
-                    <ChevronRight size={14} className="opacity-40" />
+                    <ChevronRight size={13} style={{ opacity: .35 }} />
                   </Link>
                 )
               )}
 
-              {token && !OUTSIDE_PAGES.includes(location.pathname) && (
+              {loggedIn && (
                 <>
-                  <button
-                    onClick={() => handleProtectedNav("/dashboard")}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      isActive("/dashboard")
-                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                        : "text-white/50 hover:text-white hover:bg-white/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <LayoutDashboard size={15} />
-                      {t("nav.dashboard")}
-                    </span>
-                    <ChevronRight size={14} className="opacity-40" />
+                  <button onClick={() => handleProtectedNav("/dashboard")} style={drawerRow(isActive("/dashboard"))}>
+                    <span className="flex items-center gap-2"><LayoutDashboard size={14} /> {t("nav.dashboard")}</span>
+                    <ChevronRight size={13} style={{ opacity: .35 }} />
                   </button>
-
-                  <button
-                    onClick={() => handleProtectedNav("/settings")}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      isActive("/settings")
-                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                        : "text-white/50 hover:text-white hover:bg-white/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Settings size={15} />
-                      {t("nav.settings", "Settings")}
-                    </span>
-                    <ChevronRight size={14} className="opacity-40" />
+                  <button onClick={() => handleProtectedNav("/history")} style={drawerRow(isActive("/history"))}>
+                    <span className="flex items-center gap-2">History</span>
+                    <ChevronRight size={13} style={{ opacity: .35 }} />
+                  </button>
+                  <button onClick={() => handleProtectedNav("/settings")} style={drawerRow(isActive("/settings"))}>
+                    <span className="flex items-center gap-2"><Settings size={14} /> {t("nav.settings", "Settings")}</span>
+                    <ChevronRight size={13} style={{ opacity: .35 }} />
                   </button>
                 </>
               )}
 
-              {/* 💬 Chat Support — Mobile (inside drawer) */}
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setTimeout(openChat, 300); // slight delay so drawer closes first
-                }}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all mt-1"
-              >
-                <span className="flex items-center gap-2">
-                  <MessageCircle size={15} />
-                  Chat Support
-                </span>
-                <ChevronRight size={14} className="opacity-40" />
+              <button onClick={() => { setMenuOpen(false); setTimeout(openChat, 300); }}
+                style={{ ...drawerRow(false), color: c.gain }}>
+                <span className="flex items-center gap-2"><MessageCircle size={14} /> Support</span>
+                <ChevronRight size={13} style={{ opacity: .35 }} />
               </button>
             </nav>
 
-            {/* Bottom Actions */}
-            <div className="px-3 pb-6 space-y-2">
-              <div className="flex justify-center py-2">
+            {/* Bottom */}
+            <div style={{ padding: 14, borderTop: `1px solid ${c.line}` }}>
+              <div className="flex justify-center" style={{ marginBottom: 12 }}>
                 <LanguageSelector />
               </div>
 
-              {token && !OUTSIDE_PAGES.includes(location.pathname) ? (
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all"
-                >
-                  <LogOut size={15} />
-                  {t("nav.logout")}
+              {loggedIn ? (
+                <button onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 mono"
+                  style={{
+                    padding: "13px 0", fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase",
+                    border: `1px solid rgba(180,85,63,.35)`, color: c.loss, background: "transparent",
+                  }}>
+                  <LogOut size={13} /> {t("nav.logout")}
                 </button>
               ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="block text-center py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-sm font-medium hover:bg-white/10 transition-all"
-                  >
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Link to="/login" className="mono block text-center"
+                    style={{
+                      padding: "13px 0", fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase",
+                      border: `1px solid ${c.line}`, color: c.text2,
+                    }}>
                     {t("nav.signIn")}
                   </Link>
-                  <Link
-                    to="/register"
-                    className="block text-center py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20"
-                  >
+                  <Link to="/register" className="mono block text-center"
+                    style={{
+                      padding: "13px 0", fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase",
+                      background: c.gain, color: "#fff", border: `1px solid ${c.gain}`,
+                    }}>
                     {t("nav.getStarted")}
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
