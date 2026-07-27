@@ -4,9 +4,13 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Mail, Lock, Phone, Globe, ArrowRight,
-  Eye, EyeOff, CheckCircle, AlertTriangle, ChevronDown, Search, Gift, ChevronRight
+  Eye, EyeOff, Check, AlertTriangle, ChevronDown, Search, Gift,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { T, ThemeStyles, Button, Spinner, Banner, inputStyle } from "./system.jsx";
+
+const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 /* ─────────────────────────────────────────────
    COUNTRIES
@@ -17,251 +21,158 @@ const COUNTRIES = [
 
 const PHONE_LENGTHS = {AF:[9],AL:[9],DZ:[9],AD:[6],AO:[9],AR:[10],AM:[8],AU:[9],AT:[10,11],AZ:[9],BS:[10],BH:[8],BD:[10],BB:[10],BY:[9],BE:[9],BZ:[7],BJ:[8],BT:[8],BO:[8],BA:[8],BW:[8],BR:[10,11],BN:[7],BG:[9],BF:[8],BI:[8],KH:[8,9],CM:[9],CA:[10],CV:[7],CF:[8],TD:[8],CL:[9],CN:[11],CO:[10],KM:[7],CD:[9],CG:[9],CR:[8],HR:[9],CU:[8],CY:[8],CZ:[9],DK:[8],DJ:[8],DM:[10],DO:[10],EC:[9],EG:[10],SV:[8],GQ:[9],ER:[7],EE:[7,8],SZ:[8],ET:[9],FJ:[7],FI:[9,10],FR:[9],GA:[8],GM:[7],GE:[9],DE:[10,11],GH:[9],GR:[10],GD:[10],GT:[8],GN:[9],GW:[9],GY:[7],HT:[8],HN:[8],HK:[8],HU:[9],IS:[7],IN:[10],ID:[9,10,11,12],IR:[10],IQ:[10],IE:[9],IL:[9],IT:[9,10],CI:[10],JM:[10],JP:[10],JO:[9],KZ:[10],KE:[9,10],KI:[8],XK:[8],KW:[8],KG:[9],LA:[9,10],LV:[8],LB:[7,8],LS:[8],LR:[8],LY:[9],LI:[7],LT:[8],LU:[9],MO:[8],MG:[9],MW:[9],MY:[9,10],MV:[7],ML:[8],MT:[8],MH:[7],MR:[8],MU:[8],MX:[10],FM:[7],MD:[8],MC:[8],MN:[8],ME:[8],MA:[9],MZ:[9],MM:[8,9,10],NA:[9],NR:[7],NP:[10],NL:[9],NZ:[8,9],NI:[8],NE:[8],NG:[10],KP:[10],MK:[8],NO:[8],OM:[8],PK:[10],PW:[7],PS:[9],PA:[8],PG:[8],PY:[9],PE:[9],PH:[10],PL:[9],PT:[9],PR:[10],QA:[8],RO:[9],RU:[10],RW:[9],KN:[10],LC:[10],VC:[10],WS:[7],SM:[10],ST:[7],SA:[9],SN:[9],RS:[8,9],SC:[7],SL:[8],SG:[8],SK:[9],SI:[8],SB:[7],SO:[8],ZA:[9],KR:[9,10],SS:[9],ES:[9],LK:[9],SD:[9],SR:[7],SE:[9],CH:[9],SY:[9],TW:[9],TJ:[9],TZ:[9],TH:[9],TL:[7,8],TG:[8],TO:[5,7],TT:[10],TN:[8],TR:[10],TM:[8],TV:[5],UG:[9],UA:[9],AE:[9],GB:[10],US:[10],UY:[8,9],UZ:[9],VU:[7],VA:[10],VE:[10],VN:[9,10],YE:[9],ZM:[9],ZW:[9]};
 
-/* ─────────────────────────────────────────────
-   VALIDATION HELPERS
-───────────────────────────────────────────── */
+/* ── Validation ── */
 const isValidName  = (v) => v.trim().length >= 6 && v.trim().includes(" ");
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-const isValidPhone = (v) => v.replace(/\D/g,"").length >= 5;
+const isValidPhone = (v) => v.replace(/\D/g, "").length >= 5;
 const isValidPass  = (v) => v.length >= 6;
 
-/* ─────────────────────────────────────────────
-   FADE WRAPPER
-───────────────────────────────────────────── */
-const Fade = ({ show, children, delay = 0 }) => (
+/* ── Reveal wrapper ── */
+const Reveal = ({ show, children, delay = 0 }) => (
   <AnimatePresence>
     {show && (
       <motion.div
-        initial={{ opacity:0, y:20, filter:"blur(8px)" }}
-        animate={{ opacity:1, y:0,  filter:"blur(0px)" }}
-        exit={{    opacity:0, y:-8, filter:"blur(4px)" }}
-        transition={{ duration:0.6, delay, ease:[0.22,1,0.36,1] }}>
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}>
         {children}
       </motion.div>
     )}
   </AnimatePresence>
 );
 
-/* ─────────────────────────────────────────────
-   FIELD SHELL
-───────────────────────────────────────────── */
-const Field = ({ icon: Icon, children }) => (
-  <div className="relative group">
-    {Icon && <Icon size={14} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300 text-white/25 group-focus-within:text-emerald-400 z-10" />}
-    {children}
-  </div>
-);
-
-/* ─────────────────────────────────────────────
-   NEXT HINT — subtle animated nudge
-───────────────────────────────────────────── */
-const NextHint = ({ show, label = "Keep going…" }) => (
-  <AnimatePresence>
-    {show && (
-      <motion.div
-        initial={{ opacity:0, y:4 }}
-        animate={{ opacity:1, y:0 }}
-        exit={{ opacity:0, y:-4 }}
-        transition={{ duration:0.4 }}
-        className="flex items-center gap-1.5 mt-1.5 ml-1">
-        <motion.div
-          animate={{ x:[0,4,0] }}
-          transition={{ repeat:Infinity, duration:1.4, ease:"easeInOut" }}>
-          <ChevronRight size={11} style={{ color:"var(--em)" }} />
-        </motion.div>
-        <span className="text-[10px] font-light tracking-wider" style={{ color:"rgba(16,185,129,.5)" }}>{label}</span>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
-
-/* ─────────────────────────────────────────────
-   NEXT BUTTON — travels down the form
-   Only shows under the current active field
-───────────────────────────────────────────── */
-const NextButton = ({ show, onClick }) => (
-  <AnimatePresence>
-    {show && (
-      <motion.button
-        type="button"
-        onClick={onClick}
-        initial={{ opacity:0, y:6 }}
-        animate={{ opacity:1, y:0 }}
-        exit={{ opacity:0, y:-6 }}
-        transition={{ duration:0.4, ease:[0.22,1,0.36,1] }}
-        className="btn-prime group/next w-full py-3 mt-2.5 text-[10px] font-semibold tracking-[.22em] uppercase text-white flex items-center justify-center gap-2.5">
-        Next
-        <ChevronRight size={13} className="group-hover/next:translate-x-1 transition-transform duration-300" />
-      </motion.button>
-    )}
-  </AnimatePresence>
-);
-
-/* ─────────────────────────────────────────────
-   PROGRESS BAR
-───────────────────────────────────────────── */
-const ProgressBar = ({ step, total }) => {
-  const pct = Math.round((step / total) * 100);
+/* ── Progress: honest step count, not a percentage ── */
+function Progress({ step, total }) {
   return (
-    <div className="mb-8">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-[9px] font-medium tracking-[.2em] uppercase" style={{ color:"rgba(255,255,255,.25)" }}>Progress</span>
-        <span className="text-[9px] font-semibold" style={{ color:"var(--em)" }}>{pct}%</span>
+    <div style={{ marginBottom: T.space.xl }}>
+      <div className="flex items-baseline justify-between" style={{ marginBottom: 8 }}>
+        <span className="mono" style={{ fontSize: T.size.tiny, letterSpacing: ".18em", textTransform: "uppercase", color: c.text3 }}>
+          Step {Math.min(step + 1, total)} of {total}
+        </span>
+        <span className="mono tabular" style={{ fontSize: T.size.tiny, color: c.gain }}>
+          {String(step).padStart(2, "0")}/{String(total).padStart(2, "0")}
+        </span>
       </div>
-      <div className="h-[2px] w-full" style={{ background:"rgba(255,255,255,.06)" }}>
-        <motion.div className="h-full" style={{ background:"linear-gradient(90deg,var(--em),var(--teal))" }}
-          animate={{ width:`${pct}%` }}
-          transition={{ duration:0.6, ease:[0.22,1,0.36,1] }} />
+      <div style={{ height: 2, background: c.line }}>
+        <motion.div style={{ height: "100%", background: c.gain }}
+          animate={{ width: `${Math.round((step / total) * 100)}%` }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} />
       </div>
     </div>
   );
-};
+}
 
-/* ─────────────────────────────────────────────
-   MAIN COMPONENT
-───────────────────────────────────────────── */
 export default function Register() {
   const { t } = useTranslation();
-  const API_URL = "https://mexicatradingbackend.onrender.com";
   const navigate = useNavigate();
   const location = useLocation();
-  const refCode  = new URLSearchParams(location.search).get("ref") || "";
+  const refCode = new URLSearchParams(location.search).get("ref") || "";
 
   const [form, setForm] = useState({
-    name:"", email:"", phoneNumber:"", password:"", confirmPassword:"", referralCode:refCode
+    name: "", email: "", phoneNumber: "", password: "", confirmPassword: "", referralCode: refCode,
   });
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [countryOpen,     setCountryOpen]     = useState(false);
-  const [countrySearch,   setCountrySearch]   = useState("");
-  const [agreedToTerms,   setAgreedToTerms]   = useState(false);
-  const [error,           setError]           = useState("");
-  const [loading,         setLoading]         = useState(false);
-  const [showPass,        setShowPass]        = useState(false);
-  const [showConfirm,     setShowConfirm]     = useState(false);
-  const [success,         setSuccess]         = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   /* reveal flags */
-  const [showEmail,    setShowEmail]    = useState(false);
-  const [showCountry,  setShowCountry]  = useState(false);
-  const [showPhone,    setShowPhone]    = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
+  const [showCountry, setShowCountry] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmF, setShowConfirmF] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
-  const [showTerms,    setShowTerms]    = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
-  /* per-field inline error for the Next button */
   const [fieldError, setFieldError] = useState("");
 
-  /* refs for auto-focus */
-  const emailRef   = useRef(null);
-  const phoneRef   = useRef(null);
-  const passRef    = useRef(null);
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const passRef = useRef(null);
   const confirmRef = useRef(null);
-  const bottomRef  = useRef(null);
+  const bottomRef = useRef(null);
 
-  const focus  = (ref, delay = 650) => setTimeout(() => ref.current?.focus(), delay);
-  const scroll = (delay = 120)      => setTimeout(() => bottomRef.current?.scrollIntoView({ behavior:"smooth", block:"end" }), delay);
+  const focus = (ref, delay = 650) => setTimeout(() => ref.current?.focus(), delay);
+  const scroll = (delay = 120) => setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), delay);
 
   const handleChange = (e) => { setFieldError(""); setForm(f => ({ ...f, [e.target.name]: e.target.value })); };
 
-  /* ── AUTO-REVEAL EFFECTS (fire while typing, no blur needed) ── */
-
-  /* Name → Email: 6+ chars AND contains a space (first + last name) */
   useEffect(() => {
-    if (!showEmail && isValidName(form.name)) {
-      setShowEmail(true);
-      focus(emailRef);
-      scroll();
-    }
+    if (!showEmail && isValidName(form.name)) { setShowEmail(true); focus(emailRef); scroll(); }
   }, [form.name]);
 
-  /* Email → Country: valid email format */
   useEffect(() => {
-    if (!showCountry && isValidEmail(form.email)) {
-      setShowCountry(true);
-      scroll();
-    }
+    if (!showCountry && isValidEmail(form.email)) { setShowCountry(true); scroll(); }
   }, [form.email]);
 
-  /* Phone → Password: 5+ digits typed */
   useEffect(() => {
-    if (!showPassword && showPhone && isValidPhone(form.phoneNumber)) {
-      setShowPassword(true);
-      focus(passRef);
-      scroll();
-    }
+    if (!showPassword && showPhone && isValidPhone(form.phoneNumber)) { setShowPassword(true); focus(passRef); scroll(); }
   }, [form.phoneNumber]);
 
-  /* Password → Confirm: 6+ chars */
   useEffect(() => {
-    if (!showConfirmF && isValidPass(form.password)) {
-      setShowConfirmF(true);
-      focus(confirmRef);
-      scroll();
-    }
+    if (!showConfirmF && isValidPass(form.password)) { setShowConfirmF(true); focus(confirmRef); scroll(); }
   }, [form.password]);
 
-  /* Confirm → Referral + Terms: 6+ chars */
   useEffect(() => {
     if (!showReferral && form.confirmPassword.length >= 6) {
-      setShowReferral(true);
-      scroll();
+      setShowReferral(true); scroll();
       setTimeout(() => { setShowTerms(true); scroll(200); }, 350);
     }
   }, [form.confirmPassword]);
 
-  /* Country select → Phone */
-  const onCountrySelect = (c) => {
-    setSelectedCountry(c);
+  const onCountrySelect = (ct) => {
+    setSelectedCountry(ct);
     setCountryOpen(false);
     setCountrySearch("");
     setError("");
     setFieldError("");
-    if (!showPhone) {
-      setShowPhone(true);
-      focus(phoneRef);
-      scroll();
-    }
+    if (!showPhone) { setShowPhone(true); focus(phoneRef); scroll(); }
   };
 
-  /* ── NEXT BUTTON HANDLERS — reveal next field, show error if invalid ── */
   const nextFromName = () => {
-    if (!isValidName(form.name)) return setFieldError("Please enter your first and last name to continue.");
+    if (!isValidName(form.name)) return setFieldError("Enter your first and last name to continue.");
     setFieldError(""); setShowEmail(true); focus(emailRef); scroll();
   };
   const nextFromEmail = () => {
-    if (!isValidEmail(form.email)) return setFieldError("Please enter a valid email address to continue.");
+    if (!isValidEmail(form.email)) return setFieldError("Enter a valid email address to continue.");
     setFieldError(""); setShowCountry(true); scroll();
   };
   const nextFromCountry = () => {
-    if (!selectedCountry) return setFieldError("Please select your country to continue.");
+    if (!selectedCountry) return setFieldError("Select your country to continue.");
     setFieldError(""); setShowPhone(true); focus(phoneRef); scroll();
   };
   const nextFromPhone = () => {
-    if (!isValidPhone(form.phoneNumber)) return setFieldError("Please enter your phone number to continue.");
+    if (!isValidPhone(form.phoneNumber)) return setFieldError("Enter your phone number to continue.");
     setFieldError(""); setShowPassword(true); focus(passRef); scroll();
   };
   const nextFromPassword = () => {
-    if (!isValidPass(form.password)) return setFieldError("Password must be at least 6 characters to continue.");
+    if (!isValidPass(form.password)) return setFieldError("Password must be at least 6 characters.");
     setFieldError(""); setShowConfirmF(true); focus(confirmRef); scroll();
   };
   const nextFromConfirm = () => {
-    if (form.confirmPassword.length < 6) return setFieldError("Please confirm your password to continue.");
-    if (form.password !== form.confirmPassword) return setFieldError("Passwords do not match yet.");
+    if (form.confirmPassword.length < 6) return setFieldError("Confirm your password to continue.");
+    if (form.password !== form.confirmPassword) return setFieldError("Passwords don't match yet.");
     setFieldError(""); setShowReferral(true); scroll();
     setTimeout(() => { setShowTerms(true); scroll(200); }, 350);
   };
 
-  /* progress step 0–7 */
   const step = showTerms ? 7 : showReferral ? 6 : showConfirmF ? 5 : showPassword ? 4 : showPhone ? 3 : showCountry ? 2 : showEmail ? 1 : 0;
 
-  /* phone validation */
   const validatePhone = () => {
     if (!form.phoneNumber.trim()) return "Phone number is required.";
-    if (!selectedCountry)        return "Please select your country first.";
-    const digits   = form.phoneNumber.replace(/\D/g,"");
+    if (!selectedCountry) return "Select your country first.";
+    const digits = form.phoneNumber.replace(/\D/g, "");
     const expected = PHONE_LENGTHS[selectedCountry.code] || [];
-    if (!expected.length) { return digits.length < 6 || digits.length > 15 ? `Enter a valid phone number for ${selectedCountry.name}.` : null; }
+    if (!expected.length) {
+      return digits.length < 6 || digits.length > 15 ? `Enter a valid phone number for ${selectedCountry.name}.` : null;
+    }
     if (!expected.includes(digits.length)) {
       const range = expected.length === 1 ? `${expected[0]} digits` : `${expected.join(" or ")} digits`;
       return `Phone for ${selectedCountry.name} must be ${range}. You entered ${digits.length}.`;
@@ -269,23 +180,22 @@ export default function Register() {
     return null;
   };
 
-  /* submit */
   const handleSubmit = async (e) => {
     e.preventDefault(); setError("");
-    if (!isValidName(form.name))        return setError("Please enter your full name (first and last).");
-    if (!isValidEmail(form.email))      return setError("Please enter a valid email address.");
-    if (!selectedCountry)               return setError("Please select your country.");
+    if (!isValidName(form.name)) return setError("Enter your full name (first and last).");
+    if (!isValidEmail(form.email)) return setError("Enter a valid email address.");
+    if (!selectedCountry) return setError("Select your country.");
     const phoneErr = validatePhone();
-    if (phoneErr)                        return setError(phoneErr);
-    if (!isValidPass(form.password))    return setError("Password must be at least 6 characters.");
+    if (phoneErr) return setError(phoneErr);
+    if (!isValidPass(form.password)) return setError("Password must be at least 6 characters.");
     if (form.password !== form.confirmPassword) return setError("Passwords do not match.");
-    if (!agreedToTerms)                 return setError("You must agree to the Terms and Privacy Policy.");
+    if (!agreedToTerms) return setError("You must agree to the Terms and Privacy Policy.");
     const fullPhone = `${selectedCountry.dial} ${form.phoneNumber.trim()}`;
     setLoading(true);
     try {
       const res = await axios.post(`${API_URL}/api/auth/register`, {
-        name:form.name, email:form.email, phone:fullPhone,
-        country:selectedCountry.name, password:form.password, referralCode:form.referralCode,
+        name: form.name, email: form.email, phone: fullPhone,
+        country: selectedCountry.name, password: form.password, referralCode: form.referralCode,
       });
       if (res.data.token) {
         sessionStorage.setItem("token", res.data.token);
@@ -297,365 +207,350 @@ export default function Register() {
     } finally { setLoading(false); }
   };
 
-  const inp = "w-full pl-11 pr-4 py-4 bg-white/[0.03] border border-white/[0.08] outline-none text-sm text-white placeholder:text-white/25 transition-all duration-300 focus:border-emerald-500/60 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
-  const done = "border-emerald-500/25 bg-emerald-500/[0.04]";
+  const field = (valid) => ({
+    ...inputStyle,
+    paddingLeft: 38,
+    borderColor: valid ? "rgba(63,143,95,.4)" : c.line,
+    background: valid ? "rgba(63,143,95,.04)" : c.fill,
+  });
 
-  /* inline field error shown under the Next button */
-  const FieldError = ({ show }) => (
-    <AnimatePresence>
-      {show && fieldError && (
-        <motion.p initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} exit={{opacity:0}}
-          className="text-[11px] flex items-center gap-1.5 mt-2 ml-1 text-red-400">
-          <AlertTriangle size={11} className="shrink-0" />{fieldError}
-        </motion.p>
-      )}
-    </AnimatePresence>
-  );
+  const label = (txt) => <p className="eyebrow" style={{ marginBottom: 6 }}>{txt}</p>;
+
+  const Hint = ({ show, children, tone }) =>
+    show ? <p style={{ fontSize: T.size.xs, color: tone || c.text4, marginTop: 6 }}>{children}</p> : null;
+
+  const NextBtn = ({ show, onClick }) =>
+    show ? (
+      <>
+        <Button type="button" variant="quiet" full onClick={onClick} style={{ marginTop: T.space.md }}>
+          Continue
+        </Button>
+        {fieldError && (
+          <p className="flex items-center gap-1.5" style={{ fontSize: T.size.xs, color: c.loss, marginTop: 8 }}>
+            <AlertTriangle size={11} /> {fieldError}
+          </p>
+        )}
+      </>
+    ) : null;
+
+  /* ══ SUCCESS ══ */
+  if (success) {
+    return (
+      <div className="ui min-h-screen flex items-center justify-center px-4" style={{ background: c.ink, color: c.text }}>
+        <ThemeStyles />
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+          className="w-full" style={{ maxWidth: 420 }}>
+
+          <div style={{ background: c.paper, color: c.paperInk }}>
+            <div style={{ height: 3, background: c.gain }} />
+            <div style={{ padding: T.space.xxl }}>
+              <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: "rgba(14,16,19,.5)", marginBottom: 10 }}>
+                Registration complete
+              </p>
+              <h1 className="display" style={{ fontSize: 34, lineHeight: 1.05, marginBottom: T.space.lg }}>
+                Account created
+              </h1>
+              <p style={{ fontSize: T.size.sm, color: "rgba(14,16,19,.6)", lineHeight: 1.7, marginBottom: T.space.lg }}>
+                We've sent a verification link to
+              </p>
+              <p className="mono" style={{ fontSize: T.size.sm, color: c.gainDeep, wordBreak: "break-all", paddingBottom: T.space.lg, borderBottom: `1px solid ${c.lineInk}` }}>
+                {form.email}
+              </p>
+              <p style={{ fontSize: T.size.xs, color: "rgba(14,16,19,.55)", lineHeight: 1.7, marginTop: T.space.lg }}>
+                Open your inbox and click the link to activate your account. Check your spam folder if it hasn't arrived within a few minutes.
+              </p>
+            </div>
+          </div>
+
+          <Button full onClick={() => navigate("/login")} style={{ marginTop: T.space.lg }}>
+            Go to sign in <ArrowRight size={13} />
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative flex flex-col items-center justify-start min-h-screen bg-[#080c18] text-white overflow-x-hidden px-4 py-12"
-      style={{ fontFamily:"'Montserrat',sans-serif" }}>
+    <div className="ui min-h-screen flex justify-center px-4 py-16" style={{ background: c.ink, color: c.text }}>
+      <ThemeStyles />
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Montserrat:wght@300;400;500;600;700&display=swap');
-        :root{--em:#10b981;--teal:#14b8a6;}
-        .serif{font-family:'Cormorant Garamond',serif;}
-        ::selection{background:var(--em);color:#080c18;}
-        @keyframes orb{0%,100%{opacity:.06}50%{opacity:.13}}
-        .orb{animation:orb 7s ease-in-out infinite;}
-        @keyframes scan{from{top:-30%}to{top:110%}}
-        .scan{animation:scan 10s ease-in-out infinite;}
-        @keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}
-        .top-line{background:linear-gradient(90deg,transparent,var(--em) 40%,var(--teal) 60%,transparent);background-size:400% 100%;animation:shine 3s linear infinite;}
-        .grid-bg{background-image:linear-gradient(rgba(16,185,129,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,.03) 1px,transparent 1px);background-size:72px 72px;}
-        .btn-prime{background:linear-gradient(135deg,var(--em),var(--teal));transition:transform .3s,box-shadow .3s;position:relative;overflow:hidden;}
-        .btn-prime::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .3s;}
-        .btn-prime:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 0 1px var(--em),0 16px 40px rgba(16,185,129,.35);}
-        .btn-prime:hover:not(:disabled)::before{opacity:1;}
-        .shine-badge{border:1px solid transparent;background:linear-gradient(#080c18,#080c18) padding-box,linear-gradient(90deg,transparent 20%,var(--em) 50%,transparent 80%) border-box;background-size:200% auto;animation:shine 4s linear infinite;}
-        .nav-link{color:rgba(255,255,255,.35);transition:color .3s;}
-        .nav-link:hover{color:var(--em);}
-        .c-row{transition:background .2s;}
-        .c-row:hover{background:rgba(16,185,129,.08);}
-        .c-row.sel{background:rgba(16,185,129,.1);}
-      `}</style>
-
-      {/* Top shimmer */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-[2px]"><div className="top-line h-full w-full" /></div>
-
-      {/* BG */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="grid-bg absolute inset-0" />
-        <div className="orb absolute rounded-full" style={{width:800,height:800,background:"radial-gradient(circle,rgba(16,185,129,.09) 0%,transparent 70%)",top:"-300px",left:"-300px"}} />
-        <div className="orb absolute rounded-full" style={{width:600,height:600,background:"radial-gradient(circle,rgba(20,184,166,.07) 0%,transparent 70%)",bottom:"-200px",right:"-200px",animationDelay:"3.5s"}} />
-        <div className="absolute left-[5%] top-0 bottom-0 w-px hidden lg:block" style={{background:"linear-gradient(to bottom,transparent 5%,rgba(16,185,129,.15) 40%,rgba(16,185,129,.3) 60%,transparent 95%)"}} />
-        <div className="scan absolute left-[5%] w-px hidden lg:block" style={{height:"28%",background:"linear-gradient(to bottom,transparent,var(--em),transparent)"}} />
-        <div className="absolute right-[5%] top-0 bottom-0 w-px hidden lg:block" style={{background:"linear-gradient(to bottom,transparent 5%,rgba(20,184,166,.1) 40%,rgba(20,184,166,.22) 60%,transparent 95%)"}} />
-      </div>
-
-      {/* Back */}
-      <Link to="/" className="nav-link absolute top-7 left-8 text-[10px] font-medium tracking-[.2em] uppercase flex items-center gap-2 z-20">
-        ← <span className="serif text-base font-light" style={{color:"var(--em)"}}>Mexica<em className="not-italic text-white">Trading</em></span>
+      <Link to="/" className="mono absolute flex items-center gap-2"
+        style={{ top: 28, left: 24, fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase", color: c.text3 }}>
+        ← <span className="display" style={{ fontSize: T.size.base, color: c.text }}>MexicaTrading</span>
       </Link>
 
-      <div className="relative w-full max-w-md z-10 mt-8">
-        <AnimatePresence mode="wait">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: .5, ease: [.22, 1, .36, 1] }}
+        className="w-full" style={{ maxWidth: 420, marginTop: 24 }}>
 
-          {/* ══ SUCCESS ══ */}
-          {success ? (
-            <motion.div key="ok" initial={{opacity:0,scale:.96}} animate={{opacity:1,scale:1}} exit={{opacity:0}}
-              className="px-8 py-10 flex flex-col items-center text-center gap-6"
-              style={{background:"rgba(255,255,255,.025)",border:"1px solid rgba(255,255,255,.07)",backdropFilter:"blur(24px)"}}>
-              <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",stiffness:220,delay:.2}}
-                className="w-20 h-20 flex items-center justify-center border"
-                style={{borderColor:"rgba(16,185,129,.4)",background:"rgba(16,185,129,.1)"}}>
-                <CheckCircle size={36} style={{color:"var(--em)"}} />
-              </motion.div>
-              <div>
-                <h2 className="serif font-light mb-2 text-white" style={{fontSize:"clamp(28px,5vw,38px)"}}>
-                  Account <em style={{fontStyle:"italic",color:"var(--em)"}}>Created!</em>
-                </h2>
-                <p className="text-sm font-light" style={{color:"rgba(255,255,255,.4)"}}>We sent a verification email to</p>
-                <p className="font-semibold text-sm mt-1" style={{color:"var(--em)"}}>{form.email}</p>
+        {/* Referral banner */}
+        {refCode && (
+          <div style={{ marginBottom: T.space.lg }}>
+            <Banner tone="gain" title="Referral code applied" text={refCode} right={<Gift size={14} />} />
+          </div>
+        )}
+
+        {/* Header */}
+        <div style={{ marginBottom: T.space.xl }}>
+          <p className="eyebrow" style={{ marginBottom: 8 }}>New account</p>
+          <h1 className="display" style={{ fontSize: 40, lineHeight: 1.02 }}>Open an account</h1>
+          <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 10, lineHeight: 1.6 }}>
+            Start typing — each field opens as you complete the one before it.
+          </p>
+        </div>
+
+        <Progress step={step} total={7} />
+
+        {error && (
+          <div style={{ marginBottom: T.space.lg }}>
+            <Banner tone="loss" title={error} />
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+
+          {/* ── 1. NAME ── */}
+          <div style={{ marginBottom: T.space.md }}>
+            {label("Full name")}
+            <div style={{ position: "relative" }}>
+              <User size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+              <input type="text" name="name" value={form.name} onChange={handleChange}
+                placeholder="First and last name" autoFocus autoComplete="name"
+                style={field(isValidName(form.name))} />
+              {isValidName(form.name) && <Check size={14} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: c.gain }} />}
+            </div>
+            <Hint show={form.name.length > 0 && !isValidName(form.name)}>Enter both your first and last name</Hint>
+            <NextBtn show={!showEmail} onClick={nextFromName} />
+          </div>
+
+          {/* ── 2. EMAIL ── */}
+          <Reveal show={showEmail}>
+            <div style={{ marginBottom: T.space.md }}>
+              {label("Email address")}
+              <div style={{ position: "relative" }}>
+                <Mail size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                <input ref={emailRef} type="email" name="email" value={form.email} onChange={handleChange}
+                  placeholder="you@example.com" autoComplete="email"
+                  style={field(isValidEmail(form.email))} />
+                {isValidEmail(form.email) && <Check size={14} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: c.gain }} />}
               </div>
-              <div className="w-full px-5 py-4 border" style={{borderColor:"rgba(16,185,129,.2)",background:"rgba(16,185,129,.06)"}}>
-                <p className="text-sm font-light leading-relaxed" style={{color:"rgba(255,255,255,.4)"}}>
-                  📧 Check your inbox and click the verification link to activate your account.
-                </p>
-              </div>
-              <button onClick={()=>navigate("/login")} className="btn-prime w-full py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white flex items-center justify-center gap-3">
-                Go to Login <ArrowRight size={14} />
+              <Hint show={form.email.length > 0 && !isValidEmail(form.email)}>Enter a valid email address</Hint>
+              <NextBtn show={showEmail && !showCountry} onClick={nextFromEmail} />
+            </div>
+          </Reveal>
+
+          {/* ── 3. COUNTRY ── */}
+          <Reveal show={showCountry}>
+            <div style={{ marginBottom: T.space.md, position: "relative" }}>
+              {label("Country")}
+              <button type="button" onClick={() => setCountryOpen(!countryOpen)}
+                className="w-full flex items-center justify-between"
+                style={{
+                  ...inputStyle,
+                  textAlign: "left",
+                  borderColor: countryOpen ? "rgba(63,143,95,.5)" : selectedCountry ? "rgba(63,143,95,.4)" : c.line,
+                  background: selectedCountry ? "rgba(63,143,95,.04)" : c.fill,
+                }}>
+                {selectedCountry ? (
+                  <span className="flex items-center gap-2.5" style={{ minWidth: 0 }}>
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>{selectedCountry.flag}</span>
+                    <span className="truncate" style={{ fontSize: T.size.sm }}>{selectedCountry.name}</span>
+                    <span className="mono" style={{ fontSize: T.size.xs, color: c.gain }}>{selectedCountry.dial}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2.5" style={{ color: c.text4, fontSize: T.size.sm }}>
+                    <Globe size={14} /> Select your country
+                  </span>
+                )}
+                <ChevronDown size={15} style={{ color: c.text4, transform: countryOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
               </button>
-            </motion.div>
 
-          ) : (
-
-          /* ══ FORM ══ */
-          <motion.div key="form" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:.7,ease:[.22,1,.36,1]}}>
-            <div className="px-8 py-9" style={{background:"rgba(255,255,255,.025)",border:"1px solid rgba(255,255,255,.07)",backdropFilter:"blur(24px)"}}>
-
-              {/* Referral banner */}
-              {refCode && (
-                <div className="mb-6 px-4 py-3 border text-center text-xs font-medium tracking-wider flex items-center justify-center gap-2"
-                  style={{borderColor:"rgba(16,185,129,.25)",background:"rgba(16,185,129,.07)",color:"var(--em)"}}>
-                  <Gift size={12}/> Referral code applied · <strong className="font-mono">{refCode}</strong>
+              {countryOpen && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, marginTop: 2,
+                  background: c.panelAlt, border: `1px solid ${c.line}`, maxHeight: 280,
+                  display: "flex", flexDirection: "column",
+                }}>
+                  <div style={{ padding: 10, borderBottom: `1px solid ${c.line}` }}>
+                    <div style={{ position: "relative" }}>
+                      <Search size={12} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                      <input type="text" placeholder="Search country or dial code"
+                        value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} autoFocus
+                        style={{ ...inputStyle, paddingLeft: 32, padding: "9px 12px 9px 32px", fontSize: T.size.xs }} />
+                    </div>
+                  </div>
+                  <div style={{ overflowY: "auto", flex: 1 }}>
+                    {COUNTRIES.filter(ct =>
+                      ct.name.toLowerCase().includes(countrySearch.toLowerCase()) || ct.dial.includes(countrySearch)
+                    ).map((ct) => (
+                      <button key={ct.code} type="button" onClick={() => onCountrySelect(ct)}
+                        className="w-full flex items-center gap-3 text-left hover-fill"
+                        style={{
+                          padding: "10px 14px",
+                          background: selectedCountry?.code === ct.code ? "rgba(63,143,95,.1)" : "transparent",
+                        }}>
+                        <span style={{ fontSize: 15, lineHeight: 1 }}>{ct.flag}</span>
+                        <span className="truncate" style={{ flex: 1, fontSize: T.size.sm, color: c.text }}>{ct.name}</span>
+                        <span className="mono" style={{ fontSize: T.size.tiny, color: c.text3 }}>{ct.dial}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Header */}
-              <div className="text-center mb-8">
-                <div className="shine-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-semibold tracking-[.28em] uppercase mb-5" style={{color:"var(--em)"}}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:"var(--em)"}} />
-                  Secure Registration
+              <Hint show={showCountry && !selectedCountry}>Choose the country your phone number belongs to</Hint>
+              <NextBtn show={showCountry && !showPhone} onClick={nextFromCountry} />
+            </div>
+          </Reveal>
+
+          {/* ── 4. PHONE ── */}
+          <Reveal show={showPhone}>
+            <div style={{ marginBottom: T.space.md }}>
+              {label("Phone number")}
+              <div className="flex" style={{ gap: 0 }}>
+                <div className="flex items-center justify-center gap-1.5 shrink-0"
+                  style={{
+                    minWidth: 92, padding: "13px 10px",
+                    background: "rgba(63,143,95,.06)", border: `1px solid rgba(63,143,95,.3)`, borderRight: "none",
+                  }}>
+                  <span style={{ fontSize: 15, lineHeight: 1 }}>{selectedCountry?.flag}</span>
+                  <span className="mono" style={{ fontSize: T.size.sm, color: c.gain }}>{selectedCountry?.dial}</span>
                 </div>
-                <h2 className="serif font-light text-white mb-2" style={{fontSize:"clamp(28px,5vw,40px)",lineHeight:1.1}}>
-                  Create Your{" "}
-                  <em style={{fontStyle:"italic",background:"linear-gradient(135deg,var(--em),var(--teal))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Account</em>
-                </h2>
-                <p className="text-xs font-light tracking-wide" style={{color:"rgba(255,255,255,.35)"}}>
-                  Just start typing — each field unlocks automatically.
-                </p>
+                <div style={{ position: "relative", flex: 1 }}>
+                  <Phone size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                  <input ref={phoneRef} type="tel" name="phoneNumber" value={form.phoneNumber} onChange={handleChange}
+                    placeholder="Phone number"
+                    style={field(isValidPhone(form.phoneNumber))} />
+                </div>
               </div>
+              {form.phoneNumber && (
+                <p className="mono" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 6 }}>
+                  Saved as {selectedCountry?.dial} {form.phoneNumber}
+                </p>
+              )}
+              <Hint show={form.phoneNumber.length > 0 && !isValidPhone(form.phoneNumber)}>Enter your phone number</Hint>
+              <NextBtn show={showPhone && !showPassword} onClick={nextFromPhone} />
+            </div>
+          </Reveal>
 
-              {/* Progress bar */}
-              <ProgressBar step={step} total={7} />
-
-              {/* Error */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0}}
-                    className="mb-5 flex items-start gap-2.5 text-xs px-4 py-3 border"
-                    style={{background:"rgba(239,68,68,.07)",borderColor:"rgba(239,68,68,.2)",color:"#f87171"}}>
-                    <AlertTriangle size={12} className="shrink-0 mt-0.5"/><span>{error}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-3">
-
-                  {/* ── 1. NAME ── always visible */}
-                  <div>
-                    <Field icon={User}>
-                      <input type="text" name="name" value={form.name} onChange={handleChange}
-                        placeholder="Full Name (first and last)"
-                        className={`${inp} ${isValidName(form.name) ? done : ""}`}
-                        autoFocus autoComplete="name" />
-                      {isValidName(form.name) && <CheckCircle size={13} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{color:"var(--em)"}} />}
-                    </Field>
-                    {/* Hint: shows while typing but name not yet valid */}
-                    <NextHint show={form.name.length > 0 && !isValidName(form.name)} label="Enter your first and last name" />
-                    {/* Next button — only while email not yet revealed */}
-                    <NextButton show={!showEmail} onClick={nextFromName} />
-                    <FieldError show={!showEmail} />
-                  </div>
-
-                  {/* ── 2. EMAIL ── */}
-                  <Fade show={showEmail}>
-                    <div>
-                      <Field icon={Mail}>
-                        <input ref={emailRef} type="email" name="email" value={form.email} onChange={handleChange}
-                          placeholder="Email Address"
-                          className={`${inp} ${isValidEmail(form.email) ? done : ""}`}
-                          autoComplete="email" />
-                        {isValidEmail(form.email) && <CheckCircle size={13} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{color:"var(--em)"}} />}
-                      </Field>
-                      <NextHint show={form.email.length > 0 && !isValidEmail(form.email)} label="Enter a valid email address" />
-                      <NextButton show={showEmail && !showCountry} onClick={nextFromEmail} />
-                      <FieldError show={showEmail && !showCountry} />
-                    </div>
-                  </Fade>
-
-                  {/* ── 3. COUNTRY ── */}
-                  <Fade show={showCountry}>
-                    <div className="relative">
-                      <button type="button" onClick={()=>setCountryOpen(!countryOpen)}
-                        className={`w-full flex items-center justify-between px-4 py-4 border text-sm text-left transition-all duration-300 ${selectedCountry ? done : ""}`}
-                        style={{background:"rgba(255,255,255,.03)",borderColor:countryOpen?"rgba(16,185,129,.5)":selectedCountry?"rgba(16,185,129,.25)":"rgba(255,255,255,.08)"}}>
-                        {selectedCountry ? (
-                          <span className="flex items-center gap-3 text-white">
-                            <span className="text-lg leading-none">{selectedCountry.flag}</span>
-                            <span className="truncate">{selectedCountry.name}</span>
-                            <span className="font-mono text-xs ml-auto pr-2" style={{color:"var(--em)"}}>{selectedCountry.dial}</span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-3" style={{color:"rgba(255,255,255,.25)"}}>
-                            <Globe size={14}/> Select Your Country
-                          </span>
-                        )}
-                        <ChevronDown size={14} style={{color:"rgba(255,255,255,.3)",transform:countryOpen?"rotate(180deg)":"none",transition:"transform .3s"}} />
-                      </button>
-                      <AnimatePresence>
-                        {countryOpen && (
-                          <motion.div initial={{opacity:0,y:-6}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:.2}}
-                            className="absolute top-full mt-1.5 left-0 right-0 z-50 border shadow-2xl max-h-64 overflow-hidden flex flex-col"
-                            style={{background:"#0d1120",borderColor:"rgba(16,185,129,.2)"}}>
-                            <div className="p-2.5 border-b" style={{borderColor:"rgba(255,255,255,.06)"}}>
-                              <div className="relative">
-                                <Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2" style={{color:"rgba(255,255,255,.25)"}} />
-                                <input type="text" placeholder="Search country or dial code..."
-                                  value={countrySearch} onChange={e=>setCountrySearch(e.target.value)}
-                                  className="w-full pl-8 pr-3 py-2 text-xs text-white outline-none"
-                                  style={{background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)"}}
-                                  autoFocus />
-                              </div>
-                            </div>
-                            <div className="overflow-y-auto flex-1">
-                              {COUNTRIES.filter(c=>c.name.toLowerCase().includes(countrySearch.toLowerCase())||c.dial.includes(countrySearch)).map(c=>(
-                                <button key={c.code} type="button" onClick={()=>onCountrySelect(c)}
-                                  className={`c-row w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left ${selectedCountry?.code===c.code?"sel":""}`}>
-                                  <span className="text-base leading-none">{c.flag}</span>
-                                  <span className="text-white flex-1 truncate">{c.name}</span>
-                                  <span className="font-mono text-xs" style={{color:"rgba(16,185,129,.6)"}}>{c.dial}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <NextHint show={showCountry && !selectedCountry} label="Select your country to continue" />
-                      <NextButton show={showCountry && !showPhone} onClick={nextFromCountry} />
-                      <FieldError show={showCountry && !showPhone} />
-                    </div>
-                  </Fade>
-
-                  {/* ── 4. PHONE ── */}
-                  <Fade show={showPhone}>
-                    <div>
-                      <div className="flex gap-2">
-                        <div className="px-3 py-4 border flex items-center gap-1.5 shrink-0 min-w-[88px] justify-center"
-                          style={{background:"rgba(16,185,129,.06)",borderColor:"rgba(16,185,129,.25)"}}>
-                          <span className="text-base leading-none">{selectedCountry?.flag}</span>
-                          <span className="font-bold font-mono text-sm" style={{color:"var(--em)"}}>{selectedCountry?.dial}</span>
-                        </div>
-                        <Field icon={Phone}>
-                          <input ref={phoneRef} type="tel" name="phoneNumber" value={form.phoneNumber} onChange={handleChange}
-                            placeholder="Phone number"
-                            className={`${inp} ${isValidPhone(form.phoneNumber) ? done : ""}`} />
-                          {isValidPhone(form.phoneNumber) && <CheckCircle size={13} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{color:"var(--em)"}} />}
-                        </Field>
-                      </div>
-                      {form.phoneNumber && (
-                        <p className="text-[11px] mt-1.5 ml-1 font-light" style={{color:"rgba(255,255,255,.28)"}}>
-                          Saved as: <span className="font-mono" style={{color:"var(--em)"}}>{selectedCountry?.dial} {form.phoneNumber}</span>
-                        </p>
-                      )}
-                      <NextHint show={form.phoneNumber.length > 0 && !isValidPhone(form.phoneNumber)} label="Enter your phone number" />
-                      <NextButton show={showPhone && !showPassword} onClick={nextFromPhone} />
-                      <FieldError show={showPhone && !showPassword} />
-                    </div>
-                  </Fade>
-
-                  {/* ── 5. PASSWORD ── */}
-                  <Fade show={showPassword}>
-                    <div>
-                      <Field icon={Lock}>
-                        <input ref={passRef} type={showPass?"text":"password"} name="password" value={form.password}
-                          onChange={handleChange} placeholder="Password (min 6 characters)"
-                          className={`${inp} pr-11 ${isValidPass(form.password) ? done : ""}`} />
-                        <button type="button" onClick={()=>setShowPass(!showPass)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors duration-300"
-                          style={{color:"rgba(255,255,255,.25)"}}>
-                          {showPass ? <EyeOff size={14}/> : <Eye size={14}/>}
-                        </button>
-                      </Field>
-                      <NextHint show={form.password.length > 0 && !isValidPass(form.password)} label="At least 6 characters" />
-                      <NextButton show={showPassword && !showConfirmF} onClick={nextFromPassword} />
-                      <FieldError show={showPassword && !showConfirmF} />
-                    </div>
-                  </Fade>
-
-                  {/* ── 6. CONFIRM PASSWORD ── */}
-                  <Fade show={showConfirmF}>
-                    <div>
-                      <Field icon={Lock}>
-                        <input ref={confirmRef} type={showConfirm?"text":"password"} name="confirmPassword"
-                          value={form.confirmPassword} onChange={handleChange} placeholder="Confirm Password"
-                          className={`${inp} pr-11 ${form.confirmPassword.length>=6 && form.password===form.confirmPassword ? done : ""}`} />
-                        <button type="button" onClick={()=>setShowConfirm(!showConfirm)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
-                          style={{color:"rgba(255,255,255,.25)"}}>
-                          {showConfirm ? <EyeOff size={14}/> : <Eye size={14}/>}
-                        </button>
-                      </Field>
-                      {form.confirmPassword.length > 0 && (
-                        <motion.p initial={{opacity:0}} animate={{opacity:1}}
-                          className={`text-[11px] flex items-center gap-1.5 mt-1.5 ml-1 ${form.password===form.confirmPassword?"text-emerald-400":"text-red-400"}`}>
-                          {form.password===form.confirmPassword
-                            ? <><CheckCircle size={11}/>Passwords match — looking good!</>
-                            : <><AlertTriangle size={11}/>Passwords don't match yet</>}
-                        </motion.p>
-                      )}
-                      <NextButton show={showConfirmF && !showReferral && !showTerms} onClick={nextFromConfirm} />
-                      <FieldError show={showConfirmF && !showReferral && !showTerms} />
-                    </div>
-                  </Fade>
-
-                  {/* ── 7. REFERRAL ── */}
-                  <Fade show={showReferral && !refCode} delay={0.05}>
-                    <div className="relative">
-                      <Gift size={14} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{color:"rgba(255,255,255,.25)"}} />
-                      <input type="text" name="referralCode" value={form.referralCode} onChange={handleChange}
-                        placeholder="Referral Code (Optional)"
-                        className={`${inp} pl-11`} />
-                    </div>
-                  </Fade>
-
-                  {/* ── TERMS + SUBMIT ── */}
-                  <Fade show={showTerms} delay={0.1}>
-                    <div className="space-y-3 pt-1">
-                      <label className="flex items-start gap-3 px-4 py-4 border cursor-pointer transition-all duration-300 select-none"
-                        style={{background:agreedToTerms?"rgba(16,185,129,.05)":"rgba(255,255,255,.02)",borderColor:agreedToTerms?"rgba(16,185,129,.3)":"rgba(255,255,255,.07)"}}>
-                        <input type="checkbox" checked={agreedToTerms} onChange={e=>setAgreedToTerms(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 cursor-pointer shrink-0 accent-emerald-500" />
-                        <span className="text-xs font-light leading-relaxed" style={{color:"rgba(255,255,255,.45)"}}>
-                          I agree to the{" "}
-                          <Link to="/terms" target="_blank" className="font-semibold hover:underline" style={{color:"var(--em)"}}>Terms of Service</Link>
-                          {" "}and{" "}
-                          <Link to="/privacy" target="_blank" className="font-semibold hover:underline" style={{color:"var(--em)"}}>Privacy Policy</Link>
-                        </span>
-                      </label>
-
-                      <button type="submit" disabled={loading||!agreedToTerms}
-                        className="btn-prime group w-full py-4 text-[11px] font-semibold tracking-[.2em] uppercase text-white flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                        {loading
-                          ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>Creating Account...</>
-                          : <>Create Account <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300"/></>}
-                      </button>
-                    </div>
-                  </Fade>
-
-                </div>
-              </form>
-
-              {/* Sign in */}
-              <div className="mt-7">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="flex-1 h-px" style={{background:"rgba(255,255,255,.07)"}} />
-                  <span className="text-[10px] font-light tracking-wider" style={{color:"rgba(255,255,255,.2)"}}>Already have an account?</span>
-                  <div className="flex-1 h-px" style={{background:"rgba(255,255,255,.07)"}} />
-                </div>
-                <button onClick={()=>navigate("/login")}
-                  className="w-full py-3.5 border text-[11px] font-medium tracking-[.18em] uppercase transition-all duration-300"
-                  style={{borderColor:"rgba(255,255,255,.08)",background:"rgba(255,255,255,.02)",color:"rgba(255,255,255,.4)"}}
-                  onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.3)";e.currentTarget.style.color="var(--em)";e.currentTarget.style.background="rgba(16,185,129,.05)";}}
-                  onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,.08)";e.currentTarget.style.color="rgba(255,255,255,.4)";e.currentTarget.style.background="rgba(255,255,255,.02)";}}>
-                  Sign In
+          {/* ── 5. PASSWORD ── */}
+          <Reveal show={showPassword}>
+            <div style={{ marginBottom: T.space.md }}>
+              {label("Password")}
+              <div style={{ position: "relative" }}>
+                <Lock size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                <input ref={passRef} type={showPass ? "text" : "password"} name="password"
+                  value={form.password} onChange={handleChange} placeholder="At least 6 characters"
+                  style={{ ...field(isValidPass(form.password)), paddingRight: 44 }} />
+                <button type="button" onClick={() => setShowPass(!showPass)}
+                  aria-label={showPass ? "Hide password" : "Show password"}
+                  style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: c.text4, padding: 4 }}>
+                  {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
+              <Hint show={form.password.length > 0 && !isValidPass(form.password)}>At least 6 characters</Hint>
+              <NextBtn show={showPassword && !showConfirmF} onClick={nextFromPassword} />
             </div>
+          </Reveal>
 
-            {/* Trust */}
-            <div className="flex items-center justify-center gap-6 mt-5">
-              {["🔒 SSL Secured","🛡️ Data Protected","⚡ Instant Access"].map((txt,i)=>(
-                <span key={i} className="text-[10px] font-light tracking-wider" style={{color:"rgba(255,255,255,.18)"}}>{txt}</span>
-              ))}
+          {/* ── 6. CONFIRM ── */}
+          <Reveal show={showConfirmF}>
+            <div style={{ marginBottom: T.space.md }}>
+              {label("Confirm password")}
+              <div style={{ position: "relative" }}>
+                <Lock size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                <input ref={confirmRef} type={showConfirm ? "text" : "password"} name="confirmPassword"
+                  value={form.confirmPassword} onChange={handleChange} placeholder="Repeat your password"
+                  style={{
+                    ...field(form.confirmPassword.length >= 6 && form.password === form.confirmPassword),
+                    paddingRight: 44,
+                  }} />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                  aria-label={showConfirm ? "Hide password" : "Show password"}
+                  style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: c.text4, padding: 4 }}>
+                  {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              {form.confirmPassword.length > 0 && (
+                <p className="flex items-center gap-1.5" style={{
+                  fontSize: T.size.xs, marginTop: 6,
+                  color: form.password === form.confirmPassword ? c.gain : c.loss,
+                }}>
+                  {form.password === form.confirmPassword
+                    ? <><Check size={11} /> Passwords match</>
+                    : <><AlertTriangle size={11} /> Passwords don't match yet</>}
+                </p>
+              )}
+              <NextBtn show={showConfirmF && !showReferral && !showTerms} onClick={nextFromConfirm} />
             </div>
-          </motion.div>
-          )}
-        </AnimatePresence>
+          </Reveal>
+
+          {/* ── 7. REFERRAL ── */}
+          <Reveal show={showReferral && !refCode} delay={0.05}>
+            <div style={{ marginBottom: T.space.md }}>
+              {label("Referral code — optional")}
+              <div style={{ position: "relative" }}>
+                <Gift size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                <input type="text" name="referralCode" value={form.referralCode} onChange={handleChange}
+                  placeholder="Enter a code if you have one"
+                  className="mono" style={{ ...inputStyle, paddingLeft: 38, fontSize: T.size.xs }} />
+              </div>
+            </div>
+          </Reveal>
+
+          {/* ── TERMS + SUBMIT ── */}
+          <Reveal show={showTerms} delay={0.1}>
+            <div style={{ marginTop: T.space.lg }}>
+              <label className="flex items-start gap-3 cursor-pointer select-none"
+                style={{
+                  padding: T.space.lg,
+                  border: `1px solid ${agreedToTerms ? "rgba(63,143,95,.35)" : c.line}`,
+                  background: agreedToTerms ? "rgba(63,143,95,.05)" : c.fill,
+                  marginBottom: T.space.lg,
+                  transition: "background .2s, border-color .2s",
+                }}>
+                <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  style={{ marginTop: 2, width: 15, height: 15, accentColor: c.gain, flexShrink: 0, cursor: "pointer" }} />
+                <span style={{ fontSize: T.size.xs, color: c.text2, lineHeight: 1.7 }}>
+                  I agree to the{" "}
+                  <Link to="/terms" target="_blank" style={{ color: c.gain, textDecoration: "underline" }}>Terms of Service</Link>
+                  {" "}and{" "}
+                  <Link to="/privacy" target="_blank" style={{ color: c.gain, textDecoration: "underline" }}>Privacy Policy</Link>,
+                  and I understand that investing carries risk.
+                </span>
+              </label>
+
+              <Button type="submit" full disabled={loading || !agreedToTerms}
+                style={{ opacity: (loading || !agreedToTerms) ? .5 : 1 }}
+                icon={loading ? <Spinner size={13} tone="#fff" /> : null}>
+                {loading ? "Creating account" : "Create account"}
+                {!loading && <ArrowRight size={13} />}
+              </Button>
+            </div>
+          </Reveal>
+        </form>
+
+        {/* Sign in */}
+        <div style={{ marginTop: T.space.xxl }}>
+          <div className="flex items-center gap-3" style={{ marginBottom: T.space.lg }}>
+            <div style={{ flex: 1, borderBottom: `1px solid ${c.line}` }} />
+            <span className="mono" style={{ fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase", color: c.text4 }}>
+              Already registered
+            </span>
+            <div style={{ flex: 1, borderBottom: `1px solid ${c.line}` }} />
+          </div>
+          <Button variant="quiet" full onClick={() => navigate("/login")}>Sign in</Button>
+        </div>
+
+        <div className="flex items-center justify-center gap-5 mono"
+          style={{ marginTop: T.space.xl, fontSize: T.size.micro, letterSpacing: ".14em", textTransform: "uppercase", color: c.text4 }}>
+          <span>SSL secured</span>
+          <span>·</span>
+          <span>Data protected</span>
+        </div>
+
         <div ref={bottomRef} />
-      </div>
+      </motion.div>
     </div>
   );
 }
