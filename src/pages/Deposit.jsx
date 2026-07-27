@@ -8,7 +8,7 @@ import {
 import {
   T, PageShell, Panel, SectionHead, Button, Field, inputStyle,
   StatusPill, Spinner, Banner,
-} from "../ui/system.jsx";
+} from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 
