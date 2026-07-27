@@ -3,260 +3,228 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>You're Offline — MexicaTrading</title>
+  <title>You're offline — MexicaTrading</title>
   <link rel="icon" href="/logo.png" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#0E1013" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root {
+      --ink:    #0E1013;
+      --panel:  #16191E;
+      --paper:  #EDE9E1;
+      --gain:   #3F8F5F;
+      --brass:  #C08A3E;
+      --line:   rgba(255,255,255,.08);
+      --text:   rgba(255,255,255,.92);
+      --text2:  rgba(255,255,255,.55);
+      --text3:  rgba(255,255,255,.35);
+      --text4:  rgba(255,255,255,.22);
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #020617 0%, #071032 50%, #03040b 100%);
-      color: white;
+      font-family: 'Archivo', system-ui, -apple-system, sans-serif;
+      background: var(--ink);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      overflow: hidden;
-      position: relative;
     }
 
-    /* Animated background blobs */
-    body::before, body::after {
-      content: '';
-      position: absolute;
-      width: 400px;
-      height: 400px;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.15;
-      animation: float 8s ease-in-out infinite;
-    }
+    .display { font-family: 'Fraunces', Georgia, serif; font-weight: 300; letter-spacing: -.01em; }
+    .mono    { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
-    body::before {
-      background: #10b981;
-      top: -100px;
-      left: -100px;
-    }
-
-    body::after {
-      background: #3b82f6;
-      bottom: -100px;
-      right: -100px;
-      animation-delay: 2s;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(30px, 30px); }
-    }
-
-    .container {
-      max-width: 480px;
+    .wrap {
       width: 100%;
-      text-align: center;
-      position: relative;
-      z-index: 10;
-      animation: fadeIn 0.6s ease-out;
+      max-width: 380px;
+      animation: rise .5s cubic-bezier(.22,1,.36,1);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .logo-wrap {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 24px;
-      background: linear-gradient(135deg, #10b981, #3b82f6);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
-
-    .logo-wrap img {
-      width: 50px;
-      height: 50px;
-      object-fit: contain;
-    }
-
-    .icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    h1 {
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      background: linear-gradient(90deg, #10b981, #3b82f6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    p {
-      color: #94a3b8;
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-
-    .domain {
-      font-weight: 600;
-      color: #10b981;
-    }
-
-    .info-box {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 24px;
-      font-size: 14px;
-      color: #cbd5e1;
-      backdrop-filter: blur(10px);
-    }
-
-    .info-box ul {
-      list-style: none;
-      text-align: left;
-    }
-
-    .info-box li {
-      padding: 6px 0;
+    .eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--brass);
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .info-box li::before {
-      content: '•';
-      color: #10b981;
-      font-weight: bold;
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--brass);
+      animation: pulse 2s ease-in-out infinite;
     }
 
-    .retry-btn {
-      background: linear-gradient(135deg, #10b981, #3b82f6);
-      color: white;
-      border: none;
-      padding: 14px 32px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: .3; }
+    }
+
+    h1 {
+      font-size: 34px;
+      line-height: 1.05;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+
+    .lead {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text3);
+      margin-bottom: 28px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+
+    .panel-head {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+
+    .row {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .row:last-child { border-bottom: none; }
+
+    .num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--gain);
+      min-width: 16px;
+      padding-top: 2px;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #fff;
+      background: var(--gain);
+      border: 1px solid var(--gain);
       cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+      transition: opacity .2s;
     }
 
-    .retry-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
-    }
+    button:active { opacity: .8; }
 
-    .retry-btn:active {
-      transform: translateY(0);
-    }
-
-    .footer {
-      margin-top: 32px;
+    .reassure {
+      background: rgba(63,143,95,.05);
+      border-left: 2px solid var(--gain);
+      padding: 14px 16px;
+      margin-top: 24px;
       font-size: 12px;
-      color: #475569;
+      line-height: 1.65;
+      color: var(--text3);
+    }
+
+    .foot {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--text4);
+      text-align: center;
+      margin-top: 32px;
     }
 
     .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 20px;
-      font-size: 12px;
-      color: #fca5a5;
-      margin-bottom: 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text4);
+      text-align: center;
+      margin-top: 12px;
+      min-height: 16px;
     }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #ef4444;
-      border-radius: 50%;
-      animation: blink 1.5s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    @media (max-width: 480px) {
-      h1 { font-size: 24px; }
-      p { font-size: 14px; }
-      .icon { font-size: 48px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo-wrap">
-      <img src="/logo.png" alt="MexicaTrading" onerror="this.style.display='none'" />
-    </div>
 
-    <div class="status">
-      <span class="status-dot"></span>
-      <span>No Connection</span>
-    </div>
+  <div class="wrap">
 
-    <div class="icon">📡</div>
+    <p class="eyebrow"><span class="dot"></span> No connection</p>
 
-    <h1>You're Offline</h1>
+    <h1 class="display">You're offline</h1>
 
-    <p>
-      We can't reach <span class="domain">mexicatrading.com</span> right now. Check your internet connection and try again.
+    <p class="lead">
+      MexicaTrading needs an internet connection. Your account, balance and
+      investments are safe on our servers — nothing is lost.
     </p>
 
-    <div class="info-box">
-      <ul>
-        <li>Check your Wi-Fi or mobile data</li>
-        <li>Make sure airplane mode is off</li>
-        <li>Try again in a few seconds</li>
-      </ul>
+    <div class="panel">
+      <p class="panel-head">Try this</p>
+      <div class="row"><span class="num">01</span><span>Check your mobile data or Wi-Fi is on</span></div>
+      <div class="row"><span class="num">02</span><span>Move somewhere with better signal</span></div>
+      <div class="row"><span class="num">03</span><span>Turn flight mode off and on again</span></div>
     </div>
 
-    <button class="retry-btn" onclick="window.location.reload()">
-      🔄 Try Again
-    </button>
+    <button onclick="retry()">Try again</button>
+    <p class="status" id="status"></p>
 
-    <div class="footer">
-      MexicaTrading · Secure Investment Platform
+    <div class="reassure">
+      Any deposit or withdrawal you submitted before losing connection was either
+      completed or never sent — nothing is left half-done.
     </div>
+
+    <p class="foot">MexicaTrading</p>
   </div>
 
   <script>
-    // Auto-retry every 5 seconds when connection comes back
-    window.addEventListener('online', () => {
-      window.location.reload();
-    });
+    const statusEl = document.getElementById("status");
 
-    // Check connection periodically
-    setInterval(() => {
+    function retry() {
       if (navigator.onLine) {
-        fetch('/', { method: 'HEAD', cache: 'no-cache' })
-          .then(() => window.location.reload())
-          .catch(() => {});
+        statusEl.textContent = "Reconnecting…";
+        window.location.reload();
+      } else {
+        statusEl.textContent = "Still offline — check your connection";
+        setTimeout(() => { statusEl.textContent = ""; }, 3000);
       }
-    }, 5000);
+    }
+
+    // Reload automatically the moment the connection returns
+    window.addEventListener("online", () => {
+      statusEl.textContent = "Back online — reloading…";
+      setTimeout(() => window.location.reload(), 600);
+    });
   </script>
+
 </body>
 </html>
