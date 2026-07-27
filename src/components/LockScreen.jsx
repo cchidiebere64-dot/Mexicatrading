@@ -2,6 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { T, ThemeStyles, Button, Spinner, Banner, inputStyle } from "../pages/system.jsx";
+
+const c = T.color;
 
 export default function LockScreen({ onUnlock }) {
   const { t } = useTranslation();
@@ -9,6 +12,8 @@ export default function LockScreen({ onUnlock }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const unlock = async () => {
     if (!password) {
@@ -49,115 +54,94 @@ export default function LockScreen({ onUnlock }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#080c18]/95 backdrop-blur-xl flex items-center justify-center px-4">
-
-      {/* AMBIENT GLOW */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[500px] h-[500px] bg-emerald-500/10 blur-[150px] rounded-full top-[-100px] left-[-100px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
-      </div>
+    <div className="ui"
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(14,16,19,.97)",
+        backdropFilter: "blur(18px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16, color: c.text,
+      }}>
+      <ThemeStyles />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative w-full max-w-sm"
-      >
-        {/* CARD */}
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl text-white">
+        initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: .45, ease: [.22, 1, .36, 1] }}
+        style={{ width: "100%", maxWidth: 360 }}>
 
-          {/* LOCK ICON */}
-          <div className="flex flex-col items-center mb-8">
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4"
-            >
-              <Lock size={28} className="text-emerald-400" />
-            </motion.div>
-            <h2 className="text-2xl font-bold tracking-tight">Session Locked</h2>
-            <p className="text-white/40 text-sm mt-1 text-center">
-              Enter your password to continue
-            </p>
+        {/* ── Header ── */}
+        <div style={{ marginBottom: T.space.xl }}>
+          <div className="flex items-center gap-2" style={{ marginBottom: T.space.lg }}>
+            <Lock size={14} style={{ color: c.gain }} />
+            <span className="mono" style={{
+              fontSize: T.size.micro, letterSpacing: ".24em",
+              textTransform: "uppercase", color: c.gain,
+            }}>
+              Session locked
+            </span>
           </div>
 
-          {/* ERROR */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center"
-            >
-              {error}
-            </motion.div>
-          )}
+          <h1 className="display" style={{ fontSize: 32, lineHeight: 1.05 }}>
+            {user?.name ? `Welcome back, ${user.name.split(" ")[0]}` : "Welcome back"}
+          </h1>
+          <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 10, lineHeight: 1.7 }}>
+            Enter your password to continue. Your session was locked for security.
+          </p>
+        </div>
 
-          {/* PASSWORD INPUT */}
-          <div className="relative group mb-4">
-            <Lock size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
+        {error && (
+          <div style={{ marginBottom: T.space.lg }}>
+            <Banner tone="loss" title={error} />
+          </div>
+        )}
+
+        {/* ── Password ── */}
+        <div style={{ marginBottom: T.space.lg }}>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Password</p>
+          <div style={{ position: "relative" }}>
+            <Lock size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
             <input
               type={showPassword ? "text" : "password"}
-              placeholder={t("auth.password")}
-              className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25 text-white"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setError(""); setPassword(e.target.value); }}
               onKeyDown={handleKeyDown}
+              placeholder="••••••••"
               autoFocus
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
-            >
-              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              autoComplete="current-password"
+              style={{ ...inputStyle, paddingLeft: 38, paddingRight: 44 }} />
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: c.text4, padding: 4 }}>
+              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
+        </div>
 
-          {/* UNLOCK BUTTON */}
-          <button
-            onClick={unlock}
-            disabled={loading}
-            className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              <>
-                Unlock
-                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
-          </button>
+        <Button full onClick={unlock} disabled={loading}
+          style={{ opacity: loading ? .6 : 1 }}
+          icon={loading ? <Spinner size={13} tone="#fff" /> : null}>
+          {loading ? "Unlocking" : "Unlock"}
+          {!loading && <ArrowRight size={13} />}
+        </Button>
 
-          {/* DIVIDER */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-white/8" />
-            <span className="text-white/20 text-xs">or</span>
-            <div className="flex-1 h-px bg-white/8" />
+        {/* ── Identity ── */}
+        {user?.email && (
+          <div style={{
+            border: `1px solid ${c.line}`, padding: T.space.lg, marginTop: T.space.xl,
+          }}>
+            <p className="eyebrow" style={{ marginBottom: 6 }}>Signed in as</p>
+            <p className="mono truncate" style={{ fontSize: T.size.xs, color: c.text2 }}>
+              {user.email}
+            </p>
           </div>
+        )}
 
-          {/* LOGOUT OPTION */}
-          <button
-            onClick={() => {
-              sessionStorage.clear();
-              window.location.href = "/login";
-            }}
-            className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/40 hover:text-white"
-          >
-            {t("nav.logout")} & Sign In Again
-          </button>
-        </div>
-
-        {/* TRUST BADGES */}
-        <div className="flex items-center justify-center gap-4 mt-5 text-white/20 text-xs">
-          <span>🔒 {t("common.sslSecured")}</span>
-          <span>·</span>
-          <span>MexicaTrading · Secured Session</span>
-        </div>
+        <p className="mono" style={{
+          fontSize: T.size.micro, letterSpacing: ".16em", textTransform: "uppercase",
+          color: c.text4, textAlign: "center", marginTop: T.space.xl,
+        }}>
+          MexicaTrading
+        </p>
       </motion.div>
     </div>
   );
