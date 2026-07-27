@@ -6,25 +6,29 @@ import {
   Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle,
   BadgeCheck, Calendar, ChevronRight, BarChart2, Clock,
   RefreshCw, X, Gift, Copy, Check, MessageSquare,
-  Sparkles, ArrowUpRight, ArrowDownRight, Eye, EyeOff, Receipt,
+  ArrowUpRight, ArrowDownRight, Eye, EyeOff, Receipt,
 } from "lucide-react";
 import LanguageSelector from "../components/LanguageSelector.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const REFRESH_INTERVAL = 30000;
 
-// ── Verified Badge — Twitter/Instagram-style blue checkmark ─────────────────
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS — "Ledger"
+   ink      #0E1013   base, warm-neutral rather than blue-black
+   panel    #16191E   raised surfaces
+   paper    #EDE9E1   the printed statement (signature element)
+   gain     #3F8F5F   deeper than neon; used only for real gains
+   loss     #B4553F   muted rust
+   brass    #C08A3E   premium accents, used sparingly
+───────────────────────────────────────────────────────────── */
+
+// ── Verified Badge ──────────────────────────────────────────────────────────
 function VerifiedBadge({ size = 16, className = "" }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} className={className}>
-      <defs>
-        <linearGradient id="verifiedGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#10b981" />
-          <stop offset="100%" stopColor="#0ea5e9" />
-        </linearGradient>
-      </defs>
       <path
-        fill="url(#verifiedGrad)"
+        fill="#3F8F5F"
         d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484z"
       />
       <path fill="#fff" d="M9 11.74l2.21 2.21 4.79-5.6 1.5 1.28-6.07 7.1L7.5 13.27z" />
@@ -32,7 +36,7 @@ function VerifiedBadge({ size = 16, className = "" }) {
   );
 }
 
-// ── CountUp animation ────────────────────────────────────────────────────────
+// ── CountUp ─────────────────────────────────────────────────────────────────
 function CountUp({ end, prefix = "", duration = 1200, decimals = 0 }) {
   const [value, setValue] = useState(0);
   const prevEnd = useRef(0);
@@ -54,32 +58,28 @@ function CountUp({ end, prefix = "", duration = 1200, decimals = 0 }) {
   return <span>{prefix}{value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}</span>;
 }
 
-// ── Sparkline ────────────────────────────────────────────────────────────────
+// ── Sparkline — a plotted line, not a gradient blob ─────────────────────────
 function Sparkline({ profitPercent }) {
   const isPositive = profitPercent >= 0;
   const points = [];
   for (let i = 0; i < 30; i++) {
     const x = (i / 29) * 100;
-    const noise = Math.sin(i * 0.5) * 8 + Math.cos(i * 0.3) * 5;
-    const trend = isPositive ? (i / 30) * 30 : -(i / 30) * 20;
+    const noise = Math.sin(i * 0.5) * 7 + Math.cos(i * 0.3) * 4;
+    const trend = isPositive ? (i / 30) * 26 : -(i / 30) * 18;
     points.push(`${x},${50 - trend + noise}`);
   }
-  const color = isPositive ? "#10b981" : "#ef4444";
+  const color = isPositive ? "#3F8F5F" : "#B4553F";
   return (
     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
-      <defs>
-        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polyline points={points.join(" ")} fill="none" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      <polygon points={`0,100 ${points.join(" ")} 100,100`} fill="url(#sparkGrad)" />
+      {[25, 50, 75].map((y) => (
+        <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(14,16,19,.07)" strokeWidth="0.4" />
+      ))}
+      <polyline points={points.join(" ")} fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-// ── Detect country ───────────────────────────────────────────────────────────
+// ── Detect country ──────────────────────────────────────────────────────────
 async function detectCountry() {
   try {
     const r = await fetch("https://ipwho.is/"); const d = await r.json();
@@ -121,43 +121,46 @@ function ReinvestPopup({ plans, onDismiss }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }}>
-      <div className="relative w-full max-w-sm bg-gradient-to-b from-[#0d1525] to-[#0a1120] border border-emerald-500/30 rounded-3xl p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ background: "rgba(8,9,11,.86)" }}>
+      <div className="relative w-full max-w-sm" style={{ background: "#16191E", border: "1px solid rgba(192,138,62,.35)" }}>
+        <div className="h-1" style={{ background: "#C08A3E" }} />
         <button onClick={() => act("dismiss")}
-          className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-white/35 hover:text-white transition"
+          style={{ background: "rgba(255,255,255,.05)" }}>
           <X size={14} />
         </button>
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border border-emerald-500/40 flex items-center justify-center text-4xl mb-4">🏆</div>
-          <h2 className="text-xl font-bold text-white mb-1">{t("dashboard.investmentMatured")}</h2>
-          <p className="text-white/50 text-sm">
-            <strong className="text-white">{latest?.plan}</strong> {t("dashboard.planHasCompleted")}
+
+        <div className="p-7">
+          <p className="mono text-[10px] tracking-[.22em] uppercase mb-3" style={{ color: "#C08A3E" }}>Plan matured</p>
+          <h2 className="display text-2xl text-white mb-1.5">{t("dashboard.investmentMatured")}</h2>
+          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,.45)" }}>
+            <span className="text-white/85">{latest?.plan}</span> {t("dashboard.planHasCompleted")}
           </p>
-        </div>
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-white/[0.04] border border-white/8 rounded-2xl p-4 text-center">
-            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">{t("dashboard.invested")}</p>
-            <p className="text-white font-bold text-lg">${totalAmount.toLocaleString()}</p>
+
+          <div className="mb-6" style={{ borderTop: "1px solid rgba(255,255,255,.09)" }}>
+            <LedgerLine label={t("dashboard.invested")} value={`$${totalAmount.toLocaleString()}`} />
+            <LedgerLine label={t("dashboard.profitEarned")} value={`+$${totalProfit.toLocaleString()}`} accent="#3F8F5F" />
           </div>
-          <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-4 text-center">
-            <p className="text-emerald-400/70 text-xs uppercase tracking-widest mb-1">{t("dashboard.profitEarned")}</p>
-            <p className="text-emerald-400 font-bold text-lg">+${totalProfit.toLocaleString()}</p>
+
+          <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,.5)" }}>
+            {t("dashboard.fundsReady")}
+          </p>
+
+          <div className="space-y-2">
+            <button onClick={() => act("reinvest")}
+              className="w-full py-3.5 font-semibold text-sm text-white flex items-center justify-center gap-2 transition"
+              style={{ background: "#3F8F5F" }}>
+              <TrendingUp size={15} /> {t("dashboard.reinvestNow")}
+            </button>
+            <button onClick={() => act("withdraw")}
+              className="w-full py-3 text-sm transition"
+              style={{ border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.6)" }}>
+              {t("dashboard.withdrawProfits")}
+            </button>
+            <button onClick={() => act("dismiss")} className="w-full py-2 text-xs" style={{ color: "rgba(255,255,255,.25)" }}>
+              {t("dashboard.remindLater")}
+            </button>
           </div>
-        </div>
-        <p className="text-white/50 text-sm leading-relaxed mb-5 text-center">💡 {t("dashboard.fundsReady")}</p>
-        <div className="space-y-2">
-          <button onClick={() => act("reinvest")}
-            className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 transition font-bold text-sm text-white shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2">
-            <TrendingUp size={16} /> {t("dashboard.reinvestNow")}
-          </button>
-          <button onClick={() => act("withdraw")}
-            className="w-full py-3 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
-            {t("dashboard.withdrawProfits")}
-          </button>
-          <button onClick={() => act("dismiss")} className="w-full py-2.5 text-white/25 hover:text-white/50 transition text-xs">
-            {t("dashboard.remindLater")}
-          </button>
         </div>
       </div>
     </div>
@@ -167,58 +170,63 @@ function ReinvestPopup({ plans, onDismiss }) {
 // ── KYC Modal ───────────────────────────────────────────────────────────────
 function KYCModal({ kyc, onClose }) {
   const { t } = useTranslation();
+  const tone =
+    kyc?.status === "approved" ? { c: "#3F8F5F", label: t("dashboard.kycVerified") }
+    : kyc?.status === "pending" ? { c: "#C08A3E", label: t("dashboard.kycUnderReview") }
+    : { c: "#B4553F", label: t("dashboard.kycRejected2") };
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }}>
-      <div className="relative w-full max-w-sm bg-gradient-to-b from-[#0d1525] to-[#0a1120] border border-white/10 rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ background: "rgba(8,9,11,.86)" }}>
+      <div className="relative w-full max-w-sm max-h-[85vh] overflow-y-auto" style={{ background: "#16191E", border: "1px solid rgba(255,255,255,.1)" }}>
+        <div className="h-1" style={{ background: tone.c }} />
         <button onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-white/35 hover:text-white transition"
+          style={{ background: "rgba(255,255,255,.05)" }}>
           <X size={14} />
         </button>
-        <div className="flex flex-col items-center text-center mb-5">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-3">
-            {kyc?.status === "approved"
-              ? <VerifiedBadge size={36} />
-              : <span className="text-3xl">{kyc?.status === "pending" ? "⏳" : "❌"}</span>}
+
+        <div className="p-7">
+          <p className="mono text-[10px] tracking-[.22em] uppercase mb-3" style={{ color: tone.c }}>{tone.label}</p>
+          <h2 className="display text-2xl text-white mb-6">{t("kyc.title")}</h2>
+
+          <div style={{ borderTop: "1px solid rgba(255,255,255,.09)" }}>
+            <LedgerLine label={t("kyc.documentType")} value={kyc?.idType?.replace("_", " ") || "—"} />
+            {kyc?.status === "approved" && kyc?.reviewedAt && (
+              <LedgerLine label={t("dashboard.approvedOn")}
+                value={new Date(kyc.reviewedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                accent="#3F8F5F" />
+            )}
           </div>
-          <h2 className="text-lg font-bold text-white">{t("kyc.title")}</h2>
-          <span className={`mt-1 text-xs px-3 py-1 rounded-full font-semibold ${
-            kyc?.status === "approved" ? "bg-emerald-500/15 text-emerald-400"
-            : kyc?.status === "pending" ? "bg-yellow-500/15 text-yellow-400"
-            : "bg-red-500/15 text-red-400"
-          }`}>
-            {kyc?.status === "approved" ? t("dashboard.kycVerified")
-             : kyc?.status === "pending" ? t("dashboard.kycUnderReview")
-             : t("dashboard.kycRejected2")}
-          </span>
-        </div>
-        <div className="space-y-3">
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">{t("kyc.documentType")}</p>
-            <p className="text-white text-sm font-semibold capitalize">{kyc?.idType?.replace("_", " ") || "—"}</p>
-          </div>
-          {kyc?.status === "approved" && kyc?.reviewedAt && (
-            <div className="p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
-              <p className="text-emerald-400/60 text-xs uppercase tracking-widest mb-1">{t("dashboard.approvedOn")}</p>
-              <p className="text-emerald-400 text-sm font-semibold">
-                {new Date(kyc.reviewedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
-              </p>
-            </div>
-          )}
+
           {kyc?.status === "rejected" && kyc?.rejectionReason && (
-            <div className="p-3 rounded-xl bg-red-500/8 border border-red-500/20">
-              <p className="text-red-400/60 text-xs uppercase tracking-widest mb-1">{t("dashboard.rejectionReason")}</p>
-              <p className="text-red-400 text-sm">{kyc.rejectionReason}</p>
+            <div className="mt-4 p-4" style={{ background: "rgba(180,85,63,.08)", border: "1px solid rgba(180,85,63,.25)" }}>
+              <p className="mono text-[10px] tracking-[.18em] uppercase mb-1.5" style={{ color: "#B4553F" }}>{t("dashboard.rejectionReason")}</p>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,.7)" }}>{kyc.rejectionReason}</p>
             </div>
           )}
-          {kyc?.idFrontImage && <img src={kyc.idFrontImage} alt="ID" className="w-full rounded-xl border border-white/10 max-h-40 object-cover" />}
-          {kyc?.selfieImage && <img src={kyc.selfieImage} alt="Selfie" className="w-full rounded-xl border border-white/10 max-h-40 object-cover" />}
+
+          <div className="space-y-2 mt-4">
+            {kyc?.idFrontImage && <img src={kyc.idFrontImage} alt="ID" className="w-full max-h-40 object-cover" style={{ border: "1px solid rgba(255,255,255,.1)" }} />}
+            {kyc?.selfieImage && <img src={kyc.selfieImage} alt="Selfie" className="w-full max-h-40 object-cover" style={{ border: "1px solid rgba(255,255,255,.1)" }} />}
+          </div>
+
+          <button onClick={onClose}
+            className="w-full py-3 mt-5 text-sm transition"
+            style={{ border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.55)" }}>
+            {t("dashboard.close")}
+          </button>
         </div>
-        <button onClick={onClose}
-          className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition mt-4">
-          {t("dashboard.close")}
-        </button>
       </div>
+    </div>
+  );
+}
+
+/* ── Ledger row: label left, figure right, hairline between ── */
+function LedgerLine({ label, value, accent, small }) {
+  return (
+    <div className="flex items-baseline justify-between py-3" style={{ borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+      <span className={`${small ? "text-[11px]" : "text-xs"}`} style={{ color: "rgba(255,255,255,.4)" }}>{label}</span>
+      <span className="mono text-sm tabular" style={{ color: accent || "rgba(255,255,255,.9)" }}>{value}</span>
     </div>
   );
 }
@@ -228,80 +236,75 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // ── Translation shortcuts (clean code, full i18n) ─────────────────────────
   const L = {
-  morning: t("dashboard.goodMorning", "Good morning"),
-  afternoon: t("dashboard.goodAfternoon", "Good afternoon"),
-  evening: t("dashboard.goodEvening", "Good evening"),
-  balance: t("dashboard.totalBalance", "Total Balance"),
-  invested: t("dashboard.totalInvested", "Total Invested"),
-  withdrawn: t("dashboard.totalWithdrawn", "Total Withdrawn"),
-  profit: t("dashboard.totalProfit", "Total Profit"),
-  activePlans: t("dashboard.activePlans", "Active Plans"),
-  overallReturn: t("dashboard.overallReturn", "overall return"),
-  deposit: t("dashboard.deposit", "Deposit"),
-  invest: t("dashboard.invest", "Invest"),
-  withdraw: t("dashboard.withdraw", "Withdraw"),
-  messages: t("dashboard.messages", "Messages"),
-  referralProgram: t("dashboard.referralProgram", "Referral Program"),
-  referralDesc: t("dashboard.referralProgramDesc", "Earn 5% commission on every friend you refer"),
-  referrals: t("dashboard.referrals", "Referrals"),
-  earned: t("dashboard.earned", "Earned"),
-  rate: t("dashboard.rate", "Rate"),
-  yourLink: t("dashboard.yourReferralLink", "Your Referral Link"),
-  shareNote: t("dashboard.shareReferralNote", "Share this link — when your friend makes their first deposit, you earn 5% automatically."),
-  copy: t("dashboard.copy", "Copy"),
-  copied: t("dashboard.copied", "Copied!"),
-  liveMarket: t("dashboard.liveMarket", "Live Market"),
-  live: t("dashboard.live", "LIVE"),
-  addPlan: t("dashboard.addPlan", "Add Plan"),
-  completedPlans: t("dashboard.completedPlans", "Completed Plans"),
-  recentActivities: t("dashboard.recentActivities", "Recent Activities"),
-  noActivePlans: t("dashboard.noActivePlans", "No Active Plans Yet"),
-  noActiveDesc: t("dashboard.noActivePlansDesc", "Start growing your wealth by choosing an investment plan tailored for you."),
-  browsePlans: t("dashboard.browsePlans", "Browse Plans →"),
-  noCompleted: t("dashboard.noCompletedPlans", "No Completed Plans Yet"),
-  noCompletedDesc: t("dashboard.noCompletedPlansDesc", "Your completed investments and earned profits will appear here."),
-  noTransactions: t("dashboard.noTransactions", "No Transactions Yet"),
-  noTxDesc: t("dashboard.noTransactionsDesc", "Your deposits, withdrawals and activity history will show up here."),
-  location: t("dashboard.location", "Location"),
-  detecting: t("dashboard.detecting", "Detecting..."),
-  memberSince: t("dashboard.memberSince", "Member since"),
-  accountStatus: t("dashboard.accountStatus", "Account Status"),
-  verified: t("dashboard.verified", "Verified"),
-  overallRoi: t("dashboard.overallRoi", "Overall ROI"),
-  invest_label: t("dashboard.invested", "Invested"),
-  profit_label: t("dashboard.profit", "Profit"),
-  roi: t("dashboard.roi", "ROI"),
-  active: t("dashboard.active", "Active"),
-  done: t("dashboard.done", "Done"),
-  daysRemaining: t("dashboard.daysRemaining", "days remaining"),
-  planCompleted: t("dashboard.planCompleted", "Plan completed"),
-  endsOn: t("dashboard.endsOn", "Ends"),
-  tapToReinvest: t("dashboard.tapToReinvest", "Tap to reinvest →"),
-  emailVerifyTitle: t("dashboard.emailVerifyTitle", "Please verify your email address"),
-  emailVerifyDesc: t("dashboard.emailVerifyDesc", "Check your inbox for the verification link we sent you"),
-  resendEmail: t("dashboard.resendEmail", "Resend Email"),
-  sending: t("dashboard.sending", "Sending..."),
-  kycInviteTitle: t("dashboard.kycInviteTitle", "You've been invited to verify your identity"),
-  kycInviteDesc: t("dashboard.kycInviteDesc", "Complete KYC verification for a better and more secure experience"),
-  kycPendingTitle: t("dashboard.kycPendingTitle", "KYC Under Review"),
-  kycPendingDesc: t("dashboard.kycPendingDesc", "Your documents are being reviewed — tap to track progress"),
-  kycRejectedTitle: t("dashboard.kycRejectedTitle", "KYC Verification Rejected"),
-  kycRejectedDesc: t("dashboard.kycRejectedDesc", "Your documents were rejected — tap to resubmit"),
-  plansCompleted: t("dashboard.plansCompleted", "Plans Completed"),
-  planCompleted1: t("dashboard.planCompleted1", "Plan Completed"),
-  tapToSeeEarnings: t("dashboard.tapToSeeEarnings", "Tap to see completed plans"),
-  balanceCredited: t("dashboard.balanceCredited", "has been credited to your account!"),
-  balanceDeducted: t("dashboard.balanceDeducted", "has been deducted from your account."),
-  verificationSent: t("dashboard.verificationEmailSent", "Verification email sent! Please check your inbox."),
-  failedToResend: t("dashboard.failedToResend", "Failed to resend. Please try again."),
-  welcomeBack: t("dashboard.welcomeBack", "Welcome back"),
-  heroSub: t("home.heroSub", "A professional-grade investment platform built for those who take their financial future seriously."),
-  loading: t("common.loading", "Loading..."),
-  error: t("common.error", "Error loading data. Please refresh."),
-  retry: t("common.retry", "Retry"),
-};
+    morning: t("dashboard.goodMorning", "Good morning"),
+    afternoon: t("dashboard.goodAfternoon", "Good afternoon"),
+    evening: t("dashboard.goodEvening", "Good evening"),
+    balance: t("dashboard.totalBalance", "Total Balance"),
+    invested: t("dashboard.totalInvested", "Total Invested"),
+    withdrawn: t("dashboard.totalWithdrawn", "Total Withdrawn"),
+    profit: t("dashboard.totalProfit", "Total Profit"),
+    activePlans: t("dashboard.activePlans", "Active Plans"),
+    overallReturn: t("dashboard.overallReturn", "overall return"),
+    deposit: t("dashboard.deposit", "Deposit"),
+    invest: t("dashboard.invest", "Invest"),
+    withdraw: t("dashboard.withdraw", "Withdraw"),
+    messages: t("dashboard.messages", "Messages"),
+    referralProgram: t("dashboard.referralProgram", "Referral Program"),
+    referralDesc: t("dashboard.referralProgramDesc", "Earn 5% commission on every friend you refer"),
+    referrals: t("dashboard.referrals", "Referrals"),
+    earned: t("dashboard.earned", "Earned"),
+    rate: t("dashboard.rate", "Rate"),
+    copy: t("dashboard.copy", "Copy"),
+    copied: t("dashboard.copied", "Copied!"),
+    liveMarket: t("dashboard.liveMarket", "Live Market"),
+    live: t("dashboard.live", "LIVE"),
+    addPlan: t("dashboard.addPlan", "Add Plan"),
+    completedPlans: t("dashboard.completedPlans", "Completed Plans"),
+    recentActivities: t("dashboard.recentActivities", "Recent Activities"),
+    noActivePlans: t("dashboard.noActivePlans", "No Active Plans Yet"),
+    noActiveDesc: t("dashboard.noActivePlansDesc", "Start growing your wealth by choosing an investment plan tailored for you."),
+    browsePlans: t("dashboard.browsePlans", "Browse Plans →"),
+    noTransactions: t("dashboard.noTransactions", "No Transactions Yet"),
+    noTxDesc: t("dashboard.noTransactionsDesc", "Your deposits, withdrawals and activity history will show up here."),
+    location: t("dashboard.location", "Location"),
+    detecting: t("dashboard.detecting", "Detecting..."),
+    memberSince: t("dashboard.memberSince", "Member since"),
+    accountStatus: t("dashboard.accountStatus", "Account Status"),
+    verified: t("dashboard.verified", "Verified"),
+    overallRoi: t("dashboard.overallRoi", "Overall ROI"),
+    invest_label: t("dashboard.invested", "Invested"),
+    profit_label: t("dashboard.profit", "Profit"),
+    roi: t("dashboard.roi", "ROI"),
+    active: t("dashboard.active", "Active"),
+    done: t("dashboard.done", "Done"),
+    daysRemaining: t("dashboard.daysRemaining", "days remaining"),
+    planCompleted: t("dashboard.planCompleted", "Plan completed"),
+    endsOn: t("dashboard.endsOn", "Ends"),
+    tapToReinvest: t("dashboard.tapToReinvest", "Tap to reinvest →"),
+    emailVerifyTitle: t("dashboard.emailVerifyTitle", "Please verify your email address"),
+    emailVerifyDesc: t("dashboard.emailVerifyDesc", "Check your inbox for the verification link we sent you"),
+    resendEmail: t("dashboard.resendEmail", "Resend Email"),
+    sending: t("dashboard.sending", "Sending..."),
+    kycInviteTitle: t("dashboard.kycInviteTitle", "You've been invited to verify your identity"),
+    kycInviteDesc: t("dashboard.kycInviteDesc", "Complete KYC verification for a better and more secure experience"),
+    kycPendingTitle: t("dashboard.kycPendingTitle", "KYC Under Review"),
+    kycPendingDesc: t("dashboard.kycPendingDesc", "Your documents are being reviewed — tap to track progress"),
+    kycRejectedTitle: t("dashboard.kycRejectedTitle", "KYC Verification Rejected"),
+    kycRejectedDesc: t("dashboard.kycRejectedDesc", "Your documents were rejected — tap to resubmit"),
+    plansCompleted: t("dashboard.plansCompleted", "Plans Completed"),
+    planCompleted1: t("dashboard.planCompleted1", "Plan Completed"),
+    tapToSeeEarnings: t("dashboard.tapToSeeEarnings", "Tap to see completed plans"),
+    balanceCredited: t("dashboard.balanceCredited", "has been credited to your account!"),
+    balanceDeducted: t("dashboard.balanceDeducted", "has been deducted from your account."),
+    verificationSent: t("dashboard.verificationEmailSent", "Verification email sent! Please check your inbox."),
+    failedToResend: t("dashboard.failedToResend", "Failed to resend. Please try again."),
+    welcomeBack: t("dashboard.welcomeBack", "Welcome back"),
+    heroSub: t("home.heroSub", "A professional-grade investment platform built for those who take their financial future seriously."),
+    loading: t("common.loading", "Loading..."),
+    error: t("common.error", "Error loading data. Please refresh."),
+    retry: t("common.retry", "Retry"),
+  };
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -419,23 +422,38 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, [data]);
 
+  const styleBlock = (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+      .display { font-family:'Fraunces',Georgia,serif; font-optical-sizing:auto; letter-spacing:-.01em; }
+      .mono    { font-family:'IBM Plex Mono',ui-monospace,monospace; }
+      .tabular { font-variant-numeric: tabular-nums; }
+      .rule    { border-bottom:1px solid rgba(255,255,255,.07); }
+      @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+    `}</style>
+  );
+
   if (loading) return (
-    <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
-      <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-      <p className="text-white/40 text-sm animate-pulse">{L.loading}</p>
+    <div className="flex flex-col justify-center items-center h-screen gap-4" style={{ background: "#0E1013", fontFamily: "'Archivo',system-ui,sans-serif" }}>
+      {styleBlock}
+      <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: "rgba(255,255,255,.15)", borderTopColor: "#3F8F5F" }} />
+      <p className="mono text-[11px] tracking-[.2em] uppercase" style={{ color: "rgba(255,255,255,.3)" }}>{L.loading}</p>
     </div>
   );
+
   if (!data) return (
-    <div className="flex flex-col justify-center items-center h-screen bg-[#080c18] text-white gap-4">
-      <p className="text-red-400 text-sm">{L.error}</p>
+    <div className="flex flex-col justify-center items-center h-screen gap-4 px-6 text-center" style={{ background: "#0E1013", fontFamily: "'Archivo',system-ui,sans-serif" }}>
+      {styleBlock}
+      <p className="text-sm" style={{ color: "#B4553F" }}>{L.error}</p>
       <button onClick={() => fetchData(false)}
-        className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm hover:bg-emerald-500/25 transition">
+        className="px-5 py-2.5 text-sm transition"
+        style={{ border: "1px solid rgba(63,143,95,.4)", color: "#3F8F5F" }}>
         {L.retry}
       </button>
     </div>
   );
 
-  // ── Computations ──────────────────────────────────────────────────────────
+  // ── Computations (unchanged) ──────────────────────────────────────────────
   const plans = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "active");
   const completed = (data.plans || []).filter(p => p.status?.toLowerCase().trim() === "completed");
   const history = data.history || [];
@@ -455,28 +473,31 @@ export default function Dashboard() {
   const showKYCBadge = kycStatus !== "none";
   const showKYCInvite = kycInvited && kycStatus === "none";
 
-  const maskBalance = (val) => hideBalance ? "••••••" : `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const money = (v) => v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const maskBalance = (val) => hideBalance ? "••••••" : `$${money(val)}`;
+
+  const iconBtn = {
+    background: "rgba(255,255,255,.04)",
+    border: "1px solid rgba(255,255,255,.09)",
+    color: "rgba(255,255,255,.45)",
+  };
 
   return (
-    <div className="min-h-screen bg-[#080c18] text-white pb-16 font-sans">
+    <div className="min-h-screen pb-16" style={{ background: "#0E1013", color: "#fff", fontFamily: "'Archivo',system-ui,sans-serif" }}>
+      {styleBlock}
 
       {showReinvest && reinvestPlans.length > 0 && <ReinvestPopup plans={reinvestPlans} onDismiss={() => setShowReinvest(false)} />}
       {showKYCModal && kycData && <KYCModal kyc={kycData} onClose={() => setShowKYCModal(false)} />}
 
-      {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute w-[700px] h-[700px] bg-emerald-500/8 blur-[180px] rounded-full top-[-200px] left-[-200px]" />
-        <div className="absolute w-[500px] h-[500px] bg-teal-400/6 blur-[140px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute w-[400px] h-[400px] bg-blue-500/4 blur-[140px] rounded-full top-[40%] left-[40%]" />
-        <div className="absolute inset-0 opacity-[0.018]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
-      </div>
-
-      {/* Notification */}
+      {/* Balance-change notification */}
       {notification && (
-        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[999] px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold flex items-center gap-2 backdrop-blur-xl ${
-          notification.type === "credit" ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400" : "bg-red-500/20 border-red-500/40 text-red-400"
-        }`}>
-          {notification.type === "credit" ? <ArrowDownCircle size={16} /> : <ArrowUpCircle size={16} />}
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[999] px-5 py-3 text-sm flex items-center gap-2.5"
+          style={{
+            background: "#16191E",
+            border: `1px solid ${notification.type === "credit" ? "rgba(63,143,95,.45)" : "rgba(180,85,63,.45)"}`,
+            color: notification.type === "credit" ? "#3F8F5F" : "#B4553F",
+          }}>
+          {notification.type === "credit" ? <ArrowDownCircle size={15} /> : <ArrowUpCircle size={15} />}
           {notification.message}
         </div>
       )}
@@ -485,39 +506,37 @@ export default function Dashboard() {
         <div className="ticker-text">{L.welcomeBack} {data.name}! — {L.heroSub} — MexicaTrading</div>
       </div>
 
-      <main className="relative z-10 pt-20 px-4 max-w-5xl mx-auto space-y-5">
+      <main className="relative pt-20 px-4 max-w-4xl mx-auto">
 
-        {/* GREETING ROW */}
-        <div className="flex items-center justify-between gap-3 pt-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-white font-bold text-lg shrink-0">
-              {data.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-white/40 text-xs">{greeting()}</p>
-              <h2 className="text-lg font-bold flex items-center gap-1.5 truncate">
-                <span className="truncate">{data.name}</span>
-                {isVerified && <VerifiedBadge size={16} className="shrink-0" />}
-              </h2>
-            </div>
+        {/* ══ HEADER ══ */}
+        <div className="flex items-center justify-between gap-3 py-5 rule">
+          <div className="min-w-0">
+            <p className="mono text-[10px] tracking-[.22em] uppercase mb-1" style={{ color: "rgba(255,255,255,.32)" }}>
+              {greeting()}
+            </p>
+            <h2 className="display text-xl font-light flex items-center gap-2 truncate">
+              <span className="truncate">{data.name}</span>
+              {isVerified && <VerifiedBadge size={15} className="shrink-0" />}
+            </h2>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => fetchData(false)} disabled={refreshing}
-              className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button onClick={() => fetchData(false)} disabled={refreshing} aria-label="Refresh"
+              className="w-9 h-9 flex items-center justify-center transition hover:text-white" style={iconBtn}>
               <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
             </button>
 
-            {/* HISTORY — icon only */}
             <button onClick={() => navigate("/history")} aria-label="Transaction history"
-              className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+              className="w-9 h-9 flex items-center justify-center transition hover:text-white" style={iconBtn}>
               <Receipt size={14} />
             </button>
 
-            <button onClick={() => navigate("/messages")}
-              className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+            <button onClick={() => navigate("/messages")} aria-label="Messages"
+              className="relative w-9 h-9 flex items-center justify-center transition hover:text-white" style={iconBtn}>
               <MessageSquare size={14} />
               {unreadMessages > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 mono text-[9px] font-semibold flex items-center justify-center"
+                  style={{ background: "#B4553F", color: "#fff" }}>
                   {unreadMessages > 9 ? "9+" : unreadMessages}
                 </span>
               )}
@@ -526,161 +545,162 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* KYC status pill — clickable */}
+        {/* KYC pill */}
         {showKYCBadge && (
           <button onClick={openKYC}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition w-fit ${
-              kycStatus === "approved" ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/15"
-              : kycStatus === "pending" ? "bg-yellow-500/10 border-yellow-500/25 text-yellow-400 hover:bg-yellow-500/15"
-              : "bg-red-500/10 border-red-500/25 text-red-400 hover:bg-red-500/15"
-            }`}>
-            {kycStatus === "approved" ? <VerifiedBadge size={13} /> : <BadgeCheck size={13} />}
-            {kycStatus === "approved" ? "Verified Account" : kycStatus === "pending" ? "Verification Pending" : "Verification Rejected"}
+            className="mt-5 flex items-center gap-2 px-3 py-1.5 mono text-[10px] tracking-[.14em] uppercase transition w-fit"
+            style={{
+              border: `1px solid ${kycStatus === "approved" ? "rgba(63,143,95,.35)" : kycStatus === "pending" ? "rgba(192,138,62,.35)" : "rgba(180,85,63,.35)"}`,
+              color: kycStatus === "approved" ? "#3F8F5F" : kycStatus === "pending" ? "#C08A3E" : "#B4553F",
+            }}>
+            <BadgeCheck size={12} />
+            {kycStatus === "approved" ? "Verified account" : kycStatus === "pending" ? "Verification pending" : "Verification rejected"}
             <ChevronRight size={11} />
           </button>
         )}
 
         {/* Email verification banner */}
         {!data.isVerified && (
-          <div className="flex items-center justify-between p-3.5 rounded-2xl border border-yellow-500/30 bg-yellow-500/8">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center text-base shrink-0">📧</div>
-              <div className="min-w-0">
-                <p className="font-bold text-xs text-white truncate">{L.emailVerifyTitle}</p>
-                <p className="text-yellow-400/70 text-[11px] mt-0.5 truncate">{L.emailVerifyDesc}</p>
-              </div>
+          <div className="mt-5 flex items-center justify-between gap-3 p-4" style={{ background: "rgba(192,138,62,.07)", borderLeft: "2px solid #C08A3E" }}>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white truncate">{L.emailVerifyTitle}</p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: "rgba(255,255,255,.45)" }}>{L.emailVerifyDesc}</p>
             </div>
             <button onClick={resendVerification} disabled={resending}
-              className="text-[11px] px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition font-semibold whitespace-nowrap flex items-center gap-1.5 disabled:opacity-70 shrink-0">
-              {resending
-                ? <><span className="w-3 h-3 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" /> {L.sending}</>
-                : L.resendEmail}
+              className="mono text-[10px] tracking-[.12em] uppercase px-3 py-2 shrink-0 transition disabled:opacity-60"
+              style={{ border: "1px solid rgba(192,138,62,.4)", color: "#C08A3E" }}>
+              {resending ? L.sending : L.resendEmail}
             </button>
           </div>
         )}
 
-        {/* KYC invite banner */}
+        {/* KYC invite */}
         {showKYCInvite && (
-          <div onClick={() => navigate("/kyc")}
-            className="cursor-pointer flex items-center justify-between p-3.5 rounded-2xl border border-purple-500/30 bg-purple-500/8 hover:bg-purple-500/12 transition">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-base shrink-0">🪪</div>
-              <div className="min-w-0">
-                <p className="font-bold text-xs text-white truncate">{L.kycInviteTitle}</p>
-                <p className="text-purple-400/70 text-[11px] mt-0.5 truncate">{L.kycInviteDesc}</p>
-              </div>
+          <button onClick={() => navigate("/kyc")}
+            className="mt-3 w-full text-left flex items-center justify-between gap-3 p-4 transition"
+            style={{ background: "rgba(192,138,62,.07)", borderLeft: "2px solid #C08A3E" }}>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white truncate">{L.kycInviteTitle}</p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: "rgba(255,255,255,.45)" }}>{L.kycInviteDesc}</p>
             </div>
-            <ChevronRight size={16} className="text-purple-400 shrink-0" />
-          </div>
+            <ChevronRight size={16} style={{ color: "#C08A3E" }} className="shrink-0" />
+          </button>
         )}
 
-        {/* KYC pending/rejected banner */}
+        {/* KYC pending / rejected */}
         {(kycStatus === "pending" || kycStatus === "rejected") && (
-          <div onClick={openKYC}
-            className={`cursor-pointer flex items-center justify-between p-3.5 rounded-2xl border transition ${
-              kycStatus === "pending"
-                ? "border-yellow-500/30 bg-yellow-500/8 hover:bg-yellow-500/12"
-                : "border-red-500/30 bg-red-500/8 hover:bg-red-500/12"
-            }`}>
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${
-                kycStatus === "pending" ? "bg-yellow-500/15 border border-yellow-500/25" : "bg-red-500/15 border border-red-500/25"
-              }`}>
-                {kycStatus === "pending" ? "⏳" : "❌"}
-              </div>
-              <div className="min-w-0">
-                <p className="font-bold text-xs text-white truncate">
-                  {kycStatus === "pending" ? L.kycPendingTitle : L.kycRejectedTitle}
-                </p>
-                <p className={`text-[11px] mt-0.5 truncate ${kycStatus === "pending" ? "text-yellow-400/70" : "text-red-400/70"}`}>
-                  {kycStatus === "pending" ? L.kycPendingDesc : L.kycRejectedDesc}
-                </p>
-              </div>
+          <button onClick={openKYC}
+            className="mt-3 w-full text-left flex items-center justify-between gap-3 p-4 transition"
+            style={{
+              background: kycStatus === "pending" ? "rgba(192,138,62,.07)" : "rgba(180,85,63,.07)",
+              borderLeft: `2px solid ${kycStatus === "pending" ? "#C08A3E" : "#B4553F"}`,
+            }}>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                {kycStatus === "pending" ? L.kycPendingTitle : L.kycRejectedTitle}
+              </p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: "rgba(255,255,255,.45)" }}>
+                {kycStatus === "pending" ? L.kycPendingDesc : L.kycRejectedDesc}
+              </p>
             </div>
-            <ChevronRight size={16} className={kycStatus === "pending" ? "text-yellow-400" : "text-red-400"} />
-          </div>
+            <ChevronRight size={16} className="shrink-0" style={{ color: kycStatus === "pending" ? "#C08A3E" : "#B4553F" }} />
+          </button>
         )}
 
-        {/* Reinvest banner */}
+        {/* Matured plans */}
         {completed.length > 0 && completed.every(wasShown) && (
-          <div onClick={() => { setReinvestPlans(completed); setShowReinvest(true); }}
-            className="cursor-pointer flex items-center justify-between p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 hover:bg-emerald-500/12 transition">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-base shrink-0">🏆</div>
-              <div className="min-w-0">
-                <p className="font-bold text-xs text-white truncate">
-                  {completed.length} {completed.length > 1 ? L.plansCompleted : L.planCompleted1}
-                </p>
-                <p className="text-emerald-400/70 text-[11px] mt-0.5 truncate">{L.tapToSeeEarnings}</p>
-              </div>
+          <button onClick={() => { setReinvestPlans(completed); setShowReinvest(true); }}
+            className="mt-3 w-full text-left flex items-center justify-between gap-3 p-4 transition"
+            style={{ background: "rgba(63,143,95,.07)", borderLeft: "2px solid #3F8F5F" }}>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                {completed.length} {completed.length > 1 ? L.plansCompleted : L.planCompleted1}
+              </p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: "rgba(255,255,255,.45)" }}>{L.tapToSeeEarnings}</p>
             </div>
-            <ChevronRight size={16} className="text-emerald-400 shrink-0" />
-          </div>
+            <ChevronRight size={16} style={{ color: "#3F8F5F" }} className="shrink-0" />
+          </button>
         )}
 
-        {/* PORTFOLIO HERO CARD */}
-        <div className="relative rounded-3xl overflow-hidden border border-white/8 bg-gradient-to-br from-[#0d1525] via-[#0a1120] to-[#0d1525] p-6">
-          <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
-          <div className="relative">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <p className="text-white/40 text-xs uppercase tracking-widest">{L.balance}</p>
-                <button onClick={() => setHideBalance(!hideBalance)} className="text-white/30 hover:text-white transition">
-                  {hideBalance ? <EyeOff size={11} /> : <Eye size={11} />}
-                </button>
+        {/* ══ THE STATEMENT — signature element ══ */}
+        <div className="mt-6 relative" style={{ background: "#EDE9E1", color: "#0E1013" }}>
+          {/* torn-edge cue */}
+          <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "#3F8F5F" }} />
+
+          <div className="p-6 sm:p-8">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <p className="mono text-[10px] tracking-[.24em] uppercase" style={{ color: "rgba(14,16,19,.5)" }}>
+                  {L.balance}
+                </p>
+                <p className="mono text-[10px] mt-1" style={{ color: "rgba(14,16,19,.35)" }}>
+                  {lastUpdated ? `as of ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
+                </p>
               </div>
-              <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                profitPercent >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
-              }`}>
-                {profitPercent >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
-                {profitPercent.toFixed(2)}%
-              </div>
+              <button onClick={() => setHideBalance(!hideBalance)} aria-label="Toggle balance visibility"
+                className="p-1.5 transition" style={{ color: "rgba(14,16,19,.4)" }}>
+                {hideBalance ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
             </div>
-            <h1 className="text-4xl font-bold text-white tracking-tight mb-1">
+
+            <h1 className="display tabular font-light leading-none mb-4"
+              style={{ fontSize: "clamp(38px,11vw,60px)", color: "#0E1013" }}>
               {hideBalance ? "••••••" : <CountUp end={balance} prefix="$" decimals={2} />}
             </h1>
-            <p className="text-white/40 text-xs flex items-center gap-1">
-              <Sparkles size={10} className="text-emerald-400" />
-              {L.profit}: <span className="text-emerald-400 font-semibold">+${totalProfit.toLocaleString()}</span>
-              <span className="text-white/20 mx-1">·</span>
-              {L.overallReturn}
-            </p>
-            <div className="h-14 mt-4 -mx-1">
+
+            <div className="flex items-center gap-3 mb-6">
+              <span className="mono text-xs tabular flex items-center gap-1 px-2 py-1"
+                style={{
+                  background: profitPercent >= 0 ? "rgba(63,143,95,.14)" : "rgba(180,85,63,.14)",
+                  color: profitPercent >= 0 ? "#2F6E48" : "#8F3F2E",
+                }}>
+                {profitPercent >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+                {profitPercent.toFixed(2)}%
+              </span>
+              <span className="text-xs" style={{ color: "rgba(14,16,19,.5)" }}>
+                {L.profit} <span className="mono tabular" style={{ color: "#2F6E48" }}>+${money(totalProfit)}</span>
+              </span>
+            </div>
+
+            <div className="h-12 -mx-1 mb-6">
               <Sparkline profitPercent={profitPercent} />
             </div>
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/8">
-              <div>
-                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{L.invested}</p>
-                <p className="text-blue-400 font-bold text-sm">{maskBalance(totalInvested)}</p>
-              </div>
-              <div>
-                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{L.withdrawn}</p>
-                <p className="text-purple-400 font-bold text-sm">{maskBalance(totalWithdrawn)}</p>
-              </div>
-              <div>
-                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{L.activePlans}</p>
-                <p className="text-emerald-400 font-bold text-sm">{plans.length}</p>
-              </div>
+
+            {/* Ledger totals */}
+            <div style={{ borderTop: "1px solid rgba(14,16,19,.14)" }}>
+              {[
+                [L.invested, maskBalance(totalInvested)],
+                [L.withdrawn, maskBalance(totalWithdrawn)],
+                [L.activePlans, String(plans.length)],
+              ].map(([label, value], i) => (
+                <div key={i} className="flex items-baseline justify-between py-2.5"
+                  style={{ borderBottom: i < 2 ? "1px solid rgba(14,16,19,.09)" : "none" }}>
+                  <span className="text-xs" style={{ color: "rgba(14,16,19,.5)" }}>{label}</span>
+                  <span className="mono text-sm tabular" style={{ color: "#0E1013" }}>{value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* QUICK ACTIONS */}
-        <div className="grid grid-cols-3 gap-2.5">
+        {/* ══ ACTIONS ══ */}
+        <div className="grid grid-cols-3 mt-6" style={{ border: "1px solid rgba(255,255,255,.09)" }}>
           {[
-            { icon: <ArrowDownCircle size={18} />, label: L.deposit, path: "/deposit", color: "from-emerald-500/20 to-emerald-500/5 text-emerald-400 border-emerald-500/25" },
-            { icon: <TrendingUp size={18} />,      label: L.invest,  path: "/plans",   color: "from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25" },
-            { icon: <ArrowUpCircle size={18} />,   label: L.withdraw,path: "/withdraw",color: "from-purple-500/20 to-purple-500/5 text-purple-400 border-purple-500/25" },
-            /* ── Messages quick action — commented out (message icon stays in the header above) ──
-            { icon: <MessageSquare size={18} />,   label: L.messages,path: "/messages",color: "from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25", badge: unreadMessages },
+            { icon: <ArrowDownCircle size={17} />, label: L.deposit, path: "/deposit" },
+            { icon: <TrendingUp size={17} />,      label: L.invest,  path: "/plans" },
+            { icon: <ArrowUpCircle size={17} />,   label: L.withdraw,path: "/withdraw" },
+            /* ── Messages quick action — commented out (icon lives in the header) ──
+            { icon: <MessageSquare size={17} />,   label: L.messages,path: "/messages", badge: unreadMessages },
             */
           ].map((action, i) => (
             <button key={i} onClick={() => navigate(action.path)}
-              className={`relative aspect-[4/3] rounded-2xl border bg-gradient-to-br ${action.color} hover:scale-[1.02] transition flex flex-col items-center justify-center gap-1.5 group`}>
-              <div className="opacity-90 group-hover:scale-110 transition-transform">{action.icon}</div>
-              <p className="text-xs font-semibold opacity-90">{action.label}</p>
+              className="relative py-6 flex flex-col items-center justify-center gap-2 transition hover:bg-white/[0.03]"
+              style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,.09)" : "none", color: "rgba(255,255,255,.75)" }}>
+              {action.icon}
+              <span className="mono text-[10px] tracking-[.14em] uppercase">{action.label}</span>
               {action.badge > 0 && (
-                <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute top-3 right-3 w-4 h-4 mono text-[9px] flex items-center justify-center"
+                  style={{ background: "#B4553F", color: "#fff" }}>
                   {action.badge > 9 ? "9+" : action.badge}
                 </span>
               )}
@@ -688,73 +708,74 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* REFERRAL CARD */}
+        {/* ══ REFERRAL ══ */}
         {data.referralCode && (
-          <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-white/[0.02] to-teal-500/5 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
-                <Gift size={16} className="text-emerald-400" />
+          <section className="mt-8">
+            <SectionHead label="Referrals" title={L.referralProgram} />
+            <div className="p-5" style={{ background: "#16191E", border: "1px solid rgba(255,255,255,.08)" }}>
+              <p className="text-xs mb-5" style={{ color: "rgba(255,255,255,.45)" }}>{L.referralDesc}</p>
+
+              <div className="grid grid-cols-3 mb-5" style={{ borderTop: "1px solid rgba(255,255,255,.08)", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+                {[
+                  [L.referrals, String(totalReferrals), null],
+                  [L.earned, `$${money(referralEarnings)}`, "#3F8F5F"],
+                  [L.rate, "5%", "#C08A3E"],
+                ].map(([label, value, accent], i) => (
+                  <div key={i} className="py-4 text-center" style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,.08)" : "none" }}>
+                    <p className="mono text-[9px] tracking-[.18em] uppercase mb-1.5" style={{ color: "rgba(255,255,255,.32)" }}>{label}</p>
+                    <p className="mono text-base tabular" style={{ color: accent || "#fff" }}>{value}</p>
+                  </div>
+                ))}
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-white text-sm">{L.referralProgram}</h3>
-                <p className="text-emerald-400/70 text-xs mt-0.5">{L.referralDesc}</p>
+
+              <div className="flex items-stretch gap-0">
+                <div className="flex-1 px-3 py-3 mono text-[11px] truncate"
+                  style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.09)", color: "rgba(255,255,255,.55)" }}>
+                  {referralLink}
+                </div>
+                <button onClick={copyReferral}
+                  className="px-4 mono text-[10px] tracking-[.14em] uppercase flex items-center gap-1.5 transition"
+                  style={{
+                    background: copied ? "rgba(63,143,95,.15)" : "#3F8F5F",
+                    color: copied ? "#3F8F5F" : "#fff",
+                    border: copied ? "1px solid rgba(63,143,95,.4)" : "1px solid #3F8F5F",
+                  }}>
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  {copied ? L.copied : L.copy}
+                </button>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
-                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{L.referrals}</p>
-                <p className="text-white font-bold">{totalReferrals}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                <p className="text-emerald-400/60 text-[10px] uppercase tracking-widest mb-1">{L.earned}</p>
-                <p className="text-emerald-400 font-bold">${referralEarnings.toLocaleString()}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/8 text-center">
-                <p className="text-white/35 text-[10px] uppercase tracking-widest mb-1">{L.rate}</p>
-                <p className="text-white font-bold">5%</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/60 font-mono truncate">
-                {referralLink}
-              </div>
-              <button onClick={copyReferral}
-                className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs transition whitespace-nowrap ${
-                  copied ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" : "bg-emerald-500 hover:bg-emerald-400 text-white"
-                }`}>
-                {copied ? <Check size={12} /> : <Copy size={12} />}
-                {copied ? L.copied : L.copy}
-              </button>
-            </div>
-          </div>
+          </section>
         )}
 
-        {/* LIVE CHART */}
-        <section>
+        {/* ══ MARKET ══ */}
+        <section className="mt-8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white">{L.liveMarket}</h3>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <SectionHead label="Market" title={L.liveMarket} inline />
+            <span className="mono text-[10px] tracking-[.16em] uppercase flex items-center gap-1.5" style={{ color: "#3F8F5F" }}>
+              <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: "#3F8F5F" }} />
               {L.live}
-            </div>
+            </span>
           </div>
-          <div className="rounded-3xl border border-white/8 overflow-hidden h-[380px]">
+          <div style={{ border: "1px solid rgba(255,255,255,.08)", height: 360 }}>
             <div id="tradingview-widget" style={{ height: "100%", width: "100%" }} />
           </div>
         </section>
 
-        {/* ACTIVE PLANS */}
-        <section>
+        {/* ══ ACTIVE PLANS ══ */}
+        <section className="mt-8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white">{L.activePlans}</h3>
+            <SectionHead label="Portfolio" title={L.activePlans} inline />
             {plans.length > 0 && (
-              <button onClick={() => navigate("/plans")} className="text-xs text-emerald-400 flex items-center gap-1 hover:gap-2 transition">
-                {L.addPlan} <ChevronRight size={12} />
+              <button onClick={() => navigate("/plans")}
+                className="mono text-[10px] tracking-[.14em] uppercase flex items-center gap-1 transition" style={{ color: "#3F8F5F" }}>
+                {L.addPlan} <ChevronRight size={11} />
               </button>
             )}
           </div>
+
           {plans.length ? (
-            <div className="flex gap-3 overflow-x-auto py-1 snap-x snap-mandatory pb-2">
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
               {plans.map((p, i) => {
                 const start = new Date(p.createdAt);
                 const end = new Date(p.endDate);
@@ -764,167 +785,165 @@ export default function Dashboard() {
                 const daysLeft = Math.max(0, Math.ceil((end - new Date()) / 86400000));
                 const roi = p.amount > 0 ? ((p.profit / p.amount) * 100).toFixed(1) : "0.0";
                 return (
-                  <div key={i} className="min-w-[260px] flex-shrink-0 snap-start rounded-2xl border border-white/8 bg-gradient-to-br from-white/[0.04] to-white/[0.02] p-4 flex flex-col gap-3 hover:border-emerald-500/30 transition">
-                    <div className="flex items-start justify-between">
+                  <div key={i} className="min-w-[262px] shrink-0 snap-start p-5"
+                    style={{ background: "#16191E", border: "1px solid rgba(255,255,255,.08)" }}>
+                    <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h4 className="font-bold text-white text-sm">{p.plan}</h4>
-                        <p className="text-white/30 text-[10px] mt-0.5">{L.endsOn} {end.toLocaleDateString()}</p>
+                        <h4 className="display text-lg font-light text-white">{p.plan}</h4>
+                        <p className="mono text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,.3)" }}>
+                          {L.endsOn} {end.toLocaleDateString()}
+                        </p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${progress < 100 ? "bg-emerald-500/15 text-emerald-400" : "bg-green-500/15 text-green-400"}`}>
+                      <span className="mono text-[9px] tracking-[.16em] uppercase px-2 py-1"
+                        style={{
+                          background: progress < 100 ? "rgba(63,143,95,.12)" : "rgba(192,138,62,.12)",
+                          color: progress < 100 ? "#3F8F5F" : "#C08A3E",
+                        }}>
                         {progress < 100 ? L.active : L.done}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-14 h-14 shrink-0">
-                        <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="15" stroke="#ffffff10" strokeWidth="3" fill="none" />
-                          <circle cx="18" cy="18" r="15" stroke="#10b981" strokeWidth="3" fill="none"
-                            strokeDasharray={2 * Math.PI * 15}
-                            strokeDashoffset={2 * Math.PI * 15 - (2 * Math.PI * 15 * progress) / 100}
-                            strokeLinecap="round" style={{ transition: "stroke-dashoffset 1.2s ease-out" }} />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-emerald-400">{progress}%</div>
+
+                    {/* progress as a ruled bar, not a donut */}
+                    <div className="mb-4">
+                      <div className="flex items-baseline justify-between mb-1.5">
+                        <span className="mono text-[10px]" style={{ color: "rgba(255,255,255,.35)" }}>{progress}%</span>
+                        <span className="mono text-[10px]" style={{ color: "rgba(255,255,255,.35)" }}>
+                          {progress < 100 ? `${daysLeft} ${L.daysRemaining}` : L.planCompleted}
+                        </span>
                       </div>
-                      <div className="flex flex-col gap-1 text-xs flex-1">
-                        <div className="flex justify-between">
-                          <span className="text-white/35">{L.invest_label}</span>
-                          <span className="font-semibold">${parseFloat(p.amount).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/35">{L.profit_label}</span>
-                          <span className="font-semibold text-emerald-400">+${parseFloat(p.profit).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/35">{L.roi}</span>
-                          <span className="font-semibold text-teal-400">{roi}%</span>
-                        </div>
+                      <div className="h-[3px]" style={{ background: "rgba(255,255,255,.08)" }}>
+                        <div className="h-full transition-all duration-700" style={{ width: `${progress}%`, background: "#3F8F5F" }} />
                       </div>
                     </div>
-                    <div className={`flex items-center gap-1.5 text-[10px] border-t border-white/5 pt-2 ${progress < 100 ? "text-white/40" : "text-green-400"}`}>
-                      {progress < 100 ? <><Clock size={10} /> {daysLeft} {L.daysRemaining}</> : <><BadgeCheck size={10} /> {L.planCompleted}</>}
+
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,.07)" }}>
+                      <LedgerLine small label={L.invest_label} value={`$${parseFloat(p.amount).toLocaleString()}`} />
+                      <LedgerLine small label={L.profit_label} value={`+$${parseFloat(p.profit).toLocaleString()}`} accent="#3F8F5F" />
+                      <LedgerLine small label={L.roi} value={`${roi}%`} accent="#C08A3E" />
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 rounded-3xl border border-white/8 bg-white/[0.02] text-center gap-2">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <TrendingUp size={20} className="text-emerald-400 opacity-60" />
-              </div>
-              <p className="text-white font-semibold text-sm">{L.noActivePlans}</p>
-              <p className="text-white/30 text-xs max-w-xs">{L.noActiveDesc}</p>
-              <button onClick={() => navigate("/plans")} className="mt-1 px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-xs hover:bg-emerald-500/25 transition font-semibold">
-                {L.browsePlans}
-              </button>
-            </div>
+            <EmptyState icon={<TrendingUp size={20} />} title={L.noActivePlans} text={L.noActiveDesc}
+              action={{ label: L.browsePlans, onClick: () => navigate("/plans") }} />
           )}
         </section>
 
-        {/* COMPLETED PLANS */}
+        {/* ══ COMPLETED ══ */}
         {completed.length > 0 && (
-          <section>
-            <h3 className="text-sm font-bold text-white mb-3">{L.completedPlans}</h3>
-            <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+          <section className="mt-8">
+            <SectionHead label="Closed" title={L.completedPlans} />
+            <div style={{ border: "1px solid rgba(255,255,255,.08)" }}>
               {completed.map((p, i) => (
-                <div key={i} onClick={() => { setReinvestPlans([p]); setShowReinvest(true); }}
-                  className="cursor-pointer flex items-center justify-between p-3 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-emerald-500/5 transition">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                      <BadgeCheck size={15} className="text-green-400" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-xs">{p.plan}</p>
-                      <p className="text-white/30 text-[11px]">{L.invest_label} ${parseFloat(p.amount).toLocaleString()}</p>
-                    </div>
+                <button key={i} onClick={() => { setReinvestPlans([p]); setShowReinvest(true); }}
+                  className="w-full text-left flex items-center justify-between px-5 py-4 transition hover:bg-white/[0.03]"
+                  style={{ borderBottom: i < completed.length - 1 ? "1px solid rgba(255,255,255,.07)" : "none" }}>
+                  <div className="min-w-0">
+                    <p className="text-sm text-white truncate">{p.plan}</p>
+                    <p className="mono text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,.32)" }}>
+                      {L.invest_label} ${parseFloat(p.amount).toLocaleString()}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-emerald-400 font-bold text-xs">+${parseFloat(p.profit).toLocaleString()}</p>
-                    <p className="text-emerald-400/50 text-[10px]">{L.tapToReinvest}</p>
+                  <div className="text-right shrink-0 ml-3">
+                    <p className="mono text-sm tabular" style={{ color: "#3F8F5F" }}>+${parseFloat(p.profit).toLocaleString()}</p>
+                    <p className="mono text-[9px] mt-0.5" style={{ color: "rgba(255,255,255,.28)" }}>{L.tapToReinvest}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </section>
         )}
 
-        {/* RECENT ACTIVITIES */}
-        <section>
+        {/* ══ RECENT ACTIVITY ══ */}
+        <section className="mt-8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white">{L.recentActivities}</h3>
+            <SectionHead label="Ledger" title={L.recentActivities} inline />
+            <button onClick={() => navigate("/history")}
+              className="mono text-[10px] tracking-[.14em] uppercase flex items-center gap-1 transition" style={{ color: "rgba(255,255,255,.4)" }}>
+              All <ChevronRight size={11} />
+            </button>
           </div>
+
           {history.length ? (
-            <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-              {history.map((h, i) => {
-                const isDeposit = h.action === "Deposit";
+            <div style={{ border: "1px solid rgba(255,255,255,.08)" }}>
+              {history.slice(0, 6).map((h, i, arr) => {
+                const isIn = h.action === "Deposit" || h.action === "Profit" || h.action === "Referral" || h.action === "Bonus" || h.action === "Credit";
                 return (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDeposit ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
-                        {isDeposit ? <ArrowDownCircle size={15} className="text-emerald-400" /> : <ArrowUpCircle size={15} className="text-red-400" />}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-xs">{isDeposit ? L.deposit : L.withdraw}</p>
-                        <p className="text-white/30 text-[11px]">{new Date(h.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</p>
-                      </div>
+                  <div key={i} className="flex items-center justify-between px-5 py-4"
+                    style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,.07)" : "none" }}>
+                    <div className="min-w-0">
+                      <p className="text-sm text-white">{h.action}</p>
+                      <p className="mono text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,.3)" }}>
+                        {new Date(h.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
                     </div>
-                    <p className={`font-bold text-xs ${isDeposit ? "text-emerald-400" : "text-red-400"}`}>
-                      {isDeposit ? "+" : "-"}${parseFloat(h.amount ?? 0).toLocaleString()}
+                    <p className="mono text-sm tabular shrink-0 ml-3" style={{ color: isIn ? "#3F8F5F" : "#B4553F" }}>
+                      {isIn ? "+" : "−"}${parseFloat(h.amount ?? 0).toLocaleString()}
                     </p>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 rounded-3xl border border-white/8 bg-white/[0.02] text-center gap-2">
-              <Wallet size={20} className="text-white/20" />
-              <p className="text-white font-semibold text-sm">{L.noTransactions}</p>
-              <p className="text-white/30 text-xs">{L.noTxDesc}</p>
-            </div>
+            <EmptyState icon={<Wallet size={20} />} title={L.noTransactions} text={L.noTxDesc} />
           )}
         </section>
 
-        {/* ACCOUNT INFO */}
-        <section className="rounded-3xl border border-white/8 bg-white/[0.02] p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-base">
-              {flagEmoji(location.flag)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-white/30 text-[10px] uppercase tracking-widest">{L.location}</p>
-              <p className="font-semibold text-xs truncate">{location.country || L.detecting}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              <Calendar size={14} className="text-blue-400" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-white/30 text-[10px] uppercase tracking-widest">{L.memberSince}</p>
-              <p className="font-semibold text-xs truncate">{memberSince}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              {isVerified ? <VerifiedBadge size={14} /> : <BadgeCheck size={14} className="text-emerald-400" />}
-            </div>
-            <div className="min-w-0">
-              <p className="text-white/30 text-[10px] uppercase tracking-widest">{L.accountStatus}</p>
-              <p className="font-semibold text-xs text-emerald-400">{L.verified}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-              <BarChart2 size={14} className="text-purple-400" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-white/30 text-[10px] uppercase tracking-widest">{L.overallRoi}</p>
-              <p className="font-semibold text-xs text-purple-400">{profitPercent.toFixed(2)}%</p>
-            </div>
+        {/* ══ ACCOUNT ══ */}
+        <section className="mt-8">
+          <SectionHead label="Account" title="Details" />
+          <div className="grid grid-cols-2" style={{ border: "1px solid rgba(255,255,255,.08)" }}>
+            {[
+              [L.location, location.country || L.detecting, flagEmoji(location.flag)],
+              [L.memberSince, memberSince, <Calendar size={13} key="c" />],
+              [L.accountStatus, isVerified ? L.verified : "Unverified", <BadgeCheck size={13} key="b" />],
+              [L.overallRoi, `${profitPercent.toFixed(2)}%`, <BarChart2 size={13} key="r" />],
+            ].map(([label, value, icon], i) => (
+              <div key={i} className="p-4"
+                style={{
+                  borderLeft: i % 2 === 1 ? "1px solid rgba(255,255,255,.08)" : "none",
+                  borderTop: i > 1 ? "1px solid rgba(255,255,255,.08)" : "none",
+                }}>
+                <p className="mono text-[9px] tracking-[.18em] uppercase mb-2 flex items-center gap-1.5" style={{ color: "rgba(255,255,255,.3)" }}>
+                  <span style={{ color: "rgba(255,255,255,.35)" }}>{icon}</span> {label}
+                </p>
+                <p className="text-sm truncate" style={{ color: "rgba(255,255,255,.85)" }}>{value}</p>
+              </div>
+            ))}
           </div>
         </section>
 
       </main>
+    </div>
+  );
+}
+
+/* ── Section heading: small caps eyebrow + serif title ── */
+function SectionHead({ label, title, inline }) {
+  return (
+    <div className={inline ? "" : "mb-3"}>
+      <p className="mono text-[9px] tracking-[.24em] uppercase mb-1" style={{ color: "rgba(255,255,255,.3)" }}>{label}</p>
+      <h3 className="display text-lg font-light text-white">{title}</h3>
+    </div>
+  );
+}
+
+function EmptyState({ icon, title, text, action }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-12 px-6 gap-2"
+      style={{ border: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ color: "rgba(255,255,255,.2)" }}>{icon}</div>
+      <p className="display text-base text-white mt-1">{title}</p>
+      <p className="text-xs max-w-xs" style={{ color: "rgba(255,255,255,.35)" }}>{text}</p>
+      {action && (
+        <button onClick={action.onClick}
+          className="mt-3 px-5 py-2.5 mono text-[10px] tracking-[.14em] uppercase transition"
+          style={{ border: "1px solid rgba(63,143,95,.4)", color: "#3F8F5F" }}>
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }
