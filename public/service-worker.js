@@ -1,57 +1,75 @@
 // service-worker.js
-// Caches the offline page and serves it when network fails
+// Caches the offline page and serves it when the network fails.
 
-const CACHE_NAME = "mexicatrading-v1";
+// ⚠️ Bump this version whenever offline.html or logo.png changes,
+// otherwise browsers keep serving the previously cached copy.
+const CACHE_NAME = "mexicatrading-v2";
 const OFFLINE_URL = "/offline.html";
 
-// Files to cache for offline use
 const PRECACHE_URLS = [
   "/offline.html",
   "/logo.png",
 ];
 
-// Install: cache the offline page
+/* ── Install: cache the offline page ── */
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_URLS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
   );
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
+/* ── Activate: drop old caches ── */
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      );
-    })
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Fetch: intercept network requests
-// If the request fails (no network), show the custom offline page
+/* ── Fetch ── */
 self.addEventListener("fetch", (event) => {
-  // Only handle GET requests for navigation (HTML pages)
-  if (event.request.mode === "navigate") {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Never touch anything that isn't a plain GET
+  if (request.method !== "GET") return;
+
+  // Never cache or intercept API traffic — a stale balance or a replayed
+  // transaction response would be worse than an error.
+  if (
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith("/api/")
+  ) {
+    return;
+  }
+
+  // Page navigations: try the network, fall back to the offline page
+  if (request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        // Network failed → return cached offline page
-        return caches.match(OFFLINE_URL);
+      fetch(request).catch(async () => {
+        const cached = await caches.match(OFFLINE_URL);
+        return (
+          cached ||
+          new Response(
+            "<h1>You're offline</h1><p>Please check your connection.</p>",
+            { headers: { "Content-Type": "text/html" }, status: 503 }
+          )
+        );
       })
     );
     return;
   }
 
-  // For other requests (images, scripts, etc), try network first, then cache
+  // Static assets: network first, cache as fallback
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    fetch(request).catch(async () => {
+      const cached = await caches.match(request);
+      return cached || Response.error();
     })
   );
 });
