@@ -26,7 +26,6 @@ import Messages from "./pages/Messages.jsx";
 import UserSettings from "./pages/UserSettings";
 import History from "./pages/History.jsx";
 import Chat from "./pages/Chat.jsx";
-import AdminChat from "./pages/AdminChat.jsx";
 
 // Admin pages
 import AdminLayout from "./pages/AdminLayout.jsx";
@@ -42,6 +41,7 @@ import AdminWallets from "./pages/AdminWallets.jsx";
 import AdminKYC from "./pages/AdminKYC.jsx";
 import AdminBroadcast from "./pages/AdminBroadcast.jsx";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminChat from "./pages/AdminChat.jsx";
 
 
 const LOCK_TIMEOUT_MS = 30000;
