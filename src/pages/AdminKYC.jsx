@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, RefreshCw, CheckCircle, XCircle, Eye, X, ZoomIn, Mail, Landmark, Calendar, FileText } from "lucide-react";
+import {
+  ShieldCheck, RefreshCw, Check, X, ZoomIn, Mail, Landmark,
+  Send, ChevronRight, UserPlus,
+} from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, StatusPill, EmptyState, Banner, inputStyle, LedgerRow } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com/api";
+const c = T.color;
 
 export default function AdminKYC() {
   const [submissions, setSubmissions] = useState([]);
@@ -18,9 +23,15 @@ export default function AdminKYC() {
   const [filter, setFilter] = useState("pending");
   const [zoomedImage, setZoomedImage] = useState(null);
   const [inviteLoading, setInviteLoading] = useState(null);
+  const [showInvites, setShowInvites] = useState(false);
 
   const token = sessionStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}` };
+
+  const showMsg = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: "", type: "" }), 3500);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -33,6 +44,7 @@ export default function AdminKYC() {
       setAllUsers(usersRes.data);
     } catch (err) {
       console.error(err);
+      showMsg("Failed to load verification data.", "error");
     } finally {
       setLoading(false);
     }
@@ -40,14 +52,9 @@ export default function AdminKYC() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const showMsg = (text, type = "success") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: "", type: "" }), 3500);
-  };
-
   const handleAction = async (action) => {
     if (action === "reject" && !rejectReason.trim()) {
-      showMsg("Please enter a rejection reason.", "error");
+      showMsg("Give a reason so the user knows what to fix.", "error");
       return;
     }
     setActionLoading(true);
@@ -57,7 +64,7 @@ export default function AdminKYC() {
         { action, rejectionReason: rejectReason },
         { headers }
       );
-      showMsg(`KYC ${action === "approve" ? "approved ✅" : "rejected ❌"} successfully!`);
+      showMsg(action === "approve" ? "Verification approved." : "Verification rejected.");
       setSelected(null);
       setRejectReason("");
       setShowRejectInput(false);
@@ -73,7 +80,8 @@ export default function AdminKYC() {
     setInviteLoading(userId);
     try {
       await axios.post(`${API_URL}/admin/users/${userId}/invite-kyc`, {}, { headers });
-      showMsg(`✅ ${userName} has been invited to complete KYC!`);
+      showMsg(`${userName} has been invited to verify.`);
+      fetchData();
     } catch (err) {
       showMsg("Failed to send invitation.", "error");
     } finally {
@@ -89,335 +97,356 @@ export default function AdminKYC() {
     !u.kycInvited && (!u.kyc?.status || u.kyc?.status === "none") && !u.isAdmin
   );
 
-  const statusBadge = (status) => ({
-    pending:  "bg-yellow-500/15 text-yellow-400 border-yellow-500/25",
-    approved: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
-    rejected: "bg-red-500/15 text-red-400 border-red-500/25",
-    none:     "bg-white/8 text-white/30 border-white/10",
-  }[status] || "bg-white/8 text-white/30 border-white/10");
+  const counts = {
+    pending: submissions.filter(s => s.kyc?.status === "pending").length,
+    approved: submissions.filter(s => s.kyc?.status === "approved").length,
+    rejected: submissions.filter(s => s.kyc?.status === "rejected").length,
+  };
 
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(undefined, {
+    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+  }) : "—";
 
-  /* ─── Full-screen zoom rendered ON TOP via portal ─── */
+  const tone = (s) => s === "approved" ? "gain" : s === "pending" ? "brass" : s === "rejected" ? "loss" : "neutral";
+  const docLabel = (t) => (t || "").replace(/_/g, " ") || "—";
+
+  /* ── Zoom overlay via portal so it sits above everything ── */
   const ZoomOverlay = () => {
     if (!zoomedImage) return null;
     return createPortal(
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={() => setZoomedImage(null)}
-        style={{ position: "fixed", inset: 0, zIndex: 99999 }}
-        className="flex items-center justify-center bg-black/95 p-3">
-        <img src={zoomedImage} alt="Zoomed" className="max-w-full max-h-full rounded-xl object-contain shadow-2xl" />
-        <button onClick={() => setZoomedImage(null)}
-          className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-white active:bg-white/30 transition">
-          <X size={20} />
+      <div onClick={() => setZoomedImage(null)}
+        style={{
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(8,9,11,.96)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 14,
+        }}>
+        <img src={zoomedImage} alt="Document"
+          onClick={(e) => e.stopPropagation()}
+          style={{ maxWidth: "100%", maxHeight: "88vh", objectFit: "contain" }} />
+        <button onClick={() => setZoomedImage(null)} aria-label="Close"
+          style={{
+            position: "absolute", top: 18, right: 18, width: 40, height: 40,
+            background: "rgba(255,255,255,.08)", border: `1px solid ${c.line}`, color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+          <X size={18} />
         </button>
-        <p className="absolute bottom-5 left-0 right-0 text-center text-white/50 text-xs">Tap anywhere to close</p>
-      </motion.div>,
+        <p className="mono" style={{
+          position: "absolute", bottom: 20, left: 0, right: 0, textAlign: "center",
+          fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase", color: c.text4,
+        }}>
+          Tap anywhere to close
+        </p>
+      </div>,
       document.body
     );
   };
 
+  const ImageBlock = ({ label, src }) => (
+    <div>
+      <p className="eyebrow" style={{ marginBottom: 6 }}>{label}</p>
+      {src ? (
+        <button onClick={() => setZoomedImage(src)}
+          style={{ position: "relative", width: "100%", display: "block", border: `1px solid ${c.line}` }}>
+          <img src={src} alt={label} style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }} />
+          <span style={{
+            position: "absolute", bottom: 8, right: 8, width: 26, height: 26,
+            background: "rgba(14,16,19,.82)", display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <ZoomIn size={13} color="#fff" />
+          </span>
+        </button>
+      ) : (
+        <div className="flex items-center justify-center"
+          style={{ height: 150, border: `1px dashed ${c.line}`, fontSize: T.size.xs, color: c.text4 }}>
+          Not provided
+        </div>
+      )}
+    </div>
+  );
+
   if (loading) return (
-    <div className="flex flex-col items-center justify-center h-64 gap-4">
-      <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-      <p className="text-white/30 text-sm animate-pulse">Loading KYC data...</p>
+    <div className="ui flex flex-col items-center justify-center gap-4" style={{ height: 260 }}>
+      <ThemeStyles />
+      <Spinner size={26} />
+      <p className="mono" style={{ fontSize: T.size.xs, letterSpacing: ".2em", textTransform: "uppercase", color: c.text3 }}>
+        Loading
+      </p>
     </div>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
+      <ZoomOverlay />
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
         <div>
-          <h1 className="text-xl font-bold text-white">KYC Verification</h1>
-          <p className="text-white/30 text-xs mt-0.5">
-            {submissions.filter(s => s.kyc?.status === "pending").length} pending · {uninvitedUsers.length} can be invited
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Compliance</p>
+          <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Verification</h1>
+          <p className="mono" style={{ fontSize: T.size.xs, color: c.text3, marginTop: 6 }}>
+            {submissions.length} submissions
           </p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm transition-all">
-          <RefreshCw size={14} /> Refresh
+        <button onClick={fetchData} aria-label="Refresh"
+          className="flex items-center justify-center shrink-0"
+          style={{ width: 36, height: 36, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <RefreshCw size={14} />
         </button>
       </div>
 
-      {/* Message */}
-      <AnimatePresence>
-        {message.text && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`p-4 rounded-xl text-sm text-center font-medium border ${
-              message.type === "success"
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                : "bg-red-500/10 border-red-500/20 text-red-400"
-            }`}>
-            {message.text}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Filter tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {["pending", "approved", "rejected", "all"].map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all border ${
-              filter === f
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                : "bg-white/5 border-white/10 text-white/40 hover:text-white"
-            }`}>
-            {f} {f !== "all" && `(${submissions.filter(s => s.kyc?.status === f).length})`}
-          </button>
+      {/* ── Totals ── */}
+      <div className="grid grid-cols-3" style={{ border: `1px solid ${c.line}`, marginBottom: T.space.lg }}>
+        {[
+          ["Awaiting you", counts.pending, counts.pending > 0 ? c.brass : c.text2],
+          ["Approved", counts.approved, c.gain],
+          ["Rejected", counts.rejected, c.text2],
+        ].map(([label, value, col], i) => (
+          <div key={i} style={{ padding: T.space.lg, borderLeft: i > 0 ? `1px solid ${c.line}` : "none" }}>
+            <p className="eyebrow" style={{ marginBottom: 8 }}>{label}</p>
+            <p className="mono tabular" style={{ fontSize: T.size.base, color: col }}>{value}</p>
+          </div>
         ))}
       </div>
 
-      {/* ─── KYC Submissions — CARD layout (mobile friendly) ─── */}
-      <div>
-        <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">Submissions</p>
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3 rounded-2xl border border-white/8">
-            <ShieldCheck size={24} className="text-white/20" />
-            <p className="text-white/30 text-sm">No {filter} submissions</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((u, i) => (
-              <motion.div key={u._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                className="rounded-2xl border border-white/8 bg-white/[0.02] p-4">
-
-                {/* top: name + status */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-white text-sm font-semibold truncate">{u.name}</p>
-                    <p className="text-white/30 text-xs truncate">{u.email}</p>
-                  </div>
-                  <span className={`shrink-0 text-xs px-2.5 py-1 rounded-full border font-semibold capitalize ${statusBadge(u.kyc?.status)}`}>
-                    {u.kyc?.status || "none"}
-                  </span>
-                </div>
-
-                {/* meta: type + date */}
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1.5">
-                    <FileText size={12} className="text-white/25" />
-                    <span className="text-white/50 text-xs capitalize">{u.kyc?.idType?.replace(/_/g, " ") || "—"}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={12} className="text-white/25" />
-                    <span className="text-white/40 text-xs">{fmtDate(u.kyc?.submittedAt)}</span>
-                  </div>
-                </div>
-
-                {/* full-width action button */}
-                <button onClick={() => { setSelected(u); setShowRejectInput(false); setRejectReason(""); }}
-                  className="w-full flex items-center justify-center gap-2 text-sm py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white active:bg-white/10 transition-all font-medium">
-                  <Eye size={14} /> {u.kyc?.status === "pending" ? "Review Submission" : "View Submission"}
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Invite Users to KYC */}
-      {uninvitedUsers.length > 0 && (
-        <div className="rounded-2xl border border-purple-500/20 overflow-hidden">
-          <div className="px-5 py-3 bg-purple-500/8 border-b border-purple-500/15 flex items-center gap-2 flex-wrap">
-            <Mail size={14} className="text-purple-400" />
-            <p className="text-purple-400 text-xs font-semibold uppercase tracking-widest">Invite Users to KYC</p>
-            <span className="text-purple-400/60 text-xs">— {uninvitedUsers.length} users without KYC</span>
-          </div>
-          <div className="divide-y divide-white/5">
-            {uninvitedUsers.slice(0, 10).map((u) => (
-              <div key={u._id} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-white/[0.02] transition-all">
-                <div className="min-w-0 flex-1">
-                  <p className="text-white text-sm font-medium truncate">{u.name}</p>
-                  <p className="text-white/30 text-xs truncate">{u.email}</p>
-                </div>
-                <button
-                  onClick={() => handleInviteKYC(u._id, u.name)}
-                  disabled={inviteLoading === u._id}
-                  className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-500/25 text-purple-400 hover:bg-purple-500/25 transition-all disabled:opacity-50 font-semibold">
-                  {inviteLoading === u._id
-                    ? <span className="w-3 h-3 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
-                    : <Mail size={11} />}
-                  Invite
-                </button>
-              </div>
-            ))}
-            {uninvitedUsers.length > 10 && (
-              <p className="text-white/30 text-xs text-center py-3">
-                + {uninvitedUsers.length - 10} more users not shown
-              </p>
-            )}
-          </div>
+      {message.text && (
+        <div style={{ marginBottom: T.space.lg }}>
+          <Banner tone={message.type === "success" ? "gain" : "loss"} title={message.text} />
         </div>
       )}
 
-      {/* ─── REVIEW / VIEW MODAL ─── */}
+      {/* ══ NOT YET INVITED ══ */}
+      {uninvitedUsers.length > 0 && (
+        <div style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+          <button onClick={() => setShowInvites(!showInvites)}
+            className="w-full flex items-center justify-between gap-3 hover-fill"
+            style={{ padding: T.space.lg, transition: "background .2s" }}>
+            <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
+              <UserPlus size={15} style={{ color: c.brass, flexShrink: 0 }} />
+              <div style={{ textAlign: "left", minWidth: 0 }}>
+                <p style={{ fontSize: T.size.sm, color: c.text }}>
+                  {uninvitedUsers.length} {uninvitedUsers.length === 1 ? "member has" : "members have"} not been invited
+                </p>
+                <p style={{ fontSize: T.size.xs, color: c.text4, marginTop: 2 }}>
+                  Invite them to verify so withdrawals aren't blocked later
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={14}
+              style={{ color: c.text4, flexShrink: 0, transform: showInvites ? "rotate(90deg)" : "none", transition: "transform .2s" }} />
+          </button>
+
+          <AnimatePresence>
+            {showInvites && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: .25 }}
+                style={{ overflow: "hidden", borderTop: `1px solid ${c.line}` }}>
+                {uninvitedUsers.map((u, i) => (
+                  <div key={u._id}
+                    className="flex items-center justify-between gap-3"
+                    style={{
+                      padding: T.space.lg,
+                      borderBottom: i < uninvitedUsers.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                    }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>{u.name}</p>
+                      <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>
+                        {u.email}
+                      </p>
+                    </div>
+                    <Button variant="outline"
+                      onClick={() => handleInviteKYC(u._id, u.name)}
+                      disabled={inviteLoading === u._id}
+                      icon={inviteLoading === u._id ? <Spinner size={12} /> : <Send size={12} />}
+                      style={{ flexShrink: 0 }}>
+                      Invite
+                    </Button>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* ── Filters ── */}
+      <div className="flex" style={{ borderBottom: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+        {["pending", "approved", "rejected", "all"].map((f) => {
+          const on = filter === f;
+          return (
+            <button key={f} onClick={() => setFilter(f)}
+              className="mono"
+              style={{
+                padding: "11px 15px", fontSize: T.size.tiny,
+                letterSpacing: ".14em", textTransform: "uppercase",
+                color: on ? c.gain : c.text3,
+                borderBottom: `2px solid ${on ? c.gain : "transparent"}`,
+                marginBottom: -1, transition: "color .2s",
+              }}>
+              {f}{f !== "all" && counts[f] > 0 ? ` · ${counts[f]}` : ""}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── List ── */}
+      {filtered.length === 0 ? (
+        <EmptyState icon={<ShieldCheck size={20} />} title={`No ${filter === "all" ? "" : filter} submissions`}
+          text={filter === "pending" ? "Nothing waiting on you right now." : "Try another filter."} />
+      ) : (
+        <div style={{ border: `1px solid ${c.line}` }}>
+          {filtered.map((u, i) => (
+            <div key={u._id}
+              style={{
+                padding: T.space.lg,
+                borderBottom: i < filtered.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                borderLeft: `2px solid ${u.kyc?.status === "pending" ? c.brass : "transparent"}`,
+              }}>
+              <div className="flex items-start justify-between gap-3" style={{ marginBottom: T.space.md }}>
+                <div style={{ minWidth: 0 }}>
+                  <p className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>{u.name}</p>
+                  <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>{u.email}</p>
+                </div>
+                <StatusPill tone={tone(u.kyc?.status)}>{u.kyc?.status}</StatusPill>
+              </div>
+
+              <div className="flex items-baseline justify-between"
+                style={{ borderTop: `1px solid ${c.lineSoft}`, paddingTop: T.space.md, marginBottom: T.space.md }}>
+                <span className="mono" style={{ fontSize: T.size.tiny, color: c.text3, textTransform: "capitalize" }}>
+                  {u.kyc?.method === "bank" ? "Bank details" : docLabel(u.kyc?.idType)}
+                </span>
+                <span className="mono" style={{ fontSize: T.size.tiny, color: c.text4 }}>
+                  {fmtDate(u.kyc?.submittedAt)}
+                </span>
+              </div>
+
+              <Button variant={u.kyc?.status === "pending" ? "primary" : "quiet"} full
+                onClick={() => { setSelected(u); setShowRejectInput(false); setRejectReason(""); }}>
+                Review submission <ChevronRight size={13} />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ══ REVIEW SHEET ══ */}
       <AnimatePresence>
         {selected && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm">
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            style={{ background: "rgba(8,9,11,.88)" }}>
             <div className="absolute inset-0" onClick={() => setSelected(null)} />
 
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              className="relative w-full sm:max-w-xl bg-[#0e1422] border border-white/10 rounded-t-3xl sm:rounded-3xl z-10 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: .3, ease: [.22, 1, .36, 1] }}
+              className="relative w-full sm:max-w-lg z-10"
+              style={{ background: c.panel, border: `1px solid ${c.line}`, maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
 
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-[#0e1422] border-b border-white/8 px-5 py-4 flex items-center justify-between z-10">
-                <div className="min-w-0 flex-1">
-                  <p className="text-white font-bold truncate">{selected.name}</p>
-                  <p className="text-white/30 text-xs truncate">{selected.email}</p>
+              <div className="flex items-start justify-between gap-3"
+                style={{ padding: T.space.xl, borderBottom: `1px solid ${c.line}` }}>
+                <div style={{ minWidth: 0 }}>
+                  <p className="eyebrow" style={{ marginBottom: 6 }}>Review submission</p>
+                  <h3 className="display truncate" style={{ fontSize: T.size.xl, lineHeight: 1.15 }}>{selected.name}</h3>
+                  <a href={`mailto:${selected.email}`} className="mono truncate flex items-center gap-1.5"
+                    style={{ fontSize: T.size.tiny, color: c.gain, marginTop: 4 }}>
+                    <Mail size={10} /> {selected.email}
+                  </a>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`text-xs px-2 py-1 rounded-full border font-semibold capitalize ${statusBadge(selected.kyc?.status)}`}>
-                    {selected.kyc?.status}
-                  </span>
-                  <button onClick={() => setSelected(null)}
-                    className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white active:bg-white/10 transition">
-                    <X size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-5 space-y-4">
-
-                {/* Info row */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                    <p className="text-white/30 text-xs mb-1">{selected.kyc?.method === "bank" ? "Method" : "Document Type"}</p>
-                    <p className="text-white text-sm font-semibold capitalize">{selected.kyc?.idType?.replace(/_/g, " ") || "—"}</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                    <p className="text-white/30 text-xs mb-1">Submitted</p>
-                    <p className="text-white text-sm font-semibold">{fmtDate(selected.kyc?.submittedAt)}</p>
-                  </div>
-                </div>
-
-                {/* Rejection reason */}
-                {selected.kyc?.status === "rejected" && selected.kyc?.rejectionReason && (
-                  <div className="p-4 rounded-xl bg-red-500/8 border border-red-500/20">
-                    <p className="text-red-400 text-xs font-semibold mb-1">Rejection Reason</p>
-                    <p className="text-white/50 text-sm">{selected.kyc.rejectionReason}</p>
-                  </div>
-                )}
-
-                {/* Approval date */}
-                {selected.kyc?.status === "approved" && selected.kyc?.reviewedAt && (
-                  <div className="p-4 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
-                    <p className="text-emerald-400 text-xs font-semibold mb-1">Approved On</p>
-                    <p className="text-white/50 text-sm">{fmtDate(selected.kyc.reviewedAt)}</p>
-                  </div>
-                )}
-
-                {/* BANK DETAILS */}
-                {selected.kyc?.method === "bank" && (
-                  <div className="p-4 rounded-xl bg-white/[0.03] border border-white/8 space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Landmark size={14} className="text-emerald-400" />
-                      <p className="text-white/40 text-xs uppercase tracking-widest font-semibold">Bank Details</p>
-                    </div>
-                    {[
-                      ["Bank Name", selected.kyc?.bankName],
-                      ["Account Holder", selected.kyc?.accountName],
-                      ["Account Number", selected.kyc?.accountNumber],
-                      ...(selected.kyc?.routingNumber ? [["Routing / SWIFT", selected.kyc.routingNumber]] : []),
-                    ].map(([k, v], idx) => (
-                      <div key={idx} className="flex justify-between items-center gap-3">
-                        <span className="text-white/30 text-xs shrink-0">{k}</span>
-                        <span className="text-white text-sm font-medium text-right break-all">{v || "—"}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* ID Front */}
-                {selected.kyc?.idFrontImage && (
-                  <ImageBlock label="ID Document (Front)" src={selected.kyc.idFrontImage} onZoom={setZoomedImage} />
-                )}
-                {/* ID Back */}
-                {selected.kyc?.idBackImage && (
-                  <ImageBlock label="ID Document (Back)" src={selected.kyc.idBackImage} onZoom={setZoomedImage} />
-                )}
-                {/* Selfie */}
-                {selected.kyc?.selfieImage && (
-                  <ImageBlock label="Selfie with ID" src={selected.kyc.selfieImage} onZoom={setZoomedImage} />
-                )}
-
-                {/* Action buttons — only for pending */}
-                {selected.kyc?.status === "pending" && (
-                  <div className="space-y-3 pt-1">
-                    {!showRejectInput ? (
-                      <div className="grid grid-cols-2 gap-3">
-                        <button onClick={() => handleAction("approve")} disabled={actionLoading}
-                          className="py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                          {actionLoading
-                            ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            : <CheckCircle size={15} />}
-                          Approve
-                        </button>
-                        <button onClick={() => setShowRejectInput(true)} disabled={actionLoading}
-                          className="py-3 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition-all flex items-center justify-center gap-2">
-                          <XCircle size={15} /> Reject
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <textarea
-                          value={rejectReason}
-                          onChange={(e) => setRejectReason(e.target.value)}
-                          placeholder="Enter rejection reason (e.g. ID is blurry, selfie not clear, documents don't match)..."
-                          rows={3}
-                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-red-500/60 text-sm placeholder:text-white/25 text-white resize-none"
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                          <button onClick={() => handleAction("reject")} disabled={actionLoading}
-                            className="py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white text-sm font-semibold transition-all disabled:opacity-50">
-                            Confirm Reject
-                          </button>
-                          <button onClick={() => setShowRejectInput(false)}
-                            className="py-3 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm font-semibold hover:bg-white/10 transition-all">
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <button onClick={() => setSelected(null)}
-                  className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/40 hover:text-white">
-                  Close
+                <button onClick={() => setSelected(null)} aria-label="Close"
+                  className="flex items-center justify-center shrink-0"
+                  style={{ width: 32, height: 32, background: c.fill, color: c.text3 }}>
+                  <X size={14} />
                 </button>
               </div>
+
+              <div style={{ padding: T.space.xl, overflowY: "auto", flex: 1 }}>
+
+                <div style={{ border: `1px solid ${c.line}`, padding: `0 ${T.space.lg}px`, marginBottom: T.space.lg }}>
+                  <LedgerRow label="Status" value={selected.kyc?.status} />
+                  <LedgerRow label="Method"
+                    value={selected.kyc?.method === "bank" ? "Bank details" : docLabel(selected.kyc?.idType)} />
+                  <LedgerRow label="Submitted" value={fmtDate(selected.kyc?.submittedAt)} last />
+                </div>
+
+                {selected.kyc?.method === "bank" ? (
+                  <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg }}>
+                    <div className="flex items-center gap-2" style={{ marginBottom: T.space.md }}>
+                      <Landmark size={14} style={{ color: c.text3 }} />
+                      <p className="eyebrow">Bank details</p>
+                    </div>
+                    <div style={{ borderTop: `1px solid ${c.lineSoft}` }}>
+                      <LedgerRow label="Bank" value={selected.kyc?.bankName || "—"} />
+                      <LedgerRow label="Account name" value={selected.kyc?.accountName || "—"} />
+                      <LedgerRow label="Account number" value={selected.kyc?.accountNumber || "—"} />
+                      <LedgerRow label="Routing / SWIFT" value={selected.kyc?.routingNumber || "—"} last />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gap: T.space.lg }}>
+                    <ImageBlock label="Document · front" src={selected.kyc?.idFrontImage} />
+                    <ImageBlock label="Document · back" src={selected.kyc?.idBackImage} />
+                    <ImageBlock label="Selfie with document" src={selected.kyc?.selfieImage} />
+                  </div>
+                )}
+
+                {selected.kyc?.status === "rejected" && selected.kyc?.rejectionReason && (
+                  <div style={{ marginTop: T.space.lg }}>
+                    <Banner tone="loss" title="Rejection reason" text={selected.kyc.rejectionReason} />
+                  </div>
+                )}
+
+                {showRejectInput && (
+                  <div style={{ marginTop: T.space.lg }}>
+                    <p className="eyebrow" style={{ marginBottom: 6 }}>Reason for rejection</p>
+                    <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
+                      rows={3}
+                      placeholder="e.g. The back of the document is blurred — please resubmit a sharper photo."
+                      style={{ ...inputStyle, resize: "none", borderColor: "rgba(180,85,63,.35)" }} />
+                    <p style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 6, lineHeight: 1.6 }}>
+                      This is emailed to the user, so be specific about what to fix.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {selected.kyc?.status === "pending" && (
+                <div style={{ padding: T.space.lg, borderTop: `1px solid ${c.line}` }}>
+                  {!showRejectInput ? (
+                    <div className="flex" style={{ gap: 8 }}>
+                      <Button variant="primary" style={{ flex: 1 }}
+                        onClick={() => handleAction("approve")}
+                        disabled={actionLoading}
+                        icon={actionLoading ? <Spinner size={12} tone="#fff" /> : <Check size={13} />}>
+                        Approve
+                      </Button>
+                      <Button variant="danger" style={{ flex: 1 }} onClick={() => setShowRejectInput(true)}
+                        icon={<X size={13} />}>
+                        Reject
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex" style={{ gap: 8 }}>
+                      <Button variant="quiet" style={{ flex: 1 }}
+                        onClick={() => { setShowRejectInput(false); setRejectReason(""); }}>
+                        Cancel
+                      </Button>
+                      <Button variant="danger" style={{ flex: 1 }}
+                        onClick={() => handleAction("reject")}
+                        disabled={actionLoading}
+                        icon={actionLoading ? <Spinner size={12} tone={c.loss} /> : <Send size={13} />}>
+                        Confirm rejection
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Zoom overlay — rendered on top of everything via portal */}
-      <AnimatePresence>
-        <ZoomOverlay />
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ─── Reusable image block with zoom ─── */
-function ImageBlock({ label, src, onZoom }) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-white/40 text-xs uppercase tracking-widest font-semibold">{label}</p>
-        <button onClick={() => onZoom(src)}
-          className="flex items-center gap-1 text-xs text-emerald-400 active:text-emerald-300 transition">
-          <ZoomIn size={12} /> View Full Size
-        </button>
-      </div>
-      <div className="relative cursor-pointer rounded-xl overflow-hidden border border-white/10" onClick={() => onZoom(src)}>
-        <img src={src} alt={label} className="w-full object-cover max-h-64" />
-        <div className="absolute bottom-2 right-2 bg-black/60 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-white text-xs font-semibold">
-          <ZoomIn size={13} /> Tap to zoom
-        </div>
-      </div>
     </div>
   );
 }
