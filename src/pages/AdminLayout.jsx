@@ -1,24 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ArrowDownCircle,
-  ArrowUpCircle, Wallet, ChevronRight, Menu, X,
-  ShieldCheck, LogOut, Activity, Radio, CreditCard, BarChart3,
+  ArrowUpCircle, Wallet, Menu, X,
+  ShieldCheck, LogOut, Activity, Radio, CreditCard, BarChart3, Star,
 } from "lucide-react";
+import { T, ThemeStyles } from "./system.jsx";
 
-const navItems = [
-  { path: "/admin",                label: "Dashboard",      icon: <LayoutDashboard size={18} />, exact: true },
-  { path: "/admin/analytics",      label: "Analytics",      icon: <BarChart3 size={18} /> },
-  { path: "/admin/users",          label: "Manage Users",   icon: <Users size={18} /> },
-  { path: "/admin/plans",          label: "Manage Plans",   icon: <Package size={18} /> },
-  { path: "/admin/active-plans",   label: "Active Plans",   icon: <Activity size={18} /> },
-  { path: "/admin/deposits",       label: "Deposits",       icon: <ArrowDownCircle size={18} /> },
-  { path: "/admin/withdrawals",    label: "Withdrawals",    icon: <ArrowUpCircle size={18} /> },
-  { path: "/admin/credit-user",    label: "Credit User",    icon: <CreditCard size={18} /> },
-  { path: "/admin/wallets",        label: "Manage Wallets", icon: <Wallet size={18} /> },
-  { path: "/admin/kyc",            label: "KYC Reviews",    icon: <ShieldCheck size={18} /> },
-  { path: "/admin/broadcast",      label: "Broadcast",      icon: <Radio size={18} /> },
+const c = T.color;
+
+/* Grouped so the sidebar reads as sections rather than one long list */
+const navGroups = [
+  {
+    label: "Overview",
+    items: [
+      { path: "/admin",           label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Money",
+    items: [
+      { path: "/admin/deposits",    label: "Deposits",    icon: ArrowDownCircle },
+      { path: "/admin/withdrawals", label: "Withdrawals", icon: ArrowUpCircle },
+      { path: "/admin/credit-user", label: "Credit user", icon: CreditCard },
+      { path: "/admin/wallets",     label: "Wallets",     icon: Wallet },
+    ],
+  },
+  {
+    label: "Members",
+    items: [
+      { path: "/admin/users",   label: "Users",        icon: Users },
+      { path: "/admin/kyc",     label: "Verification", icon: ShieldCheck },
+      { path: "/admin/reviews", label: "Reviews",      icon: Star },
+    ],
+  },
+  {
+    label: "Products",
+    items: [
+      { path: "/admin/plans",        label: "Plans",         icon: Package },
+      { path: "/admin/active-plans", label: "Investments",   icon: Activity },
+      { path: "/admin/broadcast",    label: "Broadcast",     icon: Radio },
+    ],
+  },
 ];
+
+const allItems = navGroups.flatMap(g => g.items);
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,10 +54,8 @@ export default function AdminLayout() {
 
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
-  const isActive = (path, exact) => {
-    if (exact) return location.pathname === path;
-    return location.pathname.startsWith(path);
-  };
+  const isActive = (path, exact) =>
+    exact ? location.pathname === path : location.pathname.startsWith(path);
 
   const handleLogout = () => {
     sessionStorage.removeItem("adminToken");
@@ -40,149 +65,150 @@ export default function AdminLayout() {
     navigate("/admin/login");
   };
 
-  const currentLabel = navItems.find(n =>
-    n.exact ? location.pathname === n.path : location.pathname.startsWith(n.path)
-  )?.label || "Admin Panel";
+  const current = allItems.find(n => isActive(n.path, n.exact));
+  const currentLabel = current?.label || "Admin";
+
+  /* close the drawer whenever the route changes */
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+
+  const rowStyle = (active) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 11,
+    width: "100%",
+    padding: "11px 18px",
+    fontSize: T.size.sm,
+    color: active ? c.gain : c.text2,
+    borderLeft: `2px solid ${active ? c.gain : "transparent"}`,
+    background: active ? "rgba(63,143,95,.07)" : "transparent",
+    transition: "background .2s, color .2s",
+    textAlign: "left",
+  });
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ background: c.panel }}>
 
       {/* Brand */}
-      <div className="px-6 py-5 border-b border-white/8">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-            <ShieldCheck size={18} className="text-emerald-400" />
-          </div>
-          <div>
-            <p className="text-white font-bold text-sm tracking-tight">MexicaTrading</p>
-            <p className="text-white/30 text-xs">Operations Center</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Admin Info */}
-      <div className="px-6 py-4 border-b border-white/8">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
-            {user?.name?.charAt(0)?.toUpperCase() || "A"}
-          </div>
-          <div>
-            <p className="text-white text-sm font-semibold">{user?.name || "Admin"}</p>
-            <p className="text-emerald-400 text-xs">Super Admin</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Nav Items */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-white/20 text-xs font-semibold uppercase tracking-widest px-3 mb-3">
-          Navigation
+      <div style={{ padding: "20px 18px", borderBottom: `1px solid ${c.line}` }}>
+        <p className="mono" style={{
+          fontSize: T.size.micro, letterSpacing: ".24em",
+          textTransform: "uppercase", color: c.brass, marginBottom: 6,
+        }}>
+          Admin
         </p>
-        {navItems.map((item) => {
-          const active = isActive(item.path, item.exact);
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
-                active
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
-                  : "text-white/50 hover:text-white hover:bg-white/5 border border-transparent"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className={active ? "text-emerald-400" : "text-white/30 group-hover:text-white/60"}>
-                  {item.icon}
-                </span>
-                {item.label}
-              </div>
-              <ChevronRight size={14} className={`transition-transform ${active ? "opacity-60" : "opacity-20 group-hover:opacity-40"}`} />
-            </Link>
-          );
-        })}
+        <p className="display" style={{ fontSize: T.size.lg, color: "#fff", lineHeight: 1 }}>
+          MexicaTrading
+        </p>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto" style={{ paddingTop: 6, paddingBottom: 6 }}>
+        {navGroups.map((group, gi) => (
+          <div key={gi} style={{ marginBottom: 4 }}>
+            <p className="eyebrow" style={{ padding: "12px 18px 6px" }}>{group.label}</p>
+            {group.items.map((item) => {
+              const active = isActive(item.path, item.exact);
+              const Icon = item.icon;
+              return (
+                <Link key={item.path} to={item.path} style={rowStyle(active)}>
+                  <Icon size={15} style={{ flexShrink: 0, opacity: active ? 1 : .55 }} />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-4 border-t border-white/8">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all">
-          <LogOut size={15} />
-          Sign Out
+      {/* Account */}
+      <div style={{ borderTop: `1px solid ${c.line}`, padding: 14 }}>
+        {user?.name && (
+          <div style={{ padding: "0 4px 12px" }}>
+            <p className="eyebrow" style={{ marginBottom: 4 }}>Signed in</p>
+            <p className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>{user.name}</p>
+            <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>
+              {user.email}
+            </p>
+          </div>
+        )}
+
+        <button onClick={handleLogout}
+          className="mono w-full flex items-center justify-center gap-2"
+          style={{
+            padding: "12px 0",
+            fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase",
+            border: `1px solid rgba(180,85,63,.3)`, color: c.loss, background: "transparent",
+          }}>
+          <LogOut size={13} /> Sign out
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-[#080c18] text-white overflow-hidden">
+    <div className="ui" style={{ minHeight: "100vh", background: c.ink, color: c.text }}>
+      <ThemeStyles />
 
-      {/* Background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute w-[500px] h-[500px] bg-emerald-500/5 blur-[150px] rounded-full top-0 left-0" />
-        <div className="absolute w-[400px] h-[400px] bg-blue-500/5 blur-[120px] rounded-full bottom-0 right-0" />
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }} />
-      </div>
-
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-72 bg-[#0e1422] border-r border-white/8 z-50 shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
-              <span className="text-white font-bold text-sm">Admin Panel</span>
-              <button onClick={() => setSidebarOpen(false)}
-                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition">
-                <X size={16} />
-              </button>
-            </div>
-            <SidebarContent />
-          </aside>
-        </div>
-      )}
-
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-[#0e1422] border-r border-white/8 relative z-10 shrink-0">
+      {/* ── Desktop sidebar ── */}
+      <aside className="hidden lg:block"
+        style={{
+          position: "fixed", top: 0, left: 0, bottom: 0, width: 236,
+          borderRight: `1px solid ${c.line}`, zIndex: 30,
+        }}>
         <SidebarContent />
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-
-        {/* Top Header */}
-        <header className="flex justify-between items-center bg-[#080c18]/80 backdrop-blur-xl border-b border-white/8 px-6 py-4 shrink-0">
-          <div className="flex items-center gap-4">
-            <button
-              className="md:hidden w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition"
-              onClick={() => setSidebarOpen(true)}>
-              <Menu size={18} />
-            </button>
-            <div>
-              <h1 className="text-white font-bold text-base">{currentLabel}</h1>
-              <p className="text-white/30 text-xs">MexicaTrading Operations Center</p>
-            </div>
+      {/* ── Mobile drawer ── */}
+      {sidebarOpen && (
+        <div className="lg:hidden" style={{ position: "fixed", inset: 0, zIndex: 50 }}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(8,9,11,.82)" }}
+            onClick={() => setSidebarOpen(false)} />
+          <div style={{
+            position: "absolute", top: 0, left: 0, bottom: 0, width: 262,
+            borderRight: `1px solid ${c.line}`,
+          }}>
+            <SidebarContent />
           </div>
+        </div>
+      )}
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs text-white/40 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live
+      {/* ── Main ── */}
+      <div style={{ paddingLeft: 0 }} className="lg:pl-[236px]">
+
+        {/* Top bar */}
+        <header style={{
+          position: "sticky", top: 0, zIndex: 20,
+          background: "rgba(14,16,19,.96)", backdropFilter: "blur(12px)",
+          borderBottom: `1px solid ${c.line}`,
+        }}>
+          <div className="flex items-center gap-3" style={{ padding: "14px 20px" }}>
+            <button onClick={() => setSidebarOpen(true)} aria-label="Menu"
+              className="lg:hidden flex items-center justify-center shrink-0"
+              style={{ width: 34, height: 34, border: `1px solid ${c.line}`, background: c.fill, color: c.text2 }}>
+              <Menu size={16} />
+            </button>
+
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p className="eyebrow" style={{ marginBottom: 2 }}>Admin</p>
+              <h2 className="display truncate" style={{ fontSize: T.size.lg, lineHeight: 1.1 }}>
+                {currentLabel}
+              </h2>
             </div>
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
-              <ShieldCheck size={13} className="text-emerald-400" />
-              <span className="text-emerald-400 text-xs font-semibold">
-                {user?.name || "Admin"}
-              </span>
-            </div>
+
+            <Link to="/" target="_blank" rel="noopener noreferrer"
+              className="mono hidden sm:flex items-center shrink-0"
+              style={{
+                padding: "8px 12px", fontSize: T.size.tiny,
+                letterSpacing: ".14em", textTransform: "uppercase",
+                border: `1px solid ${c.line}`, color: c.text3,
+              }}>
+              View site
+            </Link>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Page */}
+        <main style={{ padding: "24px 20px 64px", maxWidth: 960, margin: "0 auto" }}>
           <Outlet />
         </main>
       </div>
