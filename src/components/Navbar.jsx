@@ -11,29 +11,6 @@ const c = T.color;
 // Pages considered "outside the app"
 const OUTSIDE_PAGES = ["/", "/login", "/register"];
 
-// Opens the Tawk.to chat widget
-const openChat = () => {
-  try {
-    if (window.Tawk_API && typeof window.Tawk_API.maximize === "function") {
-      window.Tawk_API.showWidget();
-      window.Tawk_API.maximize();
-    } else {
-      let attempts = 0;
-      const interval = setInterval(() => {
-        attempts++;
-        if (window.Tawk_API && typeof window.Tawk_API.maximize === "function") {
-          window.Tawk_API.showWidget();
-          window.Tawk_API.maximize();
-          clearInterval(interval);
-        }
-        if (attempts > 20) clearInterval(interval);
-      }, 500);
-    }
-  } catch (e) {
-    console.warn("Tawk.to not ready:", e);
-  }
-};
-
 export default function Navbar() {
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -156,7 +133,7 @@ export default function Navbar() {
                 </Link>
               )
             )}
-            <button onClick={openChat} style={linkStyle(false)}>
+            <button onClick={() => handleProtectedNav("/chat")} style={linkStyle(isActive("/chat"))}>
               <MessageCircle size={13} /> Support
             </button>
           </nav>
@@ -262,8 +239,8 @@ export default function Navbar() {
                 </>
               )}
 
-              <button onClick={() => { setMenuOpen(false); setTimeout(openChat, 300); }}
-                style={{ ...drawerRow(false), color: c.gain }}>
+              <button onClick={() => handleProtectedNav("/chat")}
+                style={{ ...drawerRow(isActive("/chat")), color: c.gain }}>
                 <span className="flex items-center gap-2"><MessageCircle size={14} /> Support</span>
                 <ChevronRight size={13} style={{ opacity: .35 }} />
               </button>
