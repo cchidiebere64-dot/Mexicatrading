@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users, Search, X, DollarSign, ShieldOff, Shield,
-  KeyRound, Trash2, RefreshCw, ChevronRight, AlertTriangle,
-  MessageSquare, Send, Phone, Globe, Calendar, BadgeCheck,
-  Copy, Check, Mail,
+  Users, Search, X, ShieldOff, Shield, KeyRound, Trash2, RefreshCw,
+  ChevronRight, MessageSquare, Send, Phone, Copy, Check, Mail,
 } from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, StatusPill, EmptyState, Banner, inputStyle, LedgerRow } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com/api";
+const c = T.color;
 
 /* Friendly welcome message pre-filled when you WhatsApp a user */
 const waMessage = (name) =>
@@ -39,6 +39,11 @@ export default function AdminUsers() {
   const token = sessionStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}` };
 
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  };
+
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -65,12 +70,6 @@ export default function AdminUsers() {
     ));
   }, [search, users]);
 
-  const showMessage = (text, type = "success") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-  };
-
-  /* Copy helper */
   const copyText = async (text, which) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -162,342 +161,344 @@ export default function AdminUsers() {
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-        <p className="text-white/30 text-sm animate-pulse">Loading users...</p>
-      </div>
-    );
+  const openUser = (u) => {
+    setSelectedUser(u);
+    setConfirmDelete(false);
+    setShowPasswordField(false);
+    setShowMessageForm(false);
+    setAmount("");
+    setMsgSubject("");
+    setMsgBody("");
+    setCopied("");
+  };
 
   const memberSince = (date) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
   };
 
-  return (
-    <div className="space-y-6">
+  const money = (v) => Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+  const totalBalance = users.reduce((s, u) => s + (Number(u.balance) || 0), 0);
+  const verified = users.filter(u => u.isVerified).length;
+  const frozen = users.filter(u => u.freezeWithdrawals).length;
+
+  if (loading) return (
+    <div className="ui flex flex-col items-center justify-center gap-4" style={{ height: 260 }}>
+      <ThemeStyles />
+      <Spinner size={26} />
+      <p className="mono" style={{ fontSize: T.size.xs, letterSpacing: ".2em", textTransform: "uppercase", color: c.text3 }}>
+        Loading
+      </p>
+    </div>
+  );
+
+  const iconBtn = {
+    width: 30, height: 30,
+    background: c.fill, border: `1px solid ${c.line}`, color: c.text4,
+    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+  };
+
+  return (
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
+
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
         <div>
-          <h1 className="text-xl font-bold text-white">Manage Users</h1>
-          <p className="text-white/30 text-xs mt-0.5">{users.length} total users registered</p>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Accounts</p>
+          <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Users</h1>
+          <p className="mono" style={{ fontSize: T.size.xs, color: c.text3, marginTop: 6 }}>
+            {users.length} registered
+          </p>
         </div>
-        <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm transition-all">
-          <RefreshCw size={14} /> Refresh
+        <button onClick={fetchUsers} aria-label="Refresh"
+          className="flex items-center justify-center shrink-0"
+          style={{ width: 36, height: 36, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <RefreshCw size={14} />
         </button>
       </div>
 
-      {/* Global Message */}
-      <AnimatePresence>
-        {message.text && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`p-4 rounded-xl text-sm text-center font-medium border ${message.type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-            {message.text}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Search */}
-      <div className="relative">
-        <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25" />
-        <input type="text" placeholder="Search by name, email, phone or country..." value={search} onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25 text-white" />
+      {/* ── Totals ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4" style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+        {[
+          ["Users", String(users.length), c.text],
+          ["Verified", String(verified), c.gain],
+          ["Frozen", String(frozen), frozen > 0 ? c.brass : c.text2],
+          ["Held balance", `$${money(totalBalance)}`, c.text],
+        ].map(([label, value, col], i) => (
+          <div key={i} style={{
+            padding: T.space.lg,
+            borderLeft: i % 2 === 1 ? `1px solid ${c.line}` : "none",
+            borderTop: i > 1 ? `1px solid ${c.line}` : "none",
+          }} className="sm:border-l sm:border-t-0">
+            <p className="eyebrow" style={{ marginBottom: 8 }}>{label}</p>
+            <p className="mono tabular" style={{ fontSize: T.size.base, color: col }}>{value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Users Table */}
-      <div className="rounded-2xl border border-white/8 overflow-hidden">
-        <div className="grid grid-cols-4 px-5 py-3 bg-white/[0.03] border-b border-white/8">
-          {["Name", "Email", "Balance", "Action"].map(h => (
-            <p key={h} className="text-white/30 text-xs font-semibold uppercase tracking-widest">{h}</p>
+      {message.text && (
+        <div style={{ marginBottom: T.space.lg }}>
+          <Banner tone={message.type === "success" ? "gain" : "loss"} title={message.text} />
+        </div>
+      )}
+
+      {/* ── Search ── */}
+      <div style={{ position: "relative", marginBottom: T.space.xl }}>
+        <Search size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, email, phone or country"
+          style={{ ...inputStyle, paddingLeft: 36 }} />
+      </div>
+
+      {/* ── List ── */}
+      {filtered.length === 0 ? (
+        <EmptyState icon={<Users size={20} />} title="No users found"
+          text="Try a different search term." />
+      ) : (
+        <div style={{ border: `1px solid ${c.line}` }}>
+          {filtered.map((u, i) => (
+            <button key={u._id} onClick={() => openUser(u)}
+              className="w-full text-left hover-fill flex items-center gap-3"
+              style={{
+                padding: T.space.lg,
+                borderBottom: i < filtered.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                borderLeft: `2px solid ${u.freezeWithdrawals ? c.brass : "transparent"}`,
+                transition: "background .2s",
+              }}>
+
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="flex items-center gap-2" style={{ marginBottom: 3 }}>
+                  <span className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>{u.name}</span>
+                  {u.freezeWithdrawals && <StatusPill tone="brass">Frozen</StatusPill>}
+                </div>
+                <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4 }}>
+                  {u.email}{u.country ? ` · ${u.country}` : ""}
+                </p>
+              </div>
+
+              <div className="text-right shrink-0">
+                <p className="mono tabular" style={{ fontSize: T.size.sm, color: c.gain }}>
+                  ${money(u.balance)}
+                </p>
+              </div>
+
+              <ChevronRight size={14} style={{ color: c.text4, flexShrink: 0 }} />
+            </button>
           ))}
         </div>
-        <div className="divide-y divide-white/5">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <Users size={24} className="text-white/20" />
-              <p className="text-white/30 text-sm">No users found</p>
-            </div>
-          ) : (
-            filtered.map((u, i) => (
-              <motion.div key={u._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                className="grid grid-cols-4 px-5 py-4 hover:bg-white/[0.02] transition-all items-center">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0">
-                    {u.name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{u.name}</p>
-                    {u.country && <p className="text-white/30 text-[11px] truncate">📍 {u.country}</p>}
-                  </div>
-                </div>
-                <p className="text-white/50 text-sm truncate pr-4">{u.email}</p>
-                <p className="text-emerald-400 font-bold text-sm">${parseFloat(u.balance || 0).toLocaleString()}</p>
-                <button onClick={() => {
-                  setSelectedUser(u);
-                  setConfirmDelete(false);
-                  setShowPasswordField(false);
-                  setShowMessageForm(false);
-                  setAmount("");
-                  setMsgSubject("");
-                  setMsgBody("");
-                  setCopied("");
-                }}
-                  className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-all w-fit">
-                  Manage <ChevronRight size={12} />
-                </button>
-              </motion.div>
-            ))
-          )}
-        </div>
-      </div>
+      )}
 
-      {/* USER MODAL */}
+      {/* ══ USER SHEET ══ */}
       <AnimatePresence>
         {selectedUser && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            style={{ background: "rgba(8,9,11,.88)" }}>
             <div className="absolute inset-0" onClick={() => setSelectedUser(null)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-[#0e1422] border border-white/10 rounded-3xl p-6 z-10 shadow-2xl max-h-[90vh] overflow-y-auto">
 
-              {/* Modal Header */}
-              <div className="flex items-start justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
-                    {selectedUser.name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-sm">{selectedUser.name}</p>
-                    <p className="text-white/30 text-xs">{selectedUser.email}</p>
-                  </div>
+            <motion.div
+              initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: .3, ease: [.22, 1, .36, 1] }}
+              className="relative w-full sm:max-w-md z-10"
+              style={{ background: c.panel, border: `1px solid ${c.line}`, maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+
+              {/* header */}
+              <div className="flex items-start justify-between gap-3"
+                style={{ padding: T.space.xl, borderBottom: `1px solid ${c.line}` }}>
+                <div style={{ minWidth: 0 }}>
+                  <p className="eyebrow" style={{ marginBottom: 6 }}>Account</p>
+                  <h3 className="display truncate" style={{ fontSize: T.size.xl, lineHeight: 1.15 }}>
+                    {selectedUser.name}
+                  </h3>
                 </div>
-                <button onClick={() => setSelectedUser(null)} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition">
-                  <X size={15} />
+                <button onClick={() => setSelectedUser(null)} aria-label="Close"
+                  className="flex items-center justify-center shrink-0"
+                  style={{ width: 32, height: 32, background: c.fill, color: c.text3 }}>
+                  <X size={14} />
                 </button>
               </div>
 
-              {/* ── CONTACT: WhatsApp + Email (clickable + copyable) ── */}
-              <div className="space-y-2 mb-4">
-                {/* Phone / WhatsApp */}
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1">
-                    <Phone size={10} /> Phone · WhatsApp
+              <div style={{ padding: T.space.xl, overflowY: "auto", flex: 1 }}>
+
+                {/* balance */}
+                <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg, marginBottom: T.space.lg }}>
+                  <p className="eyebrow" style={{ marginBottom: 6 }}>Current balance</p>
+                  <p className="mono tabular" style={{ fontSize: 26, color: c.gain, lineHeight: 1 }}>
+                    ${money(selectedUser.balance)}
                   </p>
-                  {selectedUser.phone ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <a
-                        href={`https://wa.me/${toWaNumber(selectedUser.phone)}?text=${encodeURIComponent(waMessage(selectedUser.name))}`}
+                </div>
+
+                {/* contact */}
+                <p className="eyebrow" style={{ marginBottom: T.space.md }}>Contact</p>
+                <div style={{ border: `1px solid ${c.line}`, marginBottom: T.space.lg }}>
+
+                  {/* phone */}
+                  <div style={{ padding: T.space.lg, borderBottom: `1px solid ${c.lineSoft}` }}>
+                    <div className="flex items-center justify-between gap-2" style={{ marginBottom: 8 }}>
+                      <span className="eyebrow flex items-center gap-1.5"><Phone size={10} /> WhatsApp</span>
+                      {selectedUser.phone && (
+                        <button onClick={() => copyText(selectedUser.phone, "phone")} aria-label="Copy phone"
+                          style={{ ...iconBtn, color: copied === "phone" ? c.gain : c.text4 }}>
+                          {copied === "phone" ? <Check size={12} /> : <Copy size={12} />}
+                        </button>
+                      )}
+                    </div>
+                    {selectedUser.phone ? (
+                      <a href={`https://wa.me/${toWaNumber(selectedUser.phone)}?text=${encodeURIComponent(waMessage(selectedUser.name))}`}
                         target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm font-semibold truncate transition">
-                        <MessageSquare size={14} className="shrink-0" />
-                        <span className="truncate">{selectedUser.phone}</span>
+                        className="mono flex items-center gap-2"
+                        style={{ fontSize: T.size.sm, color: c.gain }}>
+                        <MessageSquare size={13} /> {selectedUser.phone}
                       </a>
-                      <button onClick={() => copyText(selectedUser.phone, "phone")}
-                        className="shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
-                        {copied === "phone" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-white/30 text-xs">Not provided</p>
-                  )}
-                  {selectedUser.phone && (
-                    <p className="text-white/25 text-[10px] mt-1.5">Tap the number to message on WhatsApp</p>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1">
-                    <Mail size={10} /> Email
-                  </p>
-                  {selectedUser.email ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <a
-                        href={`mailto:${selectedUser.email}?subject=${encodeURIComponent("MexicaTrading Support")}&body=${encodeURIComponent("Hi " + (selectedUser.name || "dear") + ",\n\n")}`}
-                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-semibold truncate transition">
-                        <Mail size={14} className="shrink-0" />
-                        <span className="truncate">{selectedUser.email}</span>
-                      </a>
-                      <button onClick={() => copyText(selectedUser.email, "email")}
-                        className="shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
-                        {copied === "email" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-white/30 text-xs">Not provided</p>
-                  )}
-                </div>
-              </div>
-
-              {/* USER INFO PANEL (country, joined, status) */}
-              <div className="grid grid-cols-3 gap-2 mb-5">
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <Globe size={10} /> Country
-                  </p>
-                  <p className="text-white text-xs font-semibold truncate">
-                    {selectedUser.country || <span className="text-white/30">—</span>}
-                  </p>
-                </div>
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <Calendar size={10} /> Joined
-                  </p>
-                  <p className="text-white text-xs font-semibold truncate">{memberSince(selectedUser.createdAt)}</p>
-                </div>
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/8">
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <BadgeCheck size={10} /> Status
-                  </p>
-                  <p className={`text-xs font-semibold ${selectedUser.isVerified ? "text-emerald-400" : "text-yellow-400"}`}>
-                    {selectedUser.isVerified ? "✓ Verified" : "⏳ Pending"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Balance Badge */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/8 mb-5">
-                <p className="text-white/40 text-xs uppercase tracking-widest">Current Balance</p>
-                <p className="text-emerald-400 font-bold text-lg">${parseFloat(selectedUser.balance || 0).toLocaleString()}</p>
-              </div>
-
-              {/* Modal Message */}
-              <AnimatePresence>
-                {message.text && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className={`mb-4 p-3 rounded-xl text-xs text-center font-medium border ${message.type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-                    {message.text}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="space-y-3">
-
-                {/* Credit / Deduct */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Amount</label>
-                  <div className="relative">
-                    <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25" />
-                    <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount"
-                      className="w-full pl-9 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white" />
+                    ) : (
+                      <p style={{ fontSize: T.size.xs, color: c.text4 }}>Not provided</p>
+                    )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => updateBalance("credit")} disabled={actionLoading}
-                      className="py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/25 transition-all disabled:opacity-50">
-                      + Credit
-                    </button>
-                    <button onClick={() => updateBalance("deduct")} disabled={actionLoading}
-                      className="py-2.5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition-all disabled:opacity-50">
-                      − Deduct
-                    </button>
+
+                  {/* email */}
+                  <div style={{ padding: T.space.lg }}>
+                    <div className="flex items-center justify-between gap-2" style={{ marginBottom: 8 }}>
+                      <span className="eyebrow flex items-center gap-1.5"><Mail size={10} /> Email</span>
+                      {selectedUser.email && (
+                        <button onClick={() => copyText(selectedUser.email, "email")} aria-label="Copy email"
+                          style={{ ...iconBtn, color: copied === "email" ? c.gain : c.text4 }}>
+                          {copied === "email" ? <Check size={12} /> : <Copy size={12} />}
+                        </button>
+                      )}
+                    </div>
+                    <a href={`mailto:${selectedUser.email}?subject=${encodeURIComponent("MexicaTrading Support")}&body=${encodeURIComponent("Hi " + (selectedUser.name || "dear") + ",\n\n")}`}
+                      className="mono truncate block"
+                      style={{ fontSize: T.size.sm, color: c.gain }}>
+                      {selectedUser.email}
+                    </a>
                   </div>
                 </div>
 
-                <div className="h-px bg-white/8" />
+                {/* details */}
+                <div style={{ border: `1px solid ${c.line}`, padding: `0 ${T.space.lg}px`, marginBottom: T.space.xl }}>
+                  <LedgerRow label="Country" value={selectedUser.country || "—"} />
+                  <LedgerRow label="Joined" value={memberSince(selectedUser.createdAt)} />
+                  <LedgerRow label="Email verified"
+                    value={selectedUser.isVerified ? "Yes" : "No"}
+                    accent={selectedUser.isVerified ? c.gain : c.brass} />
+                  <LedgerRow label="Withdrawals"
+                    value={selectedUser.freezeWithdrawals ? "Frozen" : "Allowed"}
+                    accent={selectedUser.freezeWithdrawals ? c.brass : c.gain} last />
+                </div>
 
-                {/* Freeze */}
-                <button onClick={toggleFreeze} disabled={actionLoading}
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-all disabled:opacity-50 ${selectedUser.freezeWithdrawals ? "bg-green-500/15 border-green-500/25 text-green-400 hover:bg-green-500/25" : "bg-yellow-500/15 border-yellow-500/25 text-yellow-400 hover:bg-yellow-500/25"}`}>
-                  {selectedUser.freezeWithdrawals ? <Shield size={15} /> : <ShieldOff size={15} />}
-                  {selectedUser.freezeWithdrawals ? "Unfreeze Withdrawals" : "Freeze Withdrawals"}
-                </button>
+                {/* balance adjust */}
+                <p className="eyebrow" style={{ marginBottom: T.space.md }}>Adjust balance</p>
+                <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Amount"
+                  className="mono tabular"
+                  style={{ ...inputStyle, marginBottom: 8 }} />
+                <div className="grid grid-cols-2" style={{ gap: 8, marginBottom: T.space.xl }}>
+                  <Button variant="primary" onClick={() => updateBalance("credit")} disabled={actionLoading}>
+                    Credit
+                  </Button>
+                  <Button variant="danger" onClick={() => updateBalance("deduct")} disabled={actionLoading}>
+                    Deduct
+                  </Button>
+                </div>
 
-                {/* Send Message (in-app) */}
+                {/* actions */}
+                <p className="eyebrow" style={{ marginBottom: T.space.md }}>Actions</p>
+
+                <Button variant={selectedUser.freezeWithdrawals ? "primary" : "quiet"} full
+                  onClick={toggleFreeze} disabled={actionLoading}
+                  icon={selectedUser.freezeWithdrawals ? <Shield size={13} /> : <ShieldOff size={13} />}
+                  style={{ marginBottom: 8 }}>
+                  {selectedUser.freezeWithdrawals ? "Unfreeze withdrawals" : "Freeze withdrawals"}
+                </Button>
+
                 {!showMessageForm ? (
-                  <button onClick={() => setShowMessageForm(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500/15 border border-blue-500/25 text-blue-400 text-sm font-semibold hover:bg-blue-500/25 transition-all">
-                    <MessageSquare size={15} /> Send In-App Message
-                  </button>
+                  <Button variant="quiet" full onClick={() => setShowMessageForm(true)}
+                    icon={<MessageSquare size={13} />} style={{ marginBottom: 8 }}>
+                    Send in-app message
+                  </Button>
                 ) : (
-                  <div className="space-y-2 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-                    <p className="text-blue-400 text-xs font-semibold uppercase tracking-widest mb-3">
-                      Send Message to {selectedUser.name}
+                  <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg, marginBottom: 8 }}>
+                    <p className="eyebrow" style={{ marginBottom: T.space.md }}>
+                      Message to {selectedUser.name}
                     </p>
-                    <input
-                      type="text"
-                      placeholder="Subject..."
-                      value={msgSubject}
+                    <input type="text" placeholder="Subject" value={msgSubject}
                       onChange={(e) => setMsgSubject(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500/60 text-sm placeholder:text-white/25 text-white"
-                    />
-                    <textarea
-                      placeholder="Type your message here..."
-                      value={msgBody}
+                      style={{ ...inputStyle, marginBottom: 8 }} />
+                    <textarea placeholder="Your message" value={msgBody} rows={4}
                       onChange={(e) => setMsgBody(e.target.value)}
-                      rows={4}
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500/60 text-sm placeholder:text-white/25 text-white resize-none"
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <button onClick={sendMessage} disabled={actionLoading}
-                        className="py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                        {actionLoading
-                          ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          : <Send size={14} />}
+                      style={{ ...inputStyle, resize: "none", marginBottom: T.space.md }} />
+                    <div className="grid grid-cols-2" style={{ gap: 8 }}>
+                      <Button variant="quiet"
+                        onClick={() => { setShowMessageForm(false); setMsgSubject(""); setMsgBody(""); }}>
+                        Cancel
+                      </Button>
+                      <Button onClick={sendMessage} disabled={actionLoading}
+                        icon={actionLoading ? <Spinner size={12} tone="#fff" /> : <Send size={13} />}>
                         Send
-                      </button>
-                      <button onClick={() => { setShowMessageForm(false); setMsgSubject(""); setMsgBody(""); }}
-                        className="py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm font-semibold hover:bg-white/10 transition-all">
-                        Cancel
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
 
-                {/* Reset Password */}
                 {!showPasswordField ? (
-                  <button onClick={() => setShowPasswordField(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-400 text-sm font-semibold hover:bg-purple-500/25 transition-all">
-                    <KeyRound size={15} /> Reset Password
-                  </button>
+                  <Button variant="quiet" full onClick={() => setShowPasswordField(true)}
+                    icon={<KeyRound size={13} />} style={{ marginBottom: 8 }}>
+                    Reset password
+                  </Button>
                 ) : (
-                  <div className="space-y-2">
-                    <input type="password" placeholder="Enter new password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-purple-500/60 text-sm placeholder:text-white/25 text-white" />
-                    <div className="grid grid-cols-2 gap-2">
-                      <button onClick={resetPassword} disabled={actionLoading}
-                        className="py-2.5 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-400 text-sm font-semibold hover:bg-purple-500/25 transition-all disabled:opacity-50">
-                        Confirm Reset
-                      </button>
-                      <button onClick={() => { setShowPasswordField(false); setNewPassword(""); }}
-                        className="py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm font-semibold hover:bg-white/10 transition-all">
+                  <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg, marginBottom: 8 }}>
+                    <p className="eyebrow" style={{ marginBottom: T.space.md }}>New password</p>
+                    <input type="password" value={newPassword} placeholder="Enter new password"
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      style={{ ...inputStyle, marginBottom: T.space.md }} />
+                    <div className="grid grid-cols-2" style={{ gap: 8 }}>
+                      <Button variant="quiet" onClick={() => { setShowPasswordField(false); setNewPassword(""); }}>
                         Cancel
-                      </button>
+                      </Button>
+                      <Button onClick={resetPassword} disabled={actionLoading}>
+                        Confirm
+                      </Button>
                     </div>
+                    <p style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 10, lineHeight: 1.6 }}>
+                      Tell the user their new password through a channel they already trust.
+                    </p>
                   </div>
                 )}
 
-                {/* Delete */}
-                {!confirmDelete ? (
-                  <button onClick={() => setConfirmDelete(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition-all">
-                    <Trash2 size={15} /> Delete User
-                  </button>
-                ) : (
-                  <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10 space-y-3">
-                    <div className="flex items-center gap-2 text-red-400">
-                      <AlertTriangle size={15} />
-                      <p className="text-sm font-semibold">This cannot be undone!</p>
-                    </div>
-                    <p className="text-white/40 text-xs">Permanently delete {selectedUser.name}?</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button onClick={deleteUser} disabled={actionLoading}
-                        className="py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-400 transition-all disabled:opacity-50">
-                        Yes, Delete
-                      </button>
-                      <button onClick={() => setConfirmDelete(false)}
-                        className="py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm font-semibold hover:bg-white/10 transition-all">
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* danger */}
+                <div style={{ marginTop: T.space.xl }}>
+                  <p className="mono" style={{
+                    fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase",
+                    color: c.loss, marginBottom: T.space.md,
+                  }}>
+                    Danger zone
+                  </p>
 
-                <button onClick={() => setSelectedUser(null)}
-                  className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/40 hover:text-white">
-                  Close
-                </button>
+                  {!confirmDelete ? (
+                    <Button variant="danger" full onClick={() => setConfirmDelete(true)} icon={<Trash2 size={13} />}>
+                      Delete user
+                    </Button>
+                  ) : (
+                    <div style={{ border: `1px solid rgba(180,85,63,.35)`, background: "rgba(180,85,63,.05)", padding: T.space.lg }}>
+                      <p style={{ fontSize: T.size.sm, color: c.loss, marginBottom: 8 }}>
+                        Delete {selectedUser.name}?
+                      </p>
+                      <p style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.7, marginBottom: T.space.lg }}>
+                        Their account, history and referral records go permanently. If they hold a balance
+                        of ${money(selectedUser.balance)}, settle it before deleting.
+                      </p>
+                      <div className="grid grid-cols-2" style={{ gap: 8 }}>
+                        <Button variant="quiet" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+                        <Button variant="danger" onClick={deleteUser} disabled={actionLoading}
+                          icon={actionLoading ? <Spinner size={12} tone={c.loss} /> : <Trash2 size={12} />}>
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </motion.div>
