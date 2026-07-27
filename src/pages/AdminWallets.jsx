@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, Plus, Pencil, Trash2, X, RefreshCw, AlertTriangle, Copy, Check } from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, EmptyState, Banner, inputStyle } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 export default function AdminWallets() {
   const [wallets, setWallets] = useState([]);
@@ -15,9 +17,15 @@ export default function AdminWallets() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [showForm, setShowForm] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [confirmAddress, setConfirmAddress] = useState("");
 
   const token = sessionStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}` };
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  };
 
   const fetchWallets = async () => {
     setLoading(true);
@@ -33,25 +41,28 @@ export default function AdminWallets() {
 
   useEffect(() => { fetchWallets(); }, []);
 
-  const showMessage = (text, type = "success") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-  };
-
   const handleEdit = (wallet) => {
     setForm({ name: wallet.name, address: wallet.address, caution: wallet.caution || "" });
     setEditId(wallet._id);
+    setConfirmAddress(wallet.address);
     setShowForm(true);
   };
 
   const handleCancel = () => {
     setForm({ name: "", address: "", caution: "" });
     setEditId(null);
+    setConfirmAddress("");
     setShowForm(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.name.trim()) return showMessage("Give the wallet a name users will recognise.", "error");
+    if (!form.address.trim()) return showMessage("Enter the wallet address.", "error");
+    if (form.address.trim() !== confirmAddress.trim()) {
+      return showMessage("The two addresses don't match. Check them carefully.", "error");
+    }
+
     setActionLoading(true);
     try {
       if (editId) {
@@ -84,194 +95,260 @@ export default function AdminWallets() {
     }
   };
 
-  const handleCopy = (id, address) => {
-    navigator.clipboard.writeText(address);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 2000);
+  const copyAddress = async (id, addr) => {
+    try {
+      await navigator.clipboard.writeText(addr);
+      setCopied(id);
+      setTimeout(() => setCopied(null), 1800);
+    } catch {
+      showMessage("Couldn't copy.", "error");
+    }
   };
 
-  if (loading)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-        <p className="text-white/30 text-sm animate-pulse">Loading wallets...</p>
-      </div>
-    );
+  const addressesMatch = form.address.trim() && form.address.trim() === confirmAddress.trim();
+
+  if (loading) return (
+    <div className="ui flex flex-col items-center justify-center gap-4" style={{ height: 260 }}>
+      <ThemeStyles />
+      <Spinner size={26} />
+      <p className="mono" style={{ fontSize: T.size.xs, letterSpacing: ".2em", textTransform: "uppercase", color: c.text3 }}>
+        Loading
+      </p>
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
         <div>
-          <h1 className="text-xl font-bold text-white">Manage Wallets</h1>
-          <p className="text-white/30 text-xs mt-0.5">{wallets.length} payment wallet{wallets.length !== 1 ? "s" : ""} configured</p>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Deposit addresses</p>
+          <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Wallets</h1>
+          <p className="mono" style={{ fontSize: T.size.xs, color: c.text3, marginTop: 6 }}>
+            {wallets.length} live on the deposit page
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={fetchWallets} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm transition-all">
-            <RefreshCw size={14} /> Refresh
+        <div className="flex items-center shrink-0" style={{ gap: 8 }}>
+          <button onClick={fetchWallets} aria-label="Refresh"
+            className="flex items-center justify-center"
+            style={{ width: 36, height: 36, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+            <RefreshCw size={14} />
           </button>
           {!showForm && (
-            <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20">
-              <Plus size={14} /> Add Wallet
-            </button>
+            <Button onClick={() => setShowForm(true)} icon={<Plus size={13} />}>Add</Button>
           )}
         </div>
       </div>
 
-      {/* Message */}
-      <AnimatePresence>
-        {message.text && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`p-4 rounded-xl text-sm text-center font-medium border ${message.type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-            {message.text}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── Standing warning ── */}
+      <div style={{ marginBottom: T.space.xl }}>
+        <Banner tone="brass"
+          title="These addresses receive real deposits"
+          text="Anything saved here appears on the user deposit page immediately. A wrong character means funds are lost permanently." />
+      </div>
 
-      {/* ADD / EDIT FORM */}
+      {message.text && (
+        <div style={{ marginBottom: T.space.lg }}>
+          <Banner tone={message.type === "success" ? "gain" : "loss"} title={message.text} />
+        </div>
+      )}
+
+      {/* ══ FORM ══ */}
       <AnimatePresence>
         {showForm && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="bg-white/[0.03] border border-white/8 rounded-3xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-white font-bold text-sm">{editId ? "Edit Wallet" : "Add New Wallet"}</h3>
-              <button onClick={handleCancel} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition">
-                <X size={15} />
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: .25 }}
+            style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
+
+            <div className="flex items-center justify-between"
+              style={{ padding: T.space.lg, borderBottom: `1px solid ${c.line}` }}>
+              <div>
+                <p className="eyebrow" style={{ marginBottom: 4 }}>{editId ? "Editing" : "New"}</p>
+                <h3 className="display" style={{ fontSize: T.size.lg }}>
+                  {editId ? "Update wallet" : "Add a wallet"}
+                </h3>
+              </div>
+              <button onClick={handleCancel} aria-label="Close"
+                className="flex items-center justify-center"
+                style={{ width: 32, height: 32, background: c.fill, color: c.text3 }}>
+                <X size={14} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Wallet Name</label>
-                <input type="text" placeholder="e.g. USDT, BTC, TON" value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })} required
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white" />
+            <form onSubmit={handleSubmit} style={{ padding: T.space.xl }}>
+
+              <div style={{ marginBottom: T.space.lg }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>Display name</p>
+                <input type="text" value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g. USDT (TRC20)"
+                  style={inputStyle} />
+                <p style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 6 }}>
+                  This is what users see when choosing a currency.
+                </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">Wallet Address</label>
-                <input type="text" placeholder="Enter full wallet address" value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })} required
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white font-mono" />
+              <div style={{ marginBottom: T.space.lg }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>Wallet address</p>
+                <input type="text" value={form.address}
+                  onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  placeholder="Paste the address"
+                  className="mono"
+                  style={{ ...inputStyle, fontSize: T.size.xs }} />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                  Caution / Instructions <span className="text-white/20 normal-case">(optional)</span>
-                </label>
-                <input type="text" placeholder="e.g. Only send USDT TRC20 to this address" value={form.caution}
+              <div style={{ marginBottom: T.space.lg }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>Confirm address</p>
+                <input type="text" value={confirmAddress}
+                  onChange={(e) => setConfirmAddress(e.target.value)}
+                  placeholder="Paste it a second time"
+                  className="mono"
+                  style={{
+                    ...inputStyle, fontSize: T.size.xs,
+                    borderColor: confirmAddress
+                      ? (addressesMatch ? "rgba(63,143,95,.45)" : "rgba(180,85,63,.45)")
+                      : c.line,
+                  }} />
+                {confirmAddress && (
+                  <p className="flex items-center gap-1.5"
+                    style={{ fontSize: T.size.xs, marginTop: 6, color: addressesMatch ? c.gain : c.loss }}>
+                    {addressesMatch
+                      ? <><Check size={11} /> Addresses match</>
+                      : <><AlertTriangle size={11} /> Addresses don't match</>}
+                  </p>
+                )}
+              </div>
+
+              <div style={{ marginBottom: T.space.xl }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>Warning note — optional</p>
+                <textarea value={form.caution}
                   onChange={(e) => setForm({ ...form, caution: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white" />
+                  rows={2}
+                  placeholder="e.g. TRC20 network only. Sending on another network will lose your funds."
+                  style={{ ...inputStyle, resize: "none" }} />
+                <p style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 6 }}>
+                  Shown to the user beneath the address.
+                </p>
               </div>
 
-              <div className="flex gap-3">
-                <button type="submit" disabled={actionLoading}
-                  className="flex-1 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-sm transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-60">
-                  {actionLoading
-                    ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    : null}
-                  {editId ? "Save Changes" : "Add Wallet"}
-                </button>
-                <button type="button" onClick={handleCancel}
-                  className="px-5 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm font-semibold hover:bg-white/10 transition-all">
+              <div className="flex" style={{ gap: 8 }}>
+                <Button variant="quiet" onClick={handleCancel} style={{ flex: 1 }} type="button">
                   Cancel
-                </button>
+                </Button>
+                <Button type="submit" style={{ flex: 1, opacity: actionLoading ? .6 : 1 }}
+                  disabled={actionLoading}
+                  icon={actionLoading ? <Spinner size={12} tone="#fff" /> : null}>
+                  {actionLoading ? "Saving" : editId ? "Update wallet" : "Add wallet"}
+                </Button>
               </div>
             </form>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* WALLETS LIST */}
+      {/* ══ LIST ══ */}
       {wallets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-            <Wallet size={24} className="text-white/20" />
-          </div>
-          <p className="text-white font-semibold">No Wallets Yet</p>
-          <p className="text-white/30 text-sm">Add a payment wallet so users can make deposits.</p>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/25 transition-all">
-            <Plus size={14} /> Add Wallet
-          </button>
-        </div>
+        <EmptyState icon={<Wallet size={20} />}
+          title="No deposit addresses"
+          text="Users can't deposit crypto until you add at least one wallet."
+          action={{ label: "Add your first wallet", onClick: () => setShowForm(true) }} />
       ) : (
-        <div className="space-y-3">
-          {wallets.map((wallet, i) => (
-            <motion.div key={wallet._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className="p-5 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition-all">
+        <div style={{ border: `1px solid ${c.line}` }}>
+          {wallets.map((w, i) => (
+            <div key={w._id}
+              style={{
+                padding: T.space.lg,
+                borderBottom: i < wallets.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                borderLeft: editId === w._id ? `2px solid ${c.gain}` : "2px solid transparent",
+                background: editId === w._id ? "rgba(63,143,95,.05)" : "transparent",
+              }}>
 
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
-                    <Wallet size={18} className="text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-sm">{wallet.name}</p>
-                    {wallet.caution && <p className="text-yellow-400/70 text-xs mt-0.5">⚠ {wallet.caution}</p>}
-                  </div>
+              <div className="flex items-start justify-between gap-3" style={{ marginBottom: T.space.md }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: T.size.sm, color: c.text }}>{w.name}</p>
+                  <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".14em", textTransform: "uppercase", color: c.gain, marginTop: 3 }}>
+                    Live on deposit page
+                  </p>
                 </div>
-
-                <div className="flex gap-2">
-                  <button onClick={() => handleEdit(wallet)}
-                    className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/20 flex items-center justify-center text-blue-400 hover:bg-blue-500/25 transition-all">
-                    <Pencil size={13} />
+                <div className="flex shrink-0" style={{ gap: 6 }}>
+                  <button onClick={() => copyAddress(w._id, w.address)} aria-label="Copy address"
+                    className="flex items-center justify-center"
+                    style={{ width: 30, height: 30, background: c.fill, border: `1px solid ${c.line}`, color: copied === w._id ? c.gain : c.text4 }}>
+                    {copied === w._id ? <Check size={12} /> : <Copy size={12} />}
                   </button>
-                  <button onClick={() => setConfirmDelete(wallet)}
-                    className="w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/25 transition-all">
-                    <Trash2 size={13} />
+                  <button onClick={() => handleEdit(w)} aria-label="Edit"
+                    className="flex items-center justify-center"
+                    style={{ width: 30, height: 30, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+                    <Pencil size={12} />
                   </button>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div className="mt-4 pt-4 border-t border-white/8">
-                <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Wallet Address</p>
-                <div className="flex items-center gap-3 bg-black/30 border border-white/10 rounded-xl p-3">
-                  <p className="text-white/60 text-xs font-mono flex-1 break-all">{wallet.address}</p>
-                  <button onClick={() => handleCopy(wallet._id, wallet.address)}
-                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      copied === wallet._id
-                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : "bg-white/10 text-white/50 hover:bg-white/20 border border-white/10"
-                    }`}>
-                    {copied === wallet._id ? <Check size={11} /> : <Copy size={11} />}
-                    {copied === wallet._id ? "Copied!" : "Copy"}
+                  <button onClick={() => setConfirmDelete(w)} aria-label="Delete"
+                    className="flex items-center justify-center"
+                    style={{ width: 30, height: 30, background: c.fill, border: `1px solid rgba(180,85,63,.25)`, color: c.loss }}>
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>
-            </motion.div>
+
+              <div style={{ borderTop: `1px solid ${c.lineSoft}`, paddingTop: T.space.md }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>Address</p>
+                <p className="mono" style={{ fontSize: T.size.tiny, color: c.text2, wordBreak: "break-all", lineHeight: 1.7 }}>
+                  {w.address}
+                </p>
+              </div>
+
+              {w.caution && (
+                <div style={{ marginTop: T.space.md }}>
+                  <div className="flex items-start gap-2.5"
+                    style={{ background: "rgba(192,138,62,.06)", borderLeft: `2px solid ${c.brass}`, padding: T.space.md }}>
+                    <AlertTriangle size={12} style={{ color: c.brass, flexShrink: 0, marginTop: 2 }} />
+                    <p style={{ fontSize: T.size.xs, color: c.text3, lineHeight: 1.6 }}>{w.caution}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
 
-      {/* DELETE CONFIRM */}
+      {/* ══ DELETE CONFIRM ══ */}
       <AnimatePresence>
         {confirmDelete && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+            style={{ background: "rgba(8,9,11,.9)" }}>
             <div className="absolute inset-0" onClick={() => setConfirmDelete(null)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-sm bg-[#0e1422] border border-white/10 rounded-3xl p-6 z-10 shadow-2xl space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/20 flex items-center justify-center">
-                  <AlertTriangle size={18} className="text-red-400" />
-                </div>
-                <div>
-                  <p className="text-white font-bold text-sm">Delete Wallet</p>
-                  <p className="text-white/30 text-xs">This cannot be undone</p>
-                </div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+              className="relative w-full z-10"
+              style={{ maxWidth: 380, background: c.panel, border: `1px solid ${c.line}`, borderLeft: `2px solid ${c.loss}`, padding: T.space.xl }}>
+
+              <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: c.loss, marginBottom: 8 }}>
+                Confirm removal
+              </p>
+              <h3 className="display" style={{ fontSize: T.size.xl, marginBottom: 10 }}>
+                Remove {confirmDelete.name}?
+              </h3>
+              <p style={{ fontSize: T.size.sm, color: c.text3, lineHeight: 1.7, marginBottom: T.space.lg }}>
+                This currency disappears from the deposit page immediately. Anyone mid-payment to this address
+                will still send funds — make sure no deposits are in flight.
+              </p>
+
+              <div style={{ border: `1px solid ${c.line}`, padding: T.space.md, marginBottom: T.space.xl }}>
+                <p className="mono" style={{ fontSize: T.size.tiny, color: c.text4, wordBreak: "break-all", lineHeight: 1.6 }}>
+                  {confirmDelete.address}
+                </p>
               </div>
-              <p className="text-white/50 text-sm">Are you sure you want to delete the <strong className="text-white">{confirmDelete.name}</strong> wallet?</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => handleDelete(confirmDelete._id)} disabled={actionLoading}
-                  className="py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white text-sm font-semibold transition-all disabled:opacity-50">
-                  Yes, Delete
-                </button>
-                <button onClick={() => setConfirmDelete(null)}
-                  className="py-3 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm font-semibold hover:bg-white/10 transition-all">
-                  Cancel
-                </button>
+
+              <div className="grid grid-cols-2" style={{ gap: 8 }}>
+                <Button variant="quiet" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+                <Button variant="danger" onClick={() => handleDelete(confirmDelete._id)}
+                  disabled={actionLoading}
+                  icon={actionLoading ? <Spinner size={12} tone={c.loss} /> : <Trash2 size={12} />}>
+                  Remove
+                </Button>
               </div>
             </motion.div>
           </motion.div>
@@ -279,4 +356,4 @@ export default function AdminWallets() {
       </AnimatePresence>
     </div>
   );
-      }
+}
