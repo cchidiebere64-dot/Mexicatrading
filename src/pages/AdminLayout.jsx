@@ -41,6 +41,7 @@ const navGroups = [
       { path: "/admin/plans",        label: "Plans",         icon: Package },
       { path: "/admin/active-plans", label: "Investments",   icon: Activity },
       { path: "/admin/broadcast",    label: "Broadcast",     icon: Radio },
+      { path: "/admin/chat", label: "Messages", icon: MessageSquare },
     ],
   },
 ];
