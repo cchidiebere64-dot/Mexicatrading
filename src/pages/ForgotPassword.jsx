@@ -1,19 +1,22 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Mail, ArrowRight, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { T, ThemeStyles, Button, Spinner, Banner, inputStyle } from "./system.jsx";
+
+const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
 
 export default function ForgotPassword() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
   const [submitted, setSubmitted] = useState(false);
-
-  const API_URL = "https://mexicatradingbackend.onrender.com";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,99 +37,126 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#080c18] text-white overflow-hidden px-4">
+    <div className="ui min-h-screen flex items-center justify-center px-4 py-16"
+      style={{ background: c.ink, color: c.text }}>
+      <ThemeStyles />
 
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full top-[-150px] left-[-150px]" />
-        <div className="absolute w-[400px] h-[400px] bg-teal-400/8 blur-[120px] rounded-full bottom-[-100px] right-[-100px]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
-      </div>
-
-      <Link to="/login" className="absolute top-6 left-6 text-white/30 hover:text-white/70 text-sm transition flex items-center gap-1">
-        ← {t("auth.signIn")}
+      <Link to="/login" className="mono absolute flex items-center gap-2"
+        style={{ top: 28, left: 24, fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase", color: c.text3 }}>
+        ← <span className="display" style={{ fontSize: T.size.base, color: c.text }}>MexicaTrading</span>
       </Link>
 
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative w-full max-w-md">
-        <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-10 rounded-3xl shadow-2xl">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: .5, ease: [.22, 1, .36, 1] }}
+        className="w-full" style={{ maxWidth: 400 }}>
 
-          {/* HEADER */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4 text-2xl">
-              🔐
+        {/* ═══ SUBMITTED ═══ */}
+        {submitted ? (
+          <>
+            <div style={{ background: c.paper, color: c.paperInk }}>
+              <div style={{ height: 3, background: c.gain }} />
+              <div style={{ padding: T.space.xxl }}>
+                <div className="flex items-start justify-between" style={{ marginBottom: T.space.lg }}>
+                  <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".24em", textTransform: "uppercase", color: "rgba(14,16,19,.5)" }}>
+                    Link sent
+                  </p>
+                  <Check size={20} style={{ color: c.gainDeep }} />
+                </div>
+
+                <h1 className="display" style={{ fontSize: 30, lineHeight: 1.05, marginBottom: T.space.md }}>
+                  Check your inbox
+                </h1>
+
+                <p style={{ fontSize: T.size.sm, color: "rgba(14,16,19,.65)", lineHeight: 1.7, marginBottom: T.space.lg }}>
+                  {t("forgot.checkInbox", "If an account exists for that address, we've sent a reset link.")}
+                </p>
+
+                <p className="mono" style={{
+                  fontSize: T.size.xs, color: c.gainDeep, wordBreak: "break-all",
+                  paddingTop: T.space.md, borderTop: "1px solid rgba(14,16,19,.12)",
+                }}>
+                  {email}
+                </p>
+
+                <p style={{ fontSize: T.size.xs, color: "rgba(14,16,19,.5)", lineHeight: 1.7, marginTop: T.space.lg }}>
+                  The link is valid for one hour. If it hasn't arrived in a few minutes, check your spam folder.
+                </p>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight">{t("forgot.title")}</h2>
-            <p className="text-white/40 text-sm mt-2">{t("forgot.desc")}</p>
-          </div>
 
-          {/* MESSAGE */}
-          <AnimatePresence>
+            <div style={{ marginTop: T.space.lg, display: "flex", flexDirection: "column", gap: 8 }}>
+              <Button full onClick={() => navigate("/login")}>
+                Back to sign in
+              </Button>
+              <Button variant="quiet" full
+                onClick={() => { setSubmitted(false); setMessage(""); setEmail(""); }}>
+                {t("forgot.tryDifferent", "Use a different email")}
+              </Button>
+            </div>
+          </>
+
+        /* ═══ FORM ═══ */
+        ) : (
+          <>
+            <div style={{ marginBottom: T.space.xl }}>
+              <p className="eyebrow" style={{ marginBottom: 8 }}>Account recovery</p>
+              <h1 className="display" style={{ fontSize: 38, lineHeight: 1.02 }}>
+                {t("forgot.title", "Forgot your password")}
+              </h1>
+              <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 10, lineHeight: 1.7 }}>
+                {t("forgot.desc", "Enter your email and we'll send you a link to set a new one.")}
+              </p>
+            </div>
+
             {message && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className={`mb-6 p-4 rounded-xl text-sm text-center font-medium border ${messageType === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-                {message}
-              </motion.div>
+              <div style={{ marginBottom: T.space.lg }}>
+                <Banner tone={messageType === "success" ? "gain" : "loss"} title={message} />
+              </div>
             )}
-          </AnimatePresence>
 
-          {!submitted ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/40 uppercase tracking-widest">
-                  {t("auth.email")}
-                </label>
-                <div className="relative group">
-                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 group-focus-within:text-emerald-400 transition-colors" />
-                  <input
-                    type="email"
-                    placeholder={t("auth.email")}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 transition-all text-sm placeholder:text-white/25"
-                  />
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: T.space.lg }}>
+                <p className="eyebrow" style={{ marginBottom: 6 }}>{t("auth.email", "Email address")}</p>
+                <div style={{ position: "relative" }}>
+                  <Mail size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com" required autoFocus autoComplete="email"
+                    style={{ ...inputStyle, paddingLeft: 38 }} />
                 </div>
               </div>
 
-              <button type="submit" disabled={loading}
-                className="group w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2">
-                {loading ? (
-                  <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t("forgot.sending")}</>
-                ) : (
-                  <>{t("forgot.send")}<ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
-                )}
-              </button>
+              <Button type="submit" full disabled={loading}
+                style={{ opacity: loading ? .6 : 1 }}
+                icon={loading ? <Spinner size={13} tone="#fff" /> : null}>
+                {loading ? t("forgot.sending", "Sending") : t("forgot.send", "Send reset link")}
+                {!loading && <ArrowRight size={13} />}
+              </Button>
             </form>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="text-5xl">📬</div>
-              <p className="text-white/60 text-sm leading-relaxed">{t("forgot.checkInbox")}</p>
-              <button
-                onClick={() => { setSubmitted(false); setMessage(""); setEmail(""); }}
-                className="text-emerald-400 text-sm hover:underline"
-              >
-                {t("forgot.tryDifferent")}
-              </button>
+
+            <p style={{ fontSize: T.size.xs, color: c.text4, lineHeight: 1.7, marginTop: T.space.lg }}>
+              For your security we send the same response whether or not an account exists for that address.
+            </p>
+
+            <div style={{ marginTop: T.space.xxl }}>
+              <div className="flex items-center gap-3" style={{ marginBottom: T.space.lg }}>
+                <div style={{ flex: 1, borderBottom: `1px solid ${c.line}` }} />
+                <span className="mono" style={{ fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase", color: c.text4 }}>
+                  {t("forgot.remembered", "Remembered it")}
+                </span>
+                <div style={{ flex: 1, borderBottom: `1px solid ${c.line}` }} />
+              </div>
+              <Button variant="quiet" full onClick={() => navigate("/login")}>
+                {t("auth.signIn", "Sign in")}
+              </Button>
             </div>
-          )}
+          </>
+        )}
 
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-white/8" />
-            <span className="text-white/20 text-xs">{t("forgot.remembered")}</span>
-            <div className="flex-1 h-px bg-white/8" />
-          </div>
-
-          <Link to="/login" className="block text-center py-3 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition text-sm text-white/60 hover:text-white font-medium">
-            {t("common.back")} to {t("auth.signIn")}
-          </Link>
-        </div>
-
-        <div className="flex items-center justify-center gap-6 mt-6 text-white/20 text-xs">
-          <span>🔒 {t("common.sslSecured")}</span>
+        <div className="flex items-center justify-center gap-5 mono"
+          style={{ marginTop: T.space.xl, fontSize: T.size.micro, letterSpacing: ".14em", textTransform: "uppercase", color: c.text4 }}>
+          <span>SSL secured</span>
           <span>·</span>
-          <span>⏱ Expires in 15 min</span>
-          <span>·</span>
-          <span>🛡️ {t("common.dataProtected")}</span>
+          <span>Link valid 1 hour</span>
         </div>
       </motion.div>
     </div>
