@@ -1,8 +1,27 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpCircle, RefreshCw, Search, Check, X, Clock, CheckCircle, XCircle, Filter } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowUpCircle, RefreshCw, Search, Check, X, Copy } from "lucide-react";
+import { T, ThemeStyles, Button, Spinner, StatusPill, EmptyState, Banner, inputStyle } from "./system.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
+const c = T.color;
+
+/* details is stored as:
+   "<address> | Label: <label> | Network fee: $1 | Send: $499"
+   Older records are just the raw address. Parse defensively. */
+const parseDetails = (raw = "") => {
+  const parts = String(raw).split("|").map(s => s.trim());
+  const out = { address: parts[0] || "—", label: "", fee: "", send: "" };
+  parts.slice(1).forEach(p => {
+    const [k, ...rest] = p.split(":");
+    const v = rest.join(":").trim();
+    const key = (k || "").trim().toLowerCase();
+    if (key === "label") out.label = v;
+    if (key === "network fee") out.fee = v;
+    if (key === "send") out.send = v;
+  });
+  return out;
+};
 
 export default function AdminWithdrawals() {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -12,9 +31,15 @@ export default function AdminWithdrawals() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [copied, setCopied] = useState(null);
 
   const token = sessionStorage.getItem("adminToken");
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  };
 
   const fetchWithdrawals = async () => {
     setLoading(true);
@@ -48,11 +73,6 @@ export default function AdminWithdrawals() {
     setFiltered(result);
   }, [search, filter, withdrawals]);
 
-  const showMessage = (text, type = "success") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-  };
-
   const handleAction = async (id, action) => {
     setActionLoading(id + action);
     try {
@@ -62,8 +82,9 @@ export default function AdminWithdrawals() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setWithdrawals(prev => prev.map(w => w._id === id ? { ...w, status: action === "approve" ? "approved" : "rejected" } : w));
-      showMessage(`Withdrawal ${action === "approve" ? "approved" : "rejected"} successfully.`);
+      setWithdrawals(prev => prev.map(w => w._id === id
+        ? { ...w, status: action === "approve" ? "approved" : "rejected" } : w));
+      showMessage(`Withdrawal ${action === "approve" ? "approved" : "rejected"}.`);
     } catch (err) {
       showMessage(err.message || "Action failed.", "error");
     } finally {
@@ -71,133 +92,210 @@ export default function AdminWithdrawals() {
     }
   };
 
+  const copyAddress = async (id, addr) => {
+    try {
+      await navigator.clipboard.writeText(addr);
+      setCopied(id);
+      setTimeout(() => setCopied(null), 1800);
+    } catch {
+      showMessage("Couldn't copy.", "error");
+    }
+  };
+
   const pending = withdrawals.filter(w => w.status === "pending").length;
   const approved = withdrawals.filter(w => w.status === "approved").length;
   const rejected = withdrawals.filter(w => w.status === "rejected").length;
+  const pendingValue = withdrawals
+    .filter(w => w.status === "pending")
+    .reduce((s, w) => s + (Number(w.amount) || 0), 0);
 
-  if (loading)
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
-        <p className="text-white/30 text-sm animate-pulse">Loading withdrawals...</p>
-      </div>
-    );
+  const money = (v) => Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  const tone = (s) => s === "approved" ? "gain" : s === "pending" ? "brass" : "loss";
+
+  if (loading) return (
+    <div className="ui flex flex-col items-center justify-center gap-4" style={{ height: 260 }}>
+      <ThemeStyles />
+      <Spinner size={26} />
+      <p className="mono" style={{ fontSize: T.size.xs, letterSpacing: ".2em", textTransform: "uppercase", color: c.text3 }}>
+        Loading
+      </p>
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
+
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
         <div>
-          <h1 className="text-xl font-bold text-white">Withdrawals</h1>
-          <p className="text-white/30 text-xs mt-0.5">{withdrawals.length} total withdrawal requests</p>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Payouts</p>
+          <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Withdrawals</h1>
+          <p className="mono" style={{ fontSize: T.size.xs, color: c.text3, marginTop: 6 }}>
+            {withdrawals.length} requests
+          </p>
         </div>
-        <button onClick={fetchWithdrawals} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white text-sm transition-all">
-          <RefreshCw size={14} /> Refresh
+        <button onClick={fetchWithdrawals} aria-label="Refresh"
+          className="flex items-center justify-center shrink-0"
+          style={{ width: 36, height: 36, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <RefreshCw size={14} />
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      {/* ── Totals ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4" style={{ border: `1px solid ${c.line}`, marginBottom: T.space.xl }}>
         {[
-          { label: "Pending", value: pending, color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20", icon: <Clock size={16} className="text-yellow-400" /> },
-          { label: "Approved", value: approved, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", icon: <CheckCircle size={16} className="text-emerald-400" /> },
-          { label: "Rejected", value: rejected, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", icon: <XCircle size={16} className="text-red-400" /> },
-        ].map((s, i) => (
-          <div key={i} className={`p-4 rounded-2xl border ${s.bg} flex items-center justify-between`}>
-            <div>
-              <p className="text-white/40 text-xs uppercase tracking-widest">{s.label}</p>
-              <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
-            </div>
-            {s.icon}
+          ["Awaiting you", String(pending), pending > 0 ? c.brass : c.text2],
+          ["Pending value", `$${money(pendingValue)}`, pending > 0 ? c.brass : c.text2],
+          ["Approved", String(approved), c.gain],
+          ["Rejected", String(rejected), c.text2],
+        ].map(([label, value, col], i) => (
+          <div key={i} style={{
+            padding: T.space.lg,
+            borderLeft: i % 2 === 1 ? `1px solid ${c.line}` : "none",
+            borderTop: i > 1 ? `1px solid ${c.line}` : "none",
+          }} className="sm:border-l sm:border-t-0">
+            <p className="eyebrow" style={{ marginBottom: 8 }}>{label}</p>
+            <p className="mono tabular" style={{ fontSize: T.size.base, color: col }}>{value}</p>
           </div>
         ))}
       </div>
 
-      <AnimatePresence>
-        {message.text && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`p-4 rounded-xl text-sm text-center font-medium border ${message.type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-            {message.text}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {message.text && (
+        <div style={{ marginBottom: T.space.lg }}>
+          <Banner tone={message.type === "success" ? "gain" : "loss"} title={message.text} />
+        </div>
+      )}
 
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25" />
-          <input type="text" placeholder="Search by user, method, wallet..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-emerald-500/60 text-sm placeholder:text-white/25 text-white" />
-        </div>
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3">
-          <Filter size={14} className="text-white/25" />
-          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-transparent text-white/60 text-sm outline-none py-2 pr-2">
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
+      {/* ── Search ── */}
+      <div style={{ position: "relative", marginBottom: T.space.md }}>
+        <Search size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by user, method or address"
+          style={{ ...inputStyle, paddingLeft: 36 }} />
       </div>
 
+      {/* ── Filters ── */}
+      <div className="flex overflow-x-auto" style={{ borderBottom: `1px solid ${c.line}`, marginBottom: T.space.xl, scrollbarWidth: "none" }}>
+        {[["all", "All"], ["pending", "Pending"], ["approved", "Approved"], ["rejected", "Rejected"]].map(([val, label]) => {
+          const on = filter === val;
+          return (
+            <button key={val} onClick={() => setFilter(val)}
+              className="mono shrink-0"
+              style={{
+                padding: "11px 16px", fontSize: T.size.tiny,
+                letterSpacing: ".14em", textTransform: "uppercase",
+                color: on ? c.gain : c.text3,
+                borderBottom: `2px solid ${on ? c.gain : "transparent"}`,
+                marginBottom: -1, transition: "color .2s",
+              }}>
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── List ── */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-white/8 bg-white/[0.02] text-center gap-3">
-          <ArrowUpCircle size={20} className="text-white/20" />
-          <p className="text-white/40 text-sm">No withdrawals found</p>
-        </div>
+        <EmptyState icon={<ArrowUpCircle size={20} />} title="No withdrawals found"
+          text="Try a different filter or search term." />
       ) : (
-        <div className="space-y-3">
-          {filtered.map((w, i) => (
-            <motion.div key={w._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-              className="p-5 rounded-2xl border border-white/8 bg-white/[0.02] hover:border-white/15 transition-all">
-              <div className="flex items-start justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/20 flex items-center justify-center text-red-400 font-bold shrink-0">
-                    {w.user?.name?.charAt(0)?.toUpperCase() || "?"}
+        <div style={{ border: `1px solid ${c.line}` }}>
+          {filtered.map((w, i) => {
+            const d = parseDetails(w.details);
+            const isPending = w.status === "pending";
+            return (
+              <motion.div key={w._id}
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.02, .3) }}
+                style={{
+                  padding: T.space.lg,
+                  borderBottom: i < filtered.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                  borderLeft: `2px solid ${isPending ? c.brass : "transparent"}`,
+                  opacity: isPending ? 1 : .7,
+                }}>
+
+                {/* user + status */}
+                <div className="flex items-start justify-between gap-3" style={{ marginBottom: T.space.md }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>
+                      {w.user?.name || "Unknown user"}
+                    </p>
+                    <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>
+                      {w.user?.email || "—"}
+                    </p>
                   </div>
+                  <StatusPill tone={tone(w.status)}>{w.status}</StatusPill>
+                </div>
+
+                {/* the number that matters */}
+                <div className="flex items-baseline justify-between"
+                  style={{ borderTop: `1px solid ${c.lineSoft}`, paddingTop: T.space.md, marginBottom: T.space.md }}>
                   <div>
-                    <p className="text-white font-semibold text-sm">{w.user?.name || "Unknown"}</p>
-                    <p className="text-white/30 text-xs">{w.user?.email || "—"}</p>
+                    <p className="eyebrow" style={{ marginBottom: 4 }}>
+                      {d.send ? "Send this amount" : "Amount"}
+                    </p>
+                    <p className="mono tabular" style={{ fontSize: 22, color: isPending ? c.brass : c.text }}>
+                      {d.send || `$${money(w.amount)}`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {d.send && (
+                      <p className="mono tabular" style={{ fontSize: T.size.tiny, color: c.text4 }}>
+                        Requested ${money(w.amount)}{d.fee ? ` · fee ${d.fee}` : ""}
+                      </p>
+                    )}
+                    <p className="mono" style={{ fontSize: T.size.tiny, color: c.text3, marginTop: 4 }}>
+                      {w.method || "—"} · {fmtDate(w.createdAt)}
+                    </p>
                   </div>
                 </div>
-                <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${w.status === "pending" ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25" : w.status === "approved" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25" : "bg-red-500/15 text-red-400 border border-red-500/25"}`}>
-                  {w.status === "pending" ? "⏳ Pending" : w.status === "approved" ? "✅ Approved" : "❌ Rejected"}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-white/8">
-                <div>
-                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Amount</p>
-                  <p className="text-red-400 font-bold">-${Number(w.amount).toLocaleString()}</p>
+
+                {/* destination */}
+                <div style={{ border: `1px solid ${c.line}`, padding: T.space.md, marginBottom: isPending ? T.space.md : 0 }}>
+                  <div className="flex items-center justify-between gap-2" style={{ marginBottom: 6 }}>
+                    <p className="eyebrow">{d.label ? `Destination · ${d.label}` : "Destination"}</p>
+                    <button onClick={() => copyAddress(w._id, d.address)}
+                      aria-label="Copy address"
+                      className="flex items-center justify-center shrink-0"
+                      style={{ width: 26, height: 26, background: c.fill, color: copied === w._id ? c.gain : c.text4 }}>
+                      {copied === w._id ? <Check size={12} /> : <Copy size={12} />}
+                    </button>
+                  </div>
+                  <p className="mono" style={{ fontSize: T.size.tiny, color: c.text2, wordBreak: "break-all", lineHeight: 1.6 }}>
+                    {d.address}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Method</p>
-                  <p className="text-white text-sm font-medium">{w.method || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Wallet / Account</p>
-                  <p className="text-white/50 text-xs font-mono truncate">{w.details || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-white/30 text-xs uppercase tracking-widest mb-1">Date</p>
-                  <p className="text-white/50 text-xs">{w.createdAt ? new Date(w.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p>
-                </div>
-              </div>
-              {w.status === "pending" && (
-                <div className="flex gap-3 mt-4">
-                  <button onClick={() => handleAction(w._id, "approve")} disabled={actionLoading === w._id + "approve"}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/25 transition-all disabled:opacity-50">
-                    {actionLoading === w._id + "approve" ? <span className="w-3.5 h-3.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" /> : <Check size={14} />}
-                    Approve
-                  </button>
-                  <button onClick={() => handleAction(w._id, "reject")} disabled={actionLoading === w._id + "reject"}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition-all disabled:opacity-50">
-                    {actionLoading === w._id + "reject" ? <span className="w-3.5 h-3.5 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" /> : <X size={14} />}
-                    Reject
-                  </button>
-                </div>
-              )}
-              {w.status !== "pending" && <p className="text-white/20 text-xs mt-4">Processed — no further action required</p>}
-            </motion.div>
-          ))}
+
+                {/* actions */}
+                {isPending ? (
+                  <div className="flex" style={{ gap: 8 }}>
+                    <Button variant="primary" onClick={() => handleAction(w._id, "approve")}
+                      disabled={actionLoading === w._id + "approve"}
+                      style={{ flex: 1 }}
+                      icon={actionLoading === w._id + "approve"
+                        ? <Spinner size={12} tone="#fff" /> : <Check size={13} />}>
+                      Approve
+                    </Button>
+                    <Button variant="danger" onClick={() => handleAction(w._id, "reject")}
+                      disabled={actionLoading === w._id + "reject"}
+                      style={{ flex: 1 }}
+                      icon={actionLoading === w._id + "reject"
+                        ? <Spinner size={12} tone={c.loss} /> : <X size={13} />}>
+                      Reject
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".14em", textTransform: "uppercase", color: c.text4 }}>
+                    Processed — no action needed
+                  </p>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>
   );
-                }
+}
