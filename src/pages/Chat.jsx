@@ -44,11 +44,14 @@ export default function Chat() {
       const res = await axios.get(`${API_URL}/api/chat`, auth);
       const next = res.data.messages || [];
       setMessages((prev) => {
-        // avoid re-render if nothing changed
-        if (prev.length === next.length && prev[prev.length - 1]?._id === next[next.length - 1]?._id) {
+        // keep anything still sending or failed — the server doesn't know about those yet
+        const local = prev.filter((m) => m.pending || m.failed);
+        if (!local.length &&
+            prev.length === next.length &&
+            prev[prev.length - 1]?._id === next[next.length - 1]?._id) {
           return prev;
         }
-        return next;
+        return [...next, ...local];
       });
       setSupportTyping(Boolean(res.data.supportTyping));
       setError("");
@@ -99,7 +102,11 @@ export default function Chat() {
       setMessages((m) => m.map((x) => (x._id === temp._id ? res.data.message : x)));
     } catch (err) {
       setMessages((m) => m.map((x) => (x._id === temp._id ? { ...x, failed: true, pending: false } : x)));
-      setError(err.response?.data?.message || "Message didn't send. Check your connection.");
+      setError(
+        err.response?.status === 413
+          ? "That file is too large for the server. Try a shorter recording or smaller image."
+          : err.response?.data?.message || `Didn't send (${err.response?.status || "no response"}). Check your connection.`
+      );
     } finally {
       setSending(false);
     }
