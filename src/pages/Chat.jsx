@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, MessageSquare, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Send, MessageSquare, AlertTriangle, HelpCircle, ChevronDown } from "lucide-react";
 import { T, PageShell, Button, Spinner, EmptyState, inputStyle } from "./system.jsx";
 import { Composer, MessageBody } from "./ChatComposer.jsx";
 
@@ -21,6 +21,27 @@ const QUICK_ASKS = [
 ];
 const c = T.color;
 
+/* The question list — used both on an empty thread and from the toggle */
+function AskList({ onPick, compact }) {
+  return (
+    <div style={{ border: `1px solid ${c.line}` }}>
+      {QUICK_ASKS.map((q, i) => (
+        <button key={q.key}
+          onClick={() => onPick(q)}
+          className="w-full text-left hover-fill flex items-center justify-between gap-3"
+          style={{
+            padding: compact ? `11px ${T.space.lg}px` : `13px ${T.space.lg}px`,
+            borderBottom: i < QUICK_ASKS.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+            transition: "background .2s",
+          }}>
+          <span style={{ fontSize: T.size.sm, color: c.text2 }}>{q.label}</span>
+          <Send size={12} style={{ color: c.text4, flexShrink: 0 }} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Chat() {
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token");
@@ -31,7 +52,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [supportTyping, setSupportTyping] = useState(false);
-  const [showAsks, setShowAsks] = useState(true);
+  const [showAsks, setShowAsks] = useState(false);
 
   const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
@@ -207,21 +228,9 @@ export default function Chat() {
                 </p>
               </div>
 
-              <div style={{ border: `1px solid ${c.line}` }}>
-                {QUICK_ASKS.map((q, i) => (
-                  <button key={q.key}
-                    onClick={() => send({ body: q.label, file: null, kind: "text", duration: 0, ask: q.key })}
-                    className="w-full text-left hover-fill flex items-center justify-between gap-3"
-                    style={{
-                      padding: `13px ${T.space.lg}px`,
-                      borderBottom: i < QUICK_ASKS.length - 1 ? `1px solid ${c.lineSoft}` : "none",
-                      transition: "background .2s",
-                    }}>
-                    <span style={{ fontSize: T.size.sm, color: c.text2 }}>{q.label}</span>
-                    <Send size={12} style={{ color: c.text4, flexShrink: 0 }} />
-                  </button>
-                ))}
-              </div>
+              <AskList onPick={(q) =>
+                send({ body: q.label, file: null, kind: "text", duration: 0, ask: q.key })
+              } />
             </div>
           ) : (
             Object.entries(groups).map(([day, items]) => (
@@ -315,6 +324,50 @@ export default function Chat() {
 
           <div ref={bottomRef} />
         </div>
+
+        {/* ── Common questions — always reachable ── */}
+        {messages.length > 0 && (
+          <div style={{ borderTop: `1px solid ${c.line}` }}>
+            <button
+              onClick={() => setShowAsks((v) => !v)}
+              className="w-full flex items-center justify-between hover-fill"
+              style={{
+                padding: `11px ${T.space.lg}px`,
+                transition: "background .2s",
+              }}>
+              <span className="mono flex items-center gap-2" style={{
+                fontSize: T.size.tiny, letterSpacing: ".16em",
+                textTransform: "uppercase", color: c.text3,
+              }}>
+                <HelpCircle size={12} /> Common questions
+              </span>
+              <ChevronDown size={13}
+                style={{
+                  color: c.text4,
+                  transform: showAsks ? "rotate(180deg)" : "none",
+                  transition: "transform .2s",
+                }} />
+            </button>
+
+            <AnimatePresence>
+              {showAsks && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: .25, ease: [.22, 1, .36, 1] }}
+                  style={{ overflow: "hidden", borderTop: `1px solid ${c.lineSoft}` }}>
+                  <div style={{ padding: T.space.md, maxHeight: 240, overflowY: "auto" }}>
+                    <AskList compact onPick={(q) => {
+                      setShowAsks(false);
+                      send({ body: q.label, file: null, kind: "text", duration: 0, ask: q.key });
+                    }} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         <Composer
           sending={sending}
