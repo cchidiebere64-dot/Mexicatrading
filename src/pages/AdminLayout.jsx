@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ArrowDownCircle,
   ArrowUpCircle, Wallet, Menu, X,
-  ShieldCheck, LogOut, Activity, Radio, CreditCard, BarChart3, Star,
+  ShieldCheck, LogOut, Activity, Radio, CreditCard, BarChart3, Star, MessageSquare,
 } from "lucide-react";
 import { T, ThemeStyles } from "./system.jsx";
 
