@@ -4,6 +4,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, MessageSquare, AlertTriangle } from "lucide-react";
 import { T, PageShell, Button, Spinner, EmptyState, inputStyle } from "./system.jsx";
+import { Composer, MessageBody } from "./ChatComposer.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const POLL_MS = 4000;
@@ -15,7 +16,6 @@ export default function Chat() {
   const auth = { headers: { Authorization: `Bearer ${token}` } };
 
   const [messages, setMessages] = useState([]);
-  const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -73,28 +73,29 @@ export default function Chat() {
     if (stickToBottom.current) scrollToBottom(!loading);
   }, [messages, loading]);
 
-  const send = async (e) => {
-    e?.preventDefault();
-    const body = draft.trim();
-    if (!body || sending) return;
+  const send = async ({ body, file, kind, duration }) => {
+    if (sending) return;
+    if (!body && !file) return;
 
     setSending(true);
     setError("");
-    setDraft("");
     stickToBottom.current = true;
 
     // optimistic — show it straight away
     const temp = {
       _id: `temp-${Date.now()}`,
       from: "user",
-      body,
+      body: body || "",
+      kind: kind || "text",
+      mediaUrl: kind === "image" ? file : "",
+      mediaDuration: duration || 0,
       createdAt: new Date().toISOString(),
       pending: true,
     };
     setMessages((m) => [...m, temp]);
 
     try {
-      const res = await axios.post(`${API_URL}/api/chat`, { body }, auth);
+      const res = await axios.post(`${API_URL}/api/chat`, { body, file, kind, duration }, auth);
       setMessages((m) => m.map((x) => (x._id === temp._id ? res.data.message : x)));
     } catch (err) {
       setMessages((m) => m.map((x) => (x._id === temp._id ? { ...x, failed: true, pending: false } : x)));
@@ -225,15 +226,7 @@ export default function Chat() {
                           padding: "11px 14px",
                           opacity: m.pending ? .6 : 1,
                         }}>
-                          <p style={{
-                            fontSize: T.size.sm,
-                            color: c.text,
-                            lineHeight: 1.65,
-                            whiteSpace: "pre-line",
-                            wordBreak: "break-word",
-                          }}>
-                            {m.body}
-                          </p>
+                          <MessageBody m={m} />
                         </div>
 
                         <p className="mono" style={{
@@ -281,46 +274,17 @@ export default function Chat() {
           <div ref={bottomRef} />
         </div>
 
-        {/* ── Composer ── */}
-        <form onSubmit={send}
-          style={{ borderTop: `1px solid ${c.line}`, padding: T.space.md, display: "flex", gap: 8 }}>
-          <textarea
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              const now = Date.now();
-              if (e.target.value && now - typingSentAt.current > 3000) {
-                typingSentAt.current = now;
-                axios.post(`${API_URL}/api/chat/typing`, {}, auth).catch(() => {});
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-            }}
-            rows={1}
-            placeholder="Type your message"
-            style={{
-              ...inputStyle,
-              flex: 1,
-              resize: "none",
-              minHeight: 44,
-              maxHeight: 120,
-              lineHeight: 1.5,
-            }} />
-          <button type="submit" disabled={!draft.trim() || sending}
-            aria-label="Send"
-            style={{
-              width: 46,
-              flexShrink: 0,
-              background: draft.trim() ? c.gain : c.fill,
-              border: `1px solid ${draft.trim() ? c.gain : c.line}`,
-              color: draft.trim() ? "#fff" : c.text4,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "background .2s, border-color .2s, color .2s",
-            }}>
-            {sending ? <Spinner size={14} tone="#fff" /> : <Send size={15} />}
-          </button>
-        </form>
+        <Composer
+          sending={sending}
+          onSend={send}
+          onTyping={(val) => {
+            const now = Date.now();
+            if (val && now - typingSentAt.current > 3000) {
+              typingSentAt.current = now;
+              axios.post(`${API_URL}/api/chat/typing`, {}, auth).catch(() => {});
+            }
+          }}
+        />
       </div>
 
       {error && (
