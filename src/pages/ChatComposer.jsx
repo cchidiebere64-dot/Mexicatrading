@@ -122,6 +122,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
+  const secondsRef = useRef(0);
 
   const toDataUrl = (file) => new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -148,26 +149,48 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     setMicError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
-      chunksRef.current = [];
 
-      rec.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
+      // Pick a format this browser actually supports
+      let mimeType = "";
+      const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
+      for (const t of candidates) {
+        if (window.MediaRecorder?.isTypeSupported?.(t)) { mimeType = t; break; }
+      }
+
+      const rec = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      chunksRef.current = [];
+      secondsRef.current = 0;
+
+      rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
+
       rec.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+
         const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        const secs = secondsRef.current;
+
+        if (!blob.size || secs < 1) {
+          setMicError("That recording was too short. Hold on a moment before sending.");
+          setTimeout(() => setMicError(""), 4000);
+          setPreview(null);
+          setSeconds(0);
+          return;
+        }
+
         const dataUrl = await toDataUrl(blob);
-        setPreview({ dataUrl, kind: "audio", duration: seconds });
+        setPreview({ dataUrl, kind: "audio", duration: secs });
       };
 
       recorderRef.current = rec;
-      rec.start();
+      // timeslice keeps chunks flowing so nothing is lost on stop
+      rec.start(500);
       setRecording(true);
       setSeconds(0);
+
       timerRef.current = setInterval(() => {
-        setSeconds((s) => {
-          if (s + 1 >= MAX_SECONDS) { stopRecording(); return MAX_SECONDS; }
-          return s + 1;
-        });
+        secondsRef.current += 1;
+        setSeconds(secondsRef.current);
+        if (secondsRef.current >= MAX_SECONDS) stopRecording();
       }, 1000);
     } catch (err) {
       setMicError("Microphone blocked. Allow access in your browser settings.");
@@ -185,6 +208,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     clearInterval(timerRef.current);
     setRecording(false);
     chunksRef.current = [];
+    secondsRef.current = 0;
     try {
       recorderRef.current?.stream?.getTracks?.().forEach((t) => t.stop());
       recorderRef.current?.stop();
@@ -210,6 +234,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     setDraft("");
     setPreview(null);
     setSeconds(0);
+    secondsRef.current = 0;
   };
 
   const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
