@@ -26,7 +26,9 @@ export default function AdminChat() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [memberTyping, setMemberTyping] = useState(false);
 
+  const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
   const listRef = useRef(null);
   const stick = useRef(true);
@@ -64,6 +66,7 @@ export default function AdminChat() {
         if (prev.length === next.length && prev[prev.length - 1]?._id === next[next.length - 1]?._id) return prev;
         return next;
       });
+      setMemberTyping(Boolean(res.data.memberTyping));
       setError("");
     } catch (err) {
       if (!silent) setError("Couldn't load that conversation.");
@@ -169,6 +172,17 @@ export default function AdminChat() {
     return (
       <div className="ui" style={{ color: c.text }}>
         <ThemeStyles />
+        <style>{`
+          .chat-dots i {
+            width: 4px; height: 4px; border-radius: 50%;
+            background: ${c.brass}; display: inline-block;
+            animation: chatDot 1.2s ease-in-out infinite;
+          }
+          .chat-dots i:nth-child(2) { animation-delay: .18s; }
+          .chat-dots i:nth-child(3) { animation-delay: .36s; }
+          @keyframes chatDot { 0%,60%,100% { opacity:.25; } 30% { opacity:1; } }
+          @media (prefers-reduced-motion: reduce) { .chat-dots i { animation: none; opacity:.6; } }
+        `}</style>
 
         <button onClick={closeThread}
           className="mono flex items-center gap-2"
@@ -253,11 +267,41 @@ export default function AdminChat() {
                 </div>
               ))
             )}
+            {memberTyping && (
+              <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: T.space.md }}>
+                <div style={{
+                  background: c.panelAlt,
+                  border: `1px solid ${c.line}`,
+                  borderLeft: `2px solid ${c.brass}`,
+                  padding: "10px 14px",
+                  display: "flex", alignItems: "center", gap: 7,
+                }}>
+                  <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
+                    <i /><i /><i />
+                  </span>
+                  <span className="mono" style={{
+                    fontSize: T.size.micro, letterSpacing: ".16em",
+                    textTransform: "uppercase", color: c.text3,
+                  }}>
+                    {openUser.name?.split(" ")[0]} is typing
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div ref={bottomRef} />
           </div>
 
           <form onSubmit={reply} style={{ borderTop: `1px solid ${c.line}`, padding: T.space.md, display: "flex", gap: 8 }}>
-            <textarea value={draft} onChange={(e) => setDraft(e.target.value)}
+            <textarea value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value);
+                const now = Date.now();
+                if (e.target.value && openUser && now - typingSentAt.current > 3000) {
+                  typingSentAt.current = now;
+                  axios.post(`${API_URL}/api/chat/admin/${openUser._id}/typing`, {}, auth).catch(() => {});
+                }
+              }}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); reply(); } }}
               rows={1} placeholder="Type your reply"
               style={{ ...inputStyle, flex: 1, resize: "none", minHeight: 44, maxHeight: 120, lineHeight: 1.5 }} />
@@ -288,6 +332,17 @@ export default function AdminChat() {
   return (
     <div className="ui" style={{ color: c.text }}>
       <ThemeStyles />
+      <style>{`
+        .chat-dots i {
+          width: 4px; height: 4px; border-radius: 50%;
+          background: ${c.brass}; display: inline-block;
+          animation: chatDot 1.2s ease-in-out infinite;
+        }
+        .chat-dots i:nth-child(2) { animation-delay: .18s; }
+        .chat-dots i:nth-child(3) { animation-delay: .36s; }
+        @keyframes chatDot { 0%,60%,100% { opacity:.25; } 30% { opacity:1; } }
+        @media (prefers-reduced-motion: reduce) { .chat-dots i { animation: none; opacity:.6; } }
+      `}</style>
 
       <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
         <div>
@@ -344,10 +399,24 @@ export default function AdminChat() {
                   </span>
                   {t.unread > 0 && <StatusPill tone="brass">{t.unread}</StatusPill>}
                 </div>
-                <p className="truncate" style={{ fontSize: T.size.xs, color: c.text3 }}>
-                  {t.lastFrom === "admin" && <span style={{ color: c.text4 }}>You: </span>}
-                  {t.lastMessage}
-                </p>
+                {t.typing ? (
+                  <span className="flex items-center gap-2">
+                    <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
+                      <i /><i /><i />
+                    </span>
+                    <span className="mono" style={{
+                      fontSize: T.size.micro, letterSpacing: ".16em",
+                      textTransform: "uppercase", color: c.brass,
+                    }}>
+                      Typing
+                    </span>
+                  </span>
+                ) : (
+                  <p className="truncate" style={{ fontSize: T.size.xs, color: c.text3 }}>
+                    {t.lastFrom === "admin" && <span style={{ color: c.text4 }}>You: </span>}
+                    {t.lastMessage}
+                  </p>
+                )}
               </div>
 
               <div className="text-right shrink-0">
