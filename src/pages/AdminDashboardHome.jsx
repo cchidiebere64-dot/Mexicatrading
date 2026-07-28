@@ -227,7 +227,7 @@ export default function AdminDashboardHome() {
               }}>
               <div style={{ minWidth: 0 }}>
                 <p className="truncate" style={{ fontSize: T.size.sm, color: c.text }}>
-                  {a.user || a.name || "Member"}
+                  {a.user?.name || a.user?.email || (typeof a.user === "string" ? a.user : null) || a.name || "Member"}
                 </p>
                 <p className="mono truncate" style={{ fontSize: T.size.tiny, color: c.text4, marginTop: 2 }}>
                   {a.action || a.type || "Activity"}{a.date ? ` · ${fmtDate(a.date)}` : ""}
