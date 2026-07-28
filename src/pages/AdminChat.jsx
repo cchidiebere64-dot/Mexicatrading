@@ -243,6 +243,14 @@ export default function AdminChat() {
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .22 }}
                         style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: T.space.md }}>
                         <div style={{ maxWidth: "82%" }}>
+                          {mine && m.isAuto && (
+                            <p className="mono" style={{
+                              fontSize: T.size.micro, letterSpacing: ".18em",
+                              textTransform: "uppercase", color: c.brass, marginBottom: 5, textAlign: "right",
+                            }}>
+                              Automated
+                            </p>
+                          )}
                           {!mine && (
                             <p className="mono" style={{
                               fontSize: T.size.micro, letterSpacing: ".18em",
