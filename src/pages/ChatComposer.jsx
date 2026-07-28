@@ -16,7 +16,26 @@ const fmt = (s) => {
 /* ═══════════════════════════════════════════════════════════
    Bubble content — text, image, video or voice note
 ═══════════════════════════════════════════════════════════ */
-export function MessageBody({ m }) {
+export function MessageBody({ m, onAction }) {
+  const Action = () =>
+    m.actionLabel && m.actionPath ? (
+      <button
+        onClick={() => onAction?.(m.actionPath)}
+        className="mono w-full flex items-center justify-center gap-2"
+        style={{
+          marginTop: 12,
+          padding: "11px 0",
+          fontSize: T.size.tiny,
+          letterSpacing: ".14em",
+          textTransform: "uppercase",
+          background: c.gain,
+          color: "#fff",
+          border: `1px solid ${c.gain}`,
+        }}>
+        {m.actionLabel}
+      </button>
+    ) : null;
+
   if (m.kind === "image" && m.mediaUrl) {
     return (
       <>
@@ -68,9 +87,12 @@ export function MessageBody({ m }) {
   }
 
   return (
-    <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, whiteSpace: "pre-line", wordBreak: "break-word" }}>
-      {m.body}
-    </p>
+    <>
+      <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, whiteSpace: "pre-line", wordBreak: "break-word" }}>
+        {m.body}
+      </p>
+      <Action />
+    </>
   );
 }
 
