@@ -19,7 +19,9 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [supportTyping, setSupportTyping] = useState(false);
 
+  const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
   const listRef = useRef(null);
   const stickToBottom = useRef(true);
@@ -48,6 +50,7 @@ export default function Chat() {
         }
         return next;
       });
+      setSupportTyping(Boolean(res.data.supportTyping));
       setError("");
     } catch (err) {
       if (!silent) setError("Couldn't load your messages. Pull to retry.");
@@ -122,6 +125,18 @@ export default function Chat() {
 
   return (
     <PageShell width={620}>
+      <style>{`
+        .chat-dots i {
+          width: 4px; height: 4px; border-radius: 50%;
+          background: ${c.gain}; display: inline-block;
+          animation: chatDot 1.2s ease-in-out infinite;
+        }
+        .chat-dots i:nth-child(2) { animation-delay: .18s; }
+        .chat-dots i:nth-child(3) { animation-delay: .36s; }
+        @keyframes chatDot { 0%,60%,100% { opacity:.25; } 30% { opacity:1; } }
+        @media (prefers-reduced-motion: reduce) { .chat-dots i { animation: none; opacity:.6; } }
+      `}</style>
+
 
       {/* ── Back ── */}
       <button onClick={() => navigate("/dashboard")}
@@ -231,7 +246,7 @@ export default function Chat() {
                             ? "Not sent"
                             : m.pending
                               ? "Sending…"
-                              : fmtTime(m.createdAt)}
+                              : `${fmtTime(m.createdAt)}${mine && m.isRead ? " · Seen" : ""}`}
                         </p>
                       </div>
                     </motion.div>
@@ -239,6 +254,28 @@ export default function Chat() {
                 })}
               </div>
             ))
+          )}
+
+          {supportTyping && (
+            <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: T.space.md }}>
+              <div style={{
+                background: c.panelAlt,
+                border: `1px solid ${c.line}`,
+                borderLeft: `2px solid ${c.gain}`,
+                padding: "10px 14px",
+                display: "flex", alignItems: "center", gap: 7,
+              }}>
+                <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
+                  <i /><i /><i />
+                </span>
+                <span className="mono" style={{
+                  fontSize: T.size.micro, letterSpacing: ".16em",
+                  textTransform: "uppercase", color: c.text3,
+                }}>
+                  Support is typing
+                </span>
+              </div>
+            </div>
           )}
 
           <div ref={bottomRef} />
@@ -249,7 +286,14 @@ export default function Chat() {
           style={{ borderTop: `1px solid ${c.line}`, padding: T.space.md, display: "flex", gap: 8 }}>
           <textarea
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              const now = Date.now();
+              if (e.target.value && now - typingSentAt.current > 3000) {
+                typingSentAt.current = now;
+                axios.post(`${API_URL}/api/chat/typing`, {}, auth).catch(() => {});
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
             }}
