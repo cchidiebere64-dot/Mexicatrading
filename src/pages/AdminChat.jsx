@@ -3,6 +3,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Send, RefreshCw, Search, MessageSquare, Mail, ChevronRight,
+  Check, CheckCheck, Clock, AlertTriangle,
 } from "lucide-react";
 import { T, ThemeStyles, Spinner, StatusPill, EmptyState, inputStyle, LedgerRow } from "./system.jsx";
 import { Composer, MessageBody } from "./ChatComposer.jsx";
@@ -11,6 +12,13 @@ const API_URL = "https://mexicatradingbackend.onrender.com";
 const THREADS_POLL = 8000;
 const THREAD_POLL = 4000;
 const c = T.color;
+
+function Ticks({ m }) {
+  if (m.failed)  return <AlertTriangle size={11} style={{ color: c.loss }} />;
+  if (m.pending) return <Clock size={11} style={{ color: c.text4 }} />;
+  if (m.isRead)  return <CheckCheck size={12} style={{ color: c.gain }} />;
+  return <Check size={12} style={{ color: c.text4 }} />;
+}
 
 export default function AdminChat() {
   const token = sessionStorage.getItem("adminToken");
@@ -242,7 +250,7 @@ export default function AdminChat() {
                       <motion.div key={m._id}
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .22 }}
                         style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: T.space.md }}>
-                        <div style={{ maxWidth: "82%" }}>
+                        <div style={{ maxWidth: "min(74%, 460px)", minWidth: 0 }}>
                           {mine && m.isAuto && (
                             <p className="mono" style={{
                               fontSize: T.size.micro, letterSpacing: ".18em",
@@ -260,21 +268,27 @@ export default function AdminChat() {
                             </p>
                           )}
                           <div style={{
-                            background: mine ? "rgba(63,143,95,.1)" : c.panelAlt,
-                            border: `1px solid ${mine ? "rgba(63,143,95,.25)" : c.line}`,
-                            borderLeft: mine ? undefined : `2px solid ${c.brass}`,
-                            padding: "11px 14px",
-                            opacity: m.pending ? .6 : 1,
+                            background: mine ? "rgba(63,143,95,.14)" : "#242A33",
+                            border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
+                            padding: "12px 15px",
+                            borderRadius: mine ? "16px 16px 6px 16px" : "16px 16px 16px 6px",
+                            opacity: m.pending ? .65 : 1,
                           }}>
                             <MessageBody m={m} />
                           </div>
-                          <p className="mono" style={{
-                            fontSize: T.size.micro,
-                            color: m.failed ? c.loss : c.text4,
-                            marginTop: 4, textAlign: mine ? "right" : "left",
-                          }}>
-                            {m.failed ? "Not sent" : m.pending ? "Sending…" : fmtTime(m.createdAt)}
-                          </p>
+                          <div className="flex items-center gap-1.5"
+                            style={{
+                              marginTop: 5,
+                              justifyContent: mine ? "flex-end" : "flex-start",
+                            }}>
+                            <span className="mono" style={{
+                              fontSize: T.size.micro,
+                              color: m.failed ? c.loss : c.text4,
+                            }}>
+                              {m.failed ? "Not sent" : m.pending ? "Sending" : fmtTime(m.createdAt)}
+                            </span>
+                            {mine && <Ticks m={m} />}
+                          </div>
                         </div>
                       </motion.div>
                     );
