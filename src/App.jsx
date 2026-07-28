@@ -12,7 +12,7 @@ import VerifyEmail from "./pages/VerifyEmail.jsx";
 import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import KYC from "./pages/KYC.jsx";
-
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 // User pages
 import Home from "./pages/Home.jsx";
@@ -245,6 +245,7 @@ function AppInner() {
 
       <PageWrapper>
         <div className="pt-16">
+          <ErrorBoundary>
           <Routes>
 
             {/* ── PUBLIC ROUTES ─────────────────────────────────────────── */}
@@ -305,6 +306,7 @@ function AppInner() {
             <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>
+          </ErrorBoundary>
         </div>
       </PageWrapper>
 
