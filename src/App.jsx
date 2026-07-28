@@ -25,7 +25,7 @@ import Withdraw from "./pages/Withdraw.jsx";
 import Messages from "./pages/Messages.jsx";
 import UserSettings from "./pages/UserSettings";
 import History from "./pages/History.jsx";
-
+import Chat from "./pages/Chat.jsx";
 
 // Admin pages
 import AdminLayout from "./pages/AdminLayout.jsx";
@@ -41,6 +41,7 @@ import AdminWallets from "./pages/AdminWallets.jsx";
 import AdminKYC from "./pages/AdminKYC.jsx";
 import AdminBroadcast from "./pages/AdminBroadcast.jsx";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminChat from "./pages/AdminChat.jsx";
 
 
 const LOCK_TIMEOUT_MS = 30000;
@@ -259,7 +260,9 @@ function AppInner() {
             <Route path="/messages" element={token ? <Messages /> : <Navigate to="/login" />} />
             <Route path="/kyc" element={token ? <KYC /> : <Navigate to="/login" />} />
             <Route path="/settings" element={<UserSettings />} />
-            <Route path="/history" element={<History />} />
+            <Route path="/history" element={<History />} /><Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            
             
             {/* ── PROTECTED USER ROUTES ─────────────────────────────────── */}
             <Route
@@ -294,6 +297,8 @@ function AppInner() {
               <Route path="kyc" element={<AdminKYC />} />
               <Route path="broadcast" element={<AdminBroadcast />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="chat" element={<AdminChat />} />
+
               
             </Route>
 
