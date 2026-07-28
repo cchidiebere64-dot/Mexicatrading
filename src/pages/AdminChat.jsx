@@ -5,6 +5,7 @@ import {
   ArrowLeft, Send, RefreshCw, Search, MessageSquare, Mail, ChevronRight,
 } from "lucide-react";
 import { T, ThemeStyles, Spinner, StatusPill, EmptyState, inputStyle, LedgerRow } from "./system.jsx";
+import { Composer, MessageBody } from "./ChatComposer.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const THREADS_POLL = 8000;
@@ -23,7 +24,6 @@ export default function AdminChat() {
   const [openUser, setOpenUser] = useState(null);   // { _id, name, email, ... }
   const [messages, setMessages] = useState([]);
   const [loadingThread, setLoadingThread] = useState(false);
-  const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [memberTyping, setMemberTyping] = useState(false);
@@ -94,18 +94,20 @@ export default function AdminChat() {
   };
 
   /* ── Reply ── */
-  const reply = async (e) => {
-    e?.preventDefault();
-    const body = draft.trim();
-    if (!body || sending || !openUser) return;
+  const reply = async ({ body, file, kind, duration }) => {
+    if (sending || !openUser) return;
+    if (!body && !file) return;
 
-    setSending(true); setError(""); setDraft("");
+    setSending(true); setError("");
     stick.current = true;
 
     const temp = {
       _id: `temp-${Date.now()}`,
       from: "admin",
-      body,
+      body: body || "",
+      kind: kind || "text",
+      mediaUrl: kind === "image" ? file : "",
+      mediaDuration: duration || 0,
       senderName: "Support",
       createdAt: new Date().toISOString(),
       pending: true,
@@ -113,7 +115,7 @@ export default function AdminChat() {
     setMessages((m) => [...m, temp]);
 
     try {
-      const res = await axios.post(`${API_URL}/api/chat/admin/${openUser._id}`, { body }, auth);
+      const res = await axios.post(`${API_URL}/api/chat/admin/${openUser._id}`, { body, file, kind, duration }, auth);
       setMessages((m) => m.map((x) => (x._id === temp._id ? res.data.message : x)));
       loadThreads(true);
     } catch (err) {
@@ -249,9 +251,7 @@ export default function AdminChat() {
                             padding: "11px 14px",
                             opacity: m.pending ? .6 : 1,
                           }}>
-                            <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, whiteSpace: "pre-line", wordBreak: "break-word" }}>
-                              {m.body}
-                            </p>
+                            <MessageBody m={m} />
                           </div>
                           <p className="mono" style={{
                             fontSize: T.size.micro,
@@ -292,31 +292,18 @@ export default function AdminChat() {
             <div ref={bottomRef} />
           </div>
 
-          <form onSubmit={reply} style={{ borderTop: `1px solid ${c.line}`, padding: T.space.md, display: "flex", gap: 8 }}>
-            <textarea value={draft}
-              onChange={(e) => {
-                setDraft(e.target.value);
-                const now = Date.now();
-                if (e.target.value && openUser && now - typingSentAt.current > 3000) {
-                  typingSentAt.current = now;
-                  axios.post(`${API_URL}/api/chat/admin/${openUser._id}/typing`, {}, auth).catch(() => {});
-                }
-              }}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); reply(); } }}
-              rows={1} placeholder="Type your reply"
-              style={{ ...inputStyle, flex: 1, resize: "none", minHeight: 44, maxHeight: 120, lineHeight: 1.5 }} />
-            <button type="submit" disabled={!draft.trim() || sending} aria-label="Send reply"
-              style={{
-                width: 46, flexShrink: 0,
-                background: draft.trim() ? c.gain : c.fill,
-                border: `1px solid ${draft.trim() ? c.gain : c.line}`,
-                color: draft.trim() ? "#fff" : c.text4,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "background .2s, border-color .2s, color .2s",
-              }}>
-              {sending ? <Spinner size={14} tone="#fff" /> : <Send size={15} />}
-            </button>
-          </form>
+          <Composer
+            sending={sending}
+            placeholder="Type your reply"
+            onSend={reply}
+            onTyping={(val) => {
+              const now = Date.now();
+              if (val && openUser && now - typingSentAt.current > 3000) {
+                typingSentAt.current = now;
+                axios.post(`${API_URL}/api/chat/admin/${openUser._id}/typing`, {}, auth).catch(() => {});
+              }
+            }}
+          />
         </div>
 
         {error && <p style={{ fontSize: T.size.xs, color: c.loss, marginTop: 10 }}>{error}</p>}
@@ -414,7 +401,9 @@ export default function AdminChat() {
                 ) : (
                   <p className="truncate" style={{ fontSize: T.size.xs, color: c.text3 }}>
                     {t.lastFrom === "admin" && <span style={{ color: c.text4 }}>You: </span>}
-                    {t.lastMessage}
+                    {t.lastKind === "image" ? "📷 Image"
+                      : t.lastKind === "audio" ? "🎤 Voice note"
+                      : t.lastMessage}
                   </p>
                 )}
               </div>
