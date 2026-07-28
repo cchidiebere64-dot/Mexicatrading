@@ -117,16 +117,26 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [micError, setMicError] = useState("");
+  const [previewPlaying, setPreviewPlaying] = useState(false);
 
   const fileRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
   const secondsRef = useRef(0);
+  const previewAudioRef = useRef(null);
 
   const toDataUrl = (file) => new Promise((resolve, reject) => {
     const r = new FileReader();
-    r.onload = () => resolve(r.result);
+    r.onload = () => {
+      // "data:audio/webm;codecs=opus;base64,..." breaks upstream parsers.
+      // Reduce it to a single clean parameter: "data:audio/webm;base64,..."
+      const out = String(r.result).replace(
+        /^data:([^;,]+)(;[^,]*)?;base64,/,
+        (_all, mime) => `data:${mime};base64,`
+      );
+      resolve(out);
+    };
     r.onerror = reject;
     r.readAsDataURL(file);
   });
@@ -217,6 +227,23 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     setPreview(null);
   };
 
+  const togglePreviewAudio = () => {
+    const a = previewAudioRef.current;
+    if (!a) return;
+    if (previewPlaying) a.pause();
+    else a.play().catch(() => {
+      setMicError("Couldn't play that back on this device.");
+      setTimeout(() => setMicError(""), 4000);
+    });
+  };
+
+  // stop playback when the attachment changes or is removed
+  useEffect(() => {
+    setPreviewPlaying(false);
+    const a = previewAudioRef.current;
+    if (a) { a.pause(); a.currentTime = 0; }
+  }, [preview]);
+
   useEffect(() => () => clearInterval(timerRef.current), []);
 
   const submit = (e) => {
@@ -256,10 +283,12 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
           {preview.kind === "image" ? (
             <img src={preview.dataUrl} alt="" style={{ width: 46, height: 46, objectFit: "cover", border: `1px solid ${c.line}` }} />
           ) : (
-            <div className="flex items-center justify-center shrink-0"
-              style={{ width: 46, height: 46, background: "rgba(63,143,95,.12)", border: `1px solid rgba(63,143,95,.3)` }}>
-              <Mic size={16} style={{ color: c.gain }} />
-            </div>
+            <button type="button" onClick={togglePreviewAudio}
+              aria-label={previewPlaying ? "Pause" : "Play back"}
+              className="flex items-center justify-center shrink-0"
+              style={{ width: 46, height: 46, background: c.gain, border: `1px solid ${c.gain}`, color: "#fff" }}>
+              {previewPlaying ? <Pause size={17} /> : <Play size={17} />}
+            </button>
           )}
 
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -267,7 +296,9 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
               {preview.kind === "image" ? "Image ready" : `Voice note · ${fmt(preview.duration || 0)}`}
             </p>
             <p className="mono truncate" style={{ fontSize: T.size.micro, color: c.text4 }}>
-              {preview.name || "Tap send to share"}
+              {preview.kind === "audio"
+                ? (previewPlaying ? "Playing…" : "Tap play to listen back")
+                : (preview.name || "Tap send to share")}
             </p>
           </div>
 
@@ -276,6 +307,18 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
             style={{ width: 30, height: 30, background: c.fill, border: `1px solid ${c.line}`, color: c.text4 }}>
             <X size={13} />
           </button>
+
+          {preview.kind === "audio" && (
+            <audio
+              ref={previewAudioRef}
+              src={preview.dataUrl}
+              preload="metadata"
+              onPlay={() => setPreviewPlaying(true)}
+              onPause={() => setPreviewPlaying(false)}
+              onEnded={() => setPreviewPlaying(false)}
+              style={{ display: "none" }}
+            />
+          )}
         </div>
       )}
 
