@@ -2,14 +2,26 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, MessageSquare, AlertTriangle, HelpCircle, ChevronDown } from "lucide-react";
-import { T, PageShell, Button, Spinner, EmptyState, inputStyle } from "./system.jsx";
+import {
+  ArrowLeft, Send, MessageSquare, AlertTriangle,
+  HelpCircle, ChevronDown, ShieldCheck,
+} from "lucide-react";
+import { T, ThemeStyles, Spinner, inputStyle } from "./system.jsx";
 import { Composer, MessageBody } from "./ChatComposer.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const POLL_MS = 4000;
+const c = T.color;
 
-/* Tappable openers so nobody has to think about how to start */
+/* Chat gets its own, slightly lifted surfaces so the conversation
+   reads as a space rather than a panel dropped on a black page. */
+const SURFACE = {
+  page:   "#15181E",   // warmer and lighter than the app ink
+  thread: "#1A1E25",   // the conversation itself
+  mine:   "rgba(63,143,95,.16)",
+  theirs: "#242A33",
+};
+
 const QUICK_ASKS = [
   { key: "deposit",          label: "How do I make a deposit?" },
   { key: "deposit_missing",  label: "My deposit hasn't shown up yet" },
@@ -19,9 +31,7 @@ const QUICK_ASKS = [
   { key: "verification",     label: "I need help with verification" },
   { key: "other",            label: "Something else" },
 ];
-const c = T.color;
 
-/* The question list — used both on an empty thread and from the toggle */
 function AskList({ onPick, compact }) {
   return (
     <div style={{ border: `1px solid ${c.line}` }}>
@@ -30,11 +40,11 @@ function AskList({ onPick, compact }) {
           onClick={() => onPick(q)}
           className="w-full text-left hover-fill flex items-center justify-between gap-3"
           style={{
-            padding: compact ? `11px ${T.space.lg}px` : `13px ${T.space.lg}px`,
+            padding: compact ? `12px 16px` : `15px 18px`,
             borderBottom: i < QUICK_ASKS.length - 1 ? `1px solid ${c.lineSoft}` : "none",
             transition: "background .2s",
           }}>
-          <span style={{ fontSize: T.size.sm, color: c.text2 }}>{q.label}</span>
+          <span style={{ fontSize: T.size.sm, color: c.text2, lineHeight: 1.5 }}>{q.label}</span>
           <Send size={12} style={{ color: c.text4, flexShrink: 0 }} />
         </button>
       ))}
@@ -46,6 +56,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token");
   const auth = { headers: { Authorization: `Bearer ${token}` } };
+  const me = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,16 +70,10 @@ export default function Chat() {
   const listRef = useRef(null);
   const stickToBottom = useRef(true);
 
-  const scrollToBottom = (smooth = true) => {
-    bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "end" });
-  };
-
-  /* Only auto-scroll if the user is already near the bottom */
   const onScroll = () => {
     const el = listRef.current;
     if (!el) return;
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    stickToBottom.current = nearBottom;
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 140;
   };
 
   const load = useCallback(async (silent = false) => {
@@ -77,7 +82,6 @@ export default function Chat() {
       const res = await axios.get(`${API_URL}/api/chat`, auth);
       const next = res.data.messages || [];
       setMessages((prev) => {
-        // keep anything still sending or failed — the server doesn't know about those yet
         const local = prev.filter((m) => m.pending || m.failed);
         if (!local.length &&
             prev.length === next.length &&
@@ -89,7 +93,7 @@ export default function Chat() {
       setSupportTyping(Boolean(res.data.supportTyping));
       setError("");
     } catch (err) {
-      if (!silent) setError("Couldn't load your messages. Pull to retry.");
+      if (!silent) setError("Couldn't load your messages. Tap refresh to retry.");
     } finally {
       if (!silent) setLoading(false);
     }
@@ -97,7 +101,6 @@ export default function Chat() {
 
   useEffect(() => { load(false); }, [load]);
 
-  /* Poll while the tab is visible */
   useEffect(() => {
     const tick = () => { if (document.visibilityState === "visible") load(true); };
     const id = setInterval(tick, POLL_MS);
@@ -106,8 +109,10 @@ export default function Chat() {
   }, [load]);
 
   useEffect(() => {
-    if (stickToBottom.current) scrollToBottom(!loading);
-  }, [messages, loading]);
+    if (stickToBottom.current) {
+      bottomRef.current?.scrollIntoView({ behavior: loading ? "auto" : "smooth", block: "end" });
+    }
+  }, [messages, loading, supportTyping]);
 
   const send = async ({ body, file, kind, duration, ask }) => {
     if (sending) return;
@@ -117,13 +122,12 @@ export default function Chat() {
     setError("");
     stickToBottom.current = true;
 
-    // optimistic — show it straight away
     const temp = {
       _id: `temp-${Date.now()}`,
       from: "user",
       body: body || "",
       kind: kind || "text",
-      mediaUrl: (kind === "image" || kind === "video") ? file : "",
+      mediaUrl: kind === "image" ? file : "",
       mediaDuration: duration || 0,
       createdAt: new Date().toISOString(),
       pending: true,
@@ -148,8 +152,7 @@ export default function Chat() {
     }
   };
 
-  const fmtTime = (d) =>
-    new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const fmtTime = (d) => new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const fmtDay = (d) => {
     const date = new Date(d);
@@ -160,15 +163,17 @@ export default function Chat() {
     return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
   };
 
-  /* Group by day */
   const groups = messages.reduce((acc, m) => {
     const key = fmtDay(m.createdAt);
     (acc[key] = acc[key] || []).push(m);
     return acc;
   }, {});
 
+  const initial = (me?.name || "?").charAt(0).toUpperCase();
+
   return (
-    <PageShell width={620}>
+    <div className="ui" style={{ background: SURFACE.page, color: c.text, minHeight: "100vh" }}>
+      <ThemeStyles />
       <style>{`
         .chat-dots i {
           width: 4px; height: 4px; border-radius: 50%;
@@ -181,50 +186,70 @@ export default function Chat() {
         @media (prefers-reduced-motion: reduce) { .chat-dots i { animation: none; opacity:.6; } }
       `}</style>
 
+      {/* ══ HEADER ══ */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 20,
+        background: SURFACE.page,
+        borderBottom: `1px solid ${c.line}`,
+      }}>
+        <div className="mx-auto flex items-center gap-3" style={{ maxWidth: 760, padding: "14px 18px" }}>
+          <button onClick={() => navigate("/dashboard")} aria-label="Back"
+            className="flex items-center justify-center shrink-0"
+            style={{ width: 36, height: 36, border: `1px solid ${c.line}`, background: c.fill, color: c.text2 }}>
+            <ArrowLeft size={15} />
+          </button>
 
-      {/* ── Back ── */}
-      <button onClick={() => navigate("/dashboard")}
-        className="mono flex items-center gap-2"
-        style={{ fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase", color: c.text3, marginBottom: T.space.lg }}>
-        <ArrowLeft size={12} /> Dashboard
-      </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 className="display" style={{ fontSize: T.size.lg, lineHeight: 1.1 }}>
+              MexicaTrading Support
+            </h1>
+            <p className="mono flex items-center gap-1.5" style={{
+              fontSize: T.size.micro, letterSpacing: ".16em",
+              textTransform: "uppercase", color: c.gain, marginTop: 3,
+            }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: c.gain, display: "inline-block" }} />
+              {supportTyping ? "Typing…" : "Online"}
+            </p>
+          </div>
 
-      {/* ── Header ── */}
-      <div style={{ marginBottom: T.space.lg }}>
-        <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: c.gain, display: "inline-block" }} />
-          <span className="mono" style={{
-            fontSize: T.size.micro, letterSpacing: ".24em",
-            textTransform: "uppercase", color: c.gain,
-          }}>
-            Support online
-          </span>
+          <ShieldCheck size={15} style={{ color: c.text4, flexShrink: 0 }} />
         </div>
-        <h1 className="display" style={{ fontSize: T.size.xxl, lineHeight: 1.05 }}>Messages</h1>
-        <p style={{ fontSize: T.size.sm, color: c.text3, marginTop: 8, lineHeight: 1.7 }}>
-          Message our team directly. We usually reply within a few minutes.
-        </p>
-      </div>
+      </header>
 
-      {/* ── Thread ── */}
-      <div style={{ border: `1px solid ${c.line}`, display: "flex", flexDirection: "column", height: "58vh", minHeight: 340 }}>
+      {/* ══ CONVERSATION ══ */}
+      <div className="mx-auto" style={{
+        maxWidth: 760,
+        display: "flex", flexDirection: "column",
+        height: "calc(100dvh - 66px)",
+      }}>
 
         <div ref={listRef} onScroll={onScroll}
-          style={{ flex: 1, overflowY: "auto", padding: T.space.lg }}>
+          style={{
+            flex: 1, overflowY: "auto",
+            background: SURFACE.thread,
+            padding: "22px 18px 8px",
+          }}>
 
           {loading ? (
-            <div className="flex justify-center" style={{ padding: T.space.xxxl }}>
+            <div className="flex justify-center" style={{ padding: 60 }}>
               <Spinner size={24} />
             </div>
           ) : messages.length === 0 ? (
-            <div style={{ padding: `${T.space.lg}px 0` }}>
-              <div style={{ textAlign: "center", marginBottom: T.space.xl }}>
-                <MessageSquare size={20} style={{ color: c.text4, marginBottom: 10 }} />
-                <p className="display" style={{ fontSize: T.size.base, color: c.text, marginBottom: 6 }}>
+            <div style={{ padding: "24px 0", maxWidth: 460, margin: "0 auto" }}>
+              <div style={{ textAlign: "center", marginBottom: 28 }}>
+                <div className="flex items-center justify-center mx-auto"
+                  style={{
+                    width: 52, height: 52, marginBottom: 16,
+                    background: "rgba(63,143,95,.12)", border: `1px solid rgba(63,143,95,.28)`,
+                  }}>
+                  <MessageSquare size={21} style={{ color: c.gain }} />
+                </div>
+                <p className="display" style={{ fontSize: 24, color: c.text, marginBottom: 8, lineHeight: 1.2 }}>
                   How can we help?
                 </p>
-                <p style={{ fontSize: T.size.xs, color: c.text3, maxWidth: 300, margin: "0 auto", lineHeight: 1.6 }}>
-                  Tap one of these, or type your own message below.
+                <p style={{ fontSize: T.size.sm, color: c.text3, lineHeight: 1.7 }}>
+                  Pick a question below, or write your own. You can send photos,
+                  screen recordings and voice notes too.
                 </p>
               </div>
 
@@ -235,8 +260,7 @@ export default function Chat() {
           ) : (
             Object.entries(groups).map(([day, items]) => (
               <div key={day}>
-                {/* day rule */}
-                <div className="flex items-center gap-3" style={{ margin: `${T.space.md}px 0 ${T.space.lg}px` }}>
+                <div className="flex items-center gap-3" style={{ margin: "18px 0 22px" }}>
                   <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
                   <span className="mono" style={{
                     fontSize: T.size.micro, letterSpacing: ".2em",
@@ -247,34 +271,58 @@ export default function Chat() {
                   <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
                 </div>
 
-                {items.map((m) => {
+                {items.map((m, idx) => {
                   const mine = m.from === "user";
+                  const prev = items[idx - 1];
+                  const grouped = prev && prev.from === m.from;
+
                   return (
                     <motion.div
                       key={m._id}
-                      initial={{ opacity: 0, y: 8 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: .22 }}
                       style={{
                         display: "flex",
+                        gap: 10,
                         justifyContent: mine ? "flex-end" : "flex-start",
-                        marginBottom: T.space.md,
+                        marginBottom: grouped ? 8 : 20,
                       }}>
-                      <div style={{ maxWidth: "82%" }}>
-                        {!mine && (
+
+                      {/* avatar — support side only, and only on the first of a run */}
+                      {!mine && (
+                        <div style={{ width: 30, flexShrink: 0 }}>
+                          {!grouped && (
+                            <div className="flex items-center justify-center"
+                              style={{
+                                width: 30, height: 30,
+                                background: "rgba(63,143,95,.14)",
+                                border: `1px solid rgba(63,143,95,.3)`,
+                              }}>
+                              <span className="mono" style={{ fontSize: 11, color: c.gain, fontWeight: 600 }}>
+                                {m.isAuto ? "A" : "S"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div style={{ maxWidth: "76%" }}>
+                        {!mine && !grouped && (
                           <p className="mono" style={{
                             fontSize: T.size.micro, letterSpacing: ".18em",
-                            textTransform: "uppercase", color: c.gain, marginBottom: 5,
+                            textTransform: "uppercase",
+                            color: m.isAuto ? c.brass : c.gain,
+                            marginBottom: 7,
                           }}>
                             {m.isAuto ? "Assistant · automated" : (m.senderName || "Support")}
                           </p>
                         )}
 
                         <div style={{
-                          background: mine ? "rgba(63,143,95,.1)" : c.panelAlt,
-                          border: `1px solid ${mine ? "rgba(63,143,95,.25)" : c.line}`,
-                          borderLeft: mine ? undefined : `2px solid ${c.gain}`,
-                          padding: "11px 14px",
+                          background: mine ? SURFACE.mine : SURFACE.theirs,
+                          border: `1px solid ${mine ? "rgba(63,143,95,.28)" : "rgba(255,255,255,.07)"}`,
+                          padding: "13px 16px",
                           opacity: m.pending ? .6 : 1,
                         }}>
                           <MessageBody m={m} onAction={(path) => navigate(path)} />
@@ -283,7 +331,7 @@ export default function Chat() {
                         <p className="mono" style={{
                           fontSize: T.size.micro,
                           color: m.failed ? c.loss : c.text4,
-                          marginTop: 4,
+                          marginTop: 6,
                           textAlign: mine ? "right" : "left",
                         }}>
                           {m.failed
@@ -293,6 +341,24 @@ export default function Chat() {
                               : `${fmtTime(m.createdAt)}${mine && m.isRead ? " · Seen" : ""}`}
                         </p>
                       </div>
+
+                      {/* your own initial, mirrored */}
+                      {mine && (
+                        <div style={{ width: 30, flexShrink: 0 }}>
+                          {!grouped && (
+                            <div className="flex items-center justify-center"
+                              style={{
+                                width: 30, height: 30,
+                                background: "rgba(255,255,255,.05)",
+                                border: `1px solid ${c.line}`,
+                              }}>
+                              <span className="mono" style={{ fontSize: 11, color: c.text3, fontWeight: 600 }}>
+                                {initial}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}
@@ -300,14 +366,14 @@ export default function Chat() {
             ))
           )}
 
-          {supportTyping && (
-            <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: T.space.md }}>
+          {supportTyping && messages.length > 0 && (
+            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+              <div style={{ width: 30, flexShrink: 0 }} />
               <div style={{
-                background: c.panelAlt,
-                border: `1px solid ${c.line}`,
-                borderLeft: `2px solid ${c.gain}`,
-                padding: "10px 14px",
-                display: "flex", alignItems: "center", gap: 7,
+                background: SURFACE.theirs,
+                border: `1px solid rgba(255,255,255,.07)`,
+                padding: "13px 16px",
+                display: "flex", alignItems: "center", gap: 8,
               }}>
                 <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
                   <i /><i /><i />
@@ -325,28 +391,23 @@ export default function Chat() {
           <div ref={bottomRef} />
         </div>
 
-        {/* ── Common questions — always reachable ── */}
+        {/* ══ COMMON QUESTIONS ══ */}
         {messages.length > 0 && (
-          <div style={{ borderTop: `1px solid ${c.line}` }}>
-            <button
-              onClick={() => setShowAsks((v) => !v)}
+          <div style={{ background: SURFACE.page, borderTop: `1px solid ${c.line}` }}>
+            <button onClick={() => setShowAsks((v) => !v)}
               className="w-full flex items-center justify-between hover-fill"
-              style={{
-                padding: `11px ${T.space.lg}px`,
-                transition: "background .2s",
-              }}>
+              style={{ padding: "12px 18px", transition: "background .2s" }}>
               <span className="mono flex items-center gap-2" style={{
                 fontSize: T.size.tiny, letterSpacing: ".16em",
                 textTransform: "uppercase", color: c.text3,
               }}>
                 <HelpCircle size={12} /> Common questions
               </span>
-              <ChevronDown size={13}
-                style={{
-                  color: c.text4,
-                  transform: showAsks ? "rotate(180deg)" : "none",
-                  transition: "transform .2s",
-                }} />
+              <ChevronDown size={13} style={{
+                color: c.text4,
+                transform: showAsks ? "rotate(180deg)" : "none",
+                transition: "transform .2s",
+              }} />
             </button>
 
             <AnimatePresence>
@@ -357,7 +418,7 @@ export default function Chat() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: .25, ease: [.22, 1, .36, 1] }}
                   style={{ overflow: "hidden", borderTop: `1px solid ${c.lineSoft}` }}>
-                  <div style={{ padding: T.space.md, maxHeight: 240, overflowY: "auto" }}>
+                  <div style={{ padding: 14, maxHeight: 260, overflowY: "auto" }}>
                     <AskList compact onPick={(q) => {
                       setShowAsks(false);
                       send({ body: q.label, file: null, kind: "text", duration: 0, ask: q.key });
@@ -369,29 +430,35 @@ export default function Chat() {
           </div>
         )}
 
-        <Composer
-          sending={sending}
-          onSend={send}
-          onTyping={(val) => {
-            const now = Date.now();
-            if (val && now - typingSentAt.current > 3000) {
-              typingSentAt.current = now;
-              axios.post(`${API_URL}/api/chat/typing`, {}, auth).catch(() => {});
-            }
-          }}
-        />
+        {/* ══ COMPOSER ══ */}
+        <div style={{ background: SURFACE.page }}>
+          <Composer
+            sending={sending}
+            onSend={send}
+            onTyping={(val) => {
+              const now = Date.now();
+              if (val && now - typingSentAt.current > 3000) {
+                typingSentAt.current = now;
+                axios.post(`${API_URL}/api/chat/typing`, {}, auth).catch(() => {});
+              }
+            }}
+          />
+
+          {error && (
+            <p className="flex items-center gap-1.5"
+              style={{ fontSize: T.size.xs, color: c.loss, padding: "0 18px 10px" }}>
+              <AlertTriangle size={11} /> {error}
+            </p>
+          )}
+
+          <p style={{
+            fontSize: T.size.micro, color: c.text4,
+            textAlign: "center", padding: "0 18px 14px", lineHeight: 1.6,
+          }}>
+            We'll never ask for your password, withdrawal PIN, card number or CVV.
+          </p>
+        </div>
       </div>
-
-      {error && (
-        <p className="flex items-center gap-1.5"
-          style={{ fontSize: T.size.xs, color: c.loss, marginTop: 10 }}>
-          <AlertTriangle size={11} /> {error}
-        </p>
-      )}
-
-      <p style={{ fontSize: T.size.xs, color: c.text4, lineHeight: 1.7, marginTop: T.space.lg }}>
-        Our team will never ask for your password, withdrawal PIN, card number or CVV in this chat.
-      </p>
-    </PageShell>
+    </div>
   );
 }
