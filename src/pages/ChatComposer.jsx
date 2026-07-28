@@ -3,14 +3,18 @@ import { Send, Image as ImageIcon, Mic, X, Play, Pause, Trash2, Video, Film } fr
 import { T, Spinner, inputStyle } from "./system.jsx";
 
 const c = T.color;
-const MAX_SECONDS = 120;          // voice notes
-const MAX_VIDEO_SECONDS = 60;
-const MAX_VIDEO_BYTES = 30 * 1024 * 1024;          // voice notes
-const MAX_VIDEO_SECONDS = 60;     // screen recordings
-const MAX_VIDEO_BYTES = 30 * 1024 * 1024;
+const MAX_SECONDS = 120;                    // voice notes
+const MAX_VIDEO_SECONDS = 60;               // screen recordings
+const MAX_VIDEO_BYTES = 30 * 1024 * 1024;   // 30MB
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;    // 8MB
+
+const fmt = (s) => {
+  const n = Math.max(0, Math.round(s || 0));
+  return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+};
 
 /* ═══════════════════════════════════════════════════════════
-   Bubble content — renders text, image or voice note
+   Bubble content — text, image, video or voice note
 ═══════════════════════════════════════════════════════════ */
 export function MessageBody({ m }) {
   if (m.kind === "image" && m.mediaUrl) {
@@ -33,10 +37,6 @@ export function MessageBody({ m }) {
   }
 
   if (m.kind === "video" && m.mediaUrl) {
-    return <VideoPlayer src={m.mediaUrl} poster={m.mediaPoster} duration={m.mediaDuration} caption={m.body} />;
-  }
-
-  if (m.kind === "video" && m.mediaUrl) {
     return (
       <>
         <video
@@ -51,7 +51,7 @@ export function MessageBody({ m }) {
           }} />
         {m.mediaDuration > 0 && (
           <p className="mono" style={{ fontSize: T.size.micro, color: c.text4, marginTop: 5 }}>
-            {Math.floor(m.mediaDuration / 60)}:{String(Math.round(m.mediaDuration % 60)).padStart(2, "0")}
+            {fmt(m.mediaDuration)}
           </p>
         )}
         {m.body && (
@@ -74,87 +74,17 @@ export function MessageBody({ m }) {
   );
 }
 
-/* ── Video player — poster first, loads only when tapped ── */
-function VideoPlayer({ src, poster, duration, caption }) {
-  const [started, setStarted] = useState(false);
-
-  const fmt = (s) => {
-    const n = Math.max(0, Math.round(s || 0));
-    return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
-  };
-
-  return (
-    <>
-      {started ? (
-        <video
-          src={src}
-          poster={poster || undefined}
-          controls
-          autoPlay
-          playsInline
-          style={{ display: "block", width: "100%", maxHeight: 300, background: "#000", border: `1px solid ${c.line}` }}
-        />
-      ) : (
-        <button type="button" onClick={() => setStarted(true)}
-          aria-label="Play video"
-          style={{
-            position: "relative", display: "block", width: "100%",
-            border: `1px solid ${c.line}`, background: "#000", padding: 0, cursor: "pointer",
-          }}>
-          {poster ? (
-            <img src={poster} alt="Video" style={{ display: "block", width: "100%", maxHeight: 260, objectFit: "cover", opacity: .75 }} />
-          ) : (
-            <div className="flex items-center justify-center" style={{ height: 150, background: c.panelAlt }}>
-              <Film size={22} style={{ color: c.text4 }} />
-            </div>
-          )}
-
-          <span style={{
-            position: "absolute", inset: 0, display: "flex",
-            alignItems: "center", justifyContent: "center",
-          }}>
-            <span className="flex items-center justify-center"
-              style={{ width: 46, height: 46, background: "rgba(63,143,95,.92)", color: "#fff" }}>
-              <Play size={20} />
-            </span>
-          </span>
-
-          {duration > 0 && (
-            <span className="mono" style={{
-              position: "absolute", bottom: 8, right: 8,
-              background: "rgba(14,16,19,.85)", color: "#fff",
-              fontSize: 10, padding: "3px 6px",
-            }}>
-              {fmt(duration)}
-            </span>
-          )}
-        </button>
-      )}
-
-      {caption && (
-        <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
-          {caption}
-        </p>
-      )}
-    </>
-  );
-}
-
 /* ── Voice note player ── */
 function VoicePlayer({ src, duration, caption }) {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const fmt = (s) => {
-    const n = Math.max(0, Math.round(s || 0));
-    return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
-  };
-
   const toggle = () => {
     const a = audioRef.current;
     if (!a) return;
-    if (playing) { a.pause(); } else { a.play().catch(() => {}); }
+    if (playing) a.pause();
+    else a.play().catch(() => {});
   };
 
   useEffect(() => {
@@ -209,7 +139,7 @@ function VoicePlayer({ src, duration, caption }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Composer — text, image picker, voice recorder
+   Composer
    onSend({ body, file, kind, duration })
 ═══════════════════════════════════════════════════════════ */
 export function Composer({ onSend, sending, placeholder = "Type your message", onTyping }) {
@@ -220,8 +150,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
   const [micError, setMicError] = useState("");
   const [previewPlaying, setPreviewPlaying] = useState(false);
 
-  const fileRef = useRef(null);
-  const videoRef = useRef(null);
+  const imageRef = useRef(null);
   const videoRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -229,11 +158,17 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
   const secondsRef = useRef(0);
   const previewAudioRef = useRef(null);
 
+  const warn = (msg, ms = 5000) => {
+    setMicError(msg);
+    setTimeout(() => setMicError(""), ms);
+  };
+
+  /* Reads a file/blob and normalises the data URL.
+     "data:audio/webm;codecs=opus;base64,..." has two parameters, which
+     breaks upstream parsers — reduce it to one. */
   const toDataUrl = (file) => new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => {
-      // "data:audio/webm;codecs=opus;base64,..." breaks upstream parsers.
-      // Reduce it to a single clean parameter: "data:audio/webm;base64,..."
       const out = String(r.result).replace(
         /^data:([^;,]+)(;[^,]*)?;base64,/,
         (_all, mime) => `data:${mime};base64,`
@@ -244,65 +179,24 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     r.readAsDataURL(file);
   });
 
-  const pickVideo = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (file.size > MAX_VIDEO_BYTES) {
-      setMicError("That video is over 30MB. Record a shorter clip.");
-      setTimeout(() => setMicError(""), 5000);
-      return;
-    }
-
-    // read its length before uploading
-    const url = URL.createObjectURL(file);
-    const probe = document.createElement("video");
-    probe.preload = "metadata";
-    probe.src = url;
-
-    const secs = await new Promise((resolve) => {
-      probe.onloadedmetadata = () => resolve(Math.round(probe.duration) || 0);
-      probe.onerror = () => resolve(0);
-      setTimeout(() => resolve(0), 4000);
-    });
-    URL.revokeObjectURL(url);
-
-    if (secs > MAX_VIDEO_SECONDS) {
-      setMicError(`Videos are limited to ${MAX_VIDEO_SECONDS} seconds. Trim it and try again.`);
-      setTimeout(() => setMicError(""), 5000);
-      return;
-    }
-
-    const dataUrl = await toDataUrl(file);
-    setPreview({ dataUrl, kind: "video", duration: secs, name: file.name });
-  };
-
+  /* ── Image ── */
   const pickImage = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) {
-      setMicError("That image is over 8MB. Try a smaller one.");
-      setTimeout(() => setMicError(""), 4000);
-      return;
-    }
+    if (file.size > MAX_IMAGE_BYTES) return warn("That image is over 8MB. Try a smaller one.", 4000);
     const dataUrl = await toDataUrl(file);
     setPreview({ dataUrl, kind: "image", name: file.name });
   };
 
+  /* ── Video ── */
   const pickVideo = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    if (file.size > MAX_VIDEO_BYTES) return warn("That video is over 30MB. Try a shorter clip.");
 
-    if (file.size > MAX_VIDEO_BYTES) {
-      setMicError("That video is over 30MB. Try a shorter clip.");
-      setTimeout(() => setMicError(""), 5000);
-      return;
-    }
-
-    // read its length before accepting it
+    // check its length before accepting it
     const url = URL.createObjectURL(file);
     const probe = document.createElement("video");
     probe.preload = "metadata";
@@ -316,25 +210,21 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     URL.revokeObjectURL(url);
 
     if (secs > MAX_VIDEO_SECONDS + 1) {
-      setMicError(`Videos are limited to ${MAX_VIDEO_SECONDS} seconds. Trim it and try again.`);
-      setTimeout(() => setMicError(""), 5000);
-      return;
+      return warn(`Videos are limited to ${MAX_VIDEO_SECONDS} seconds. Trim it and try again.`);
     }
 
     const dataUrl = await toDataUrl(file);
     setPreview({ dataUrl, kind: "video", duration: Math.round(secs), name: file.name });
   };
 
-  /* ── Recording ── */
+  /* ── Voice recording ── */
   const startRecording = async () => {
     setMicError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Pick a format this browser actually supports
       let mimeType = "";
-      const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
-      for (const t of candidates) {
+      for (const t of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"]) {
         if (window.MediaRecorder?.isTypeSupported?.(t)) { mimeType = t; break; }
       }
 
@@ -346,16 +236,13 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
 
       rec.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-
         const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
         const secs = secondsRef.current;
 
         if (!blob.size || secs < 1) {
-          setMicError("That recording was too short. Hold on a moment before sending.");
-          setTimeout(() => setMicError(""), 4000);
           setPreview(null);
           setSeconds(0);
-          return;
+          return warn("That recording was too short. Hold on a moment before sending.", 4000);
         }
 
         const dataUrl = await toDataUrl(blob);
@@ -363,8 +250,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
       };
 
       recorderRef.current = rec;
-      // timeslice keeps chunks flowing so nothing is lost on stop
-      rec.start(500);
+      rec.start(500); // keep chunks flowing so nothing is lost on stop
       setRecording(true);
       setSeconds(0);
 
@@ -374,8 +260,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
         if (secondsRef.current >= MAX_SECONDS) stopRecording();
       }, 1000);
     } catch (err) {
-      setMicError("Microphone blocked. Allow access in your browser settings.");
-      setTimeout(() => setMicError(""), 5000);
+      warn("Microphone blocked. Allow access in your browser settings.");
     }
   };
 
@@ -398,17 +283,14 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     setPreview(null);
   };
 
+  /* ── Playback of a recorded note before sending ── */
   const togglePreviewAudio = () => {
     const a = previewAudioRef.current;
     if (!a) return;
     if (previewPlaying) a.pause();
-    else a.play().catch(() => {
-      setMicError("Couldn't play that back on this device.");
-      setTimeout(() => setMicError(""), 4000);
-    });
+    else a.play().catch(() => warn("Couldn't play that back on this device.", 4000));
   };
 
-  // stop playback when the attachment changes or is removed
   useEffect(() => {
     setPreviewPlaying(false);
     const a = previewAudioRef.current;
@@ -435,14 +317,19 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     secondsRef.current = 0;
   };
 
-  const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const canSend = Boolean(draft.trim() || preview);
+
+  const toolBtn = {
+    width: 44, height: 44,
+    background: c.fill, border: `1px solid ${c.line}`, color: c.text3,
+    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+  };
 
   return (
     <div style={{ borderTop: `1px solid ${c.line}` }}>
 
       {micError && (
-        <p style={{ fontSize: T.size.xs, color: c.loss, padding: `10px ${T.space.md}px 0` }}>
+        <p style={{ fontSize: T.size.xs, color: c.loss, padding: `10px ${T.space.md}px 0`, lineHeight: 1.5 }}>
           {micError}
         </p>
       )}
@@ -451,8 +338,10 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
       {preview && (
         <div className="flex items-center gap-3"
           style={{ padding: T.space.md, borderBottom: `1px solid ${c.lineSoft}` }}>
+
           {preview.kind === "image" ? (
-            <img src={preview.dataUrl} alt="" style={{ width: 46, height: 46, objectFit: "cover", border: `1px solid ${c.line}` }} />
+            <img src={preview.dataUrl} alt=""
+              style={{ width: 46, height: 46, objectFit: "cover", border: `1px solid ${c.line}`, flexShrink: 0 }} />
           ) : preview.kind === "video" ? (
             <div className="flex items-center justify-center shrink-0"
               style={{ width: 46, height: 46, background: "rgba(63,143,95,.12)", border: `1px solid rgba(63,143,95,.3)` }}>
@@ -480,7 +369,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
             </p>
           </div>
 
-          <button onClick={() => setPreview(null)} aria-label="Remove attachment"
+          <button type="button" onClick={() => setPreview(null)} aria-label="Remove attachment"
             className="flex items-center justify-center shrink-0"
             style={{ width: 30, height: 30, background: c.fill, border: `1px solid ${c.line}`, color: c.text4 }}>
             <X size={13} />
@@ -511,12 +400,12 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
             {fmt(seconds)} <span style={{ color: c.text4 }}>/ {fmt(MAX_SECONDS)}</span>
           </p>
 
-          <button onClick={cancelRecording} aria-label="Cancel recording"
+          <button type="button" onClick={cancelRecording} aria-label="Cancel recording"
             className="flex items-center justify-center"
             style={{ width: 40, height: 40, background: c.fill, border: `1px solid ${c.line}`, color: c.loss }}>
             <Trash2 size={15} />
           </button>
-          <button onClick={stopRecording} aria-label="Stop recording"
+          <button type="button" onClick={stopRecording} aria-label="Finish recording"
             className="flex items-center justify-center"
             style={{ width: 46, height: 40, background: c.gain, border: `1px solid ${c.gain}`, color: "#fff" }}>
             <Send size={15} />
@@ -527,33 +416,18 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
       ) : (
         <form onSubmit={submit} style={{ padding: T.space.md, display: "flex", gap: 8, alignItems: "flex-end" }}>
 
-          <input ref={fileRef} type="file" accept="image/*" onChange={pickImage} style={{ display: "none" }} />
+          <input ref={imageRef} type="file" accept="image/*" onChange={pickImage} style={{ display: "none" }} />
+          <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
 
-          <button type="button" onClick={() => fileRef.current?.click()} aria-label="Attach image"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <button type="button" onClick={() => imageRef.current?.click()} aria-label="Attach image" style={toolBtn}>
             <ImageIcon size={16} />
           </button>
 
-          <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
-
-          <button type="button" onClick={() => videoRef.current?.click()} aria-label="Attach video"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <button type="button" onClick={() => videoRef.current?.click()} aria-label="Attach video" style={toolBtn}>
             <Video size={16} />
           </button>
 
-          <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
-
-          <button type="button" onClick={() => videoRef.current?.click()} aria-label="Attach video"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
-            <Video size={16} />
-          </button>
-
-          <button type="button" onClick={startRecording} aria-label="Record voice note"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <button type="button" onClick={startRecording} aria-label="Record voice note" style={toolBtn}>
             <Mic size={16} />
           </button>
 
