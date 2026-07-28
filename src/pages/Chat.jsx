@@ -4,7 +4,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Send, MessageSquare, AlertTriangle,
-  HelpCircle, ChevronDown, ShieldCheck,
+  HelpCircle, ChevronDown, ShieldCheck, Check, CheckCheck, Clock,
 } from "lucide-react";
 import { T, ThemeStyles, Spinner, inputStyle } from "./system.jsx";
 import { Composer, MessageBody } from "./ChatComposer.jsx";
@@ -50,6 +50,15 @@ function AskList({ onPick, compact }) {
       ))}
     </div>
   );
+}
+
+/* Delivery state, WhatsApp-style:
+   sending → clock, sent → one tick, seen → two green ticks */
+function Ticks({ m }) {
+  if (m.failed)  return <AlertTriangle size={11} style={{ color: c.loss }} />;
+  if (m.pending) return <Clock size={11} style={{ color: c.text4 }} />;
+  if (m.isRead)  return <CheckCheck size={12} style={{ color: c.gain }} />;
+  return <Check size={12} style={{ color: c.text4 }} />;
 }
 
 export default function Chat() {
@@ -279,9 +288,9 @@ export default function Chat() {
                   return (
                     <motion.div
                       key={m._id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: .22 }}
+                      initial={{ opacity: 0, y: 8, x: mine ? 10 : -10 }}
+                      animate={{ opacity: 1, y: 0, x: 0 }}
+                      transition={{ duration: .26, ease: [.22, 1, .36, 1] }}
                       style={{
                         display: "flex",
                         gap: 10,
@@ -295,7 +304,7 @@ export default function Chat() {
                           {!grouped && (
                             <div className="flex items-center justify-center"
                               style={{
-                                width: 30, height: 30,
+                                width: 30, height: 30, borderRadius: "50%",
                                 background: "rgba(63,143,95,.14)",
                                 border: `1px solid rgba(63,143,95,.3)`,
                               }}>
@@ -307,7 +316,7 @@ export default function Chat() {
                         </div>
                       )}
 
-                      <div style={{ maxWidth: "76%" }}>
+                      <div style={{ maxWidth: "min(72%, 460px)", minWidth: 0 }}>
                         {!mine && !grouped && (
                           <p className="mono" style={{
                             fontSize: T.size.micro, letterSpacing: ".18em",
@@ -321,25 +330,34 @@ export default function Chat() {
 
                         <div style={{
                           background: mine ? SURFACE.mine : SURFACE.theirs,
-                          border: `1px solid ${mine ? "rgba(63,143,95,.28)" : "rgba(255,255,255,.07)"}`,
-                          padding: "13px 16px",
-                          opacity: m.pending ? .6 : 1,
+                          border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
+                          padding: "12px 15px",
+                          opacity: m.pending ? .65 : 1,
+                          // Rounded, with the corner nearest the speaker squared off —
+                          // the classic messenger shape. Softened when grouped.
+                          borderRadius: mine
+                            ? (grouped ? "16px 6px 6px 16px" : "16px 16px 6px 16px")
+                            : (grouped ? "6px 16px 16px 6px" : "16px 16px 16px 6px"),
+                          transition: "opacity .2s",
                         }}>
                           <MessageBody m={m} onAction={(path) => navigate(path)} />
                         </div>
 
-                        <p className="mono" style={{
-                          fontSize: T.size.micro,
-                          color: m.failed ? c.loss : c.text4,
-                          marginTop: 6,
-                          textAlign: mine ? "right" : "left",
-                        }}>
-                          {m.failed
-                            ? "Not sent"
-                            : m.pending
-                              ? "Sending…"
-                              : `${fmtTime(m.createdAt)}${mine && m.isRead ? " · Seen" : ""}`}
-                        </p>
+                        <div className="flex items-center gap-1.5"
+                          style={{
+                            marginTop: 5,
+                            justifyContent: mine ? "flex-end" : "flex-start",
+                            paddingLeft: mine ? 0 : 4,
+                            paddingRight: mine ? 4 : 0,
+                          }}>
+                          <span className="mono" style={{
+                            fontSize: T.size.micro,
+                            color: m.failed ? c.loss : c.text4,
+                          }}>
+                            {m.failed ? "Not sent" : m.pending ? "Sending" : fmtTime(m.createdAt)}
+                          </span>
+                          {mine && <Ticks m={m} />}
+                        </div>
                       </div>
 
                       {/* your own initial, mirrored */}
@@ -348,7 +366,7 @@ export default function Chat() {
                           {!grouped && (
                             <div className="flex items-center justify-center"
                               style={{
-                                width: 30, height: 30,
+                                width: 30, height: 30, borderRadius: "50%",
                                 background: "rgba(255,255,255,.05)",
                                 border: `1px solid ${c.line}`,
                               }}>
@@ -371,8 +389,9 @@ export default function Chat() {
               <div style={{ width: 30, flexShrink: 0 }} />
               <div style={{
                 background: SURFACE.theirs,
-                border: `1px solid rgba(255,255,255,.07)`,
-                padding: "13px 16px",
+                border: `1px solid rgba(255,255,255,.08)`,
+                padding: "12px 15px",
+                borderRadius: "16px 16px 16px 6px",
                 display: "flex", alignItems: "center", gap: 8,
               }}>
                 <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
