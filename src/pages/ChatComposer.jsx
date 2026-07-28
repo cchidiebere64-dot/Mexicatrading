@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Image as ImageIcon, Mic, X, Play, Pause, Trash2 } from "lucide-react";
+import { Send, Image as ImageIcon, Mic, X, Play, Pause, Trash2, Video, Film } from "lucide-react";
 import { T, Spinner, inputStyle } from "./system.jsx";
 
 const c = T.color;
-const MAX_SECONDS = 120;
+const MAX_SECONDS = 120;          // voice notes
+const MAX_VIDEO_SECONDS = 60;
+const MAX_VIDEO_BYTES = 30 * 1024 * 1024;          // voice notes
+const MAX_VIDEO_SECONDS = 60;     // screen recordings
+const MAX_VIDEO_BYTES = 30 * 1024 * 1024;
 
 /* ═══════════════════════════════════════════════════════════
    Bubble content — renders text, image or voice note
@@ -28,6 +32,37 @@ export function MessageBody({ m }) {
     );
   }
 
+  if (m.kind === "video" && m.mediaUrl) {
+    return <VideoPlayer src={m.mediaUrl} poster={m.mediaPoster} duration={m.mediaDuration} caption={m.body} />;
+  }
+
+  if (m.kind === "video" && m.mediaUrl) {
+    return (
+      <>
+        <video
+          src={m.mediaUrl}
+          poster={m.mediaThumb || undefined}
+          controls
+          playsInline
+          preload="metadata"
+          style={{
+            display: "block", width: "100%", maxWidth: 320, maxHeight: 300,
+            border: `1px solid ${c.line}`, background: "#000",
+          }} />
+        {m.mediaDuration > 0 && (
+          <p className="mono" style={{ fontSize: T.size.micro, color: c.text4, marginTop: 5 }}>
+            {Math.floor(m.mediaDuration / 60)}:{String(Math.round(m.mediaDuration % 60)).padStart(2, "0")}
+          </p>
+        )}
+        {m.body && (
+          <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
+            {m.body}
+          </p>
+        )}
+      </>
+    );
+  }
+
   if (m.kind === "audio" && m.mediaUrl) {
     return <VoicePlayer src={m.mediaUrl} duration={m.mediaDuration} caption={m.body} />;
   }
@@ -36,6 +71,72 @@ export function MessageBody({ m }) {
     <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, whiteSpace: "pre-line", wordBreak: "break-word" }}>
       {m.body}
     </p>
+  );
+}
+
+/* ── Video player — poster first, loads only when tapped ── */
+function VideoPlayer({ src, poster, duration, caption }) {
+  const [started, setStarted] = useState(false);
+
+  const fmt = (s) => {
+    const n = Math.max(0, Math.round(s || 0));
+    return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+  };
+
+  return (
+    <>
+      {started ? (
+        <video
+          src={src}
+          poster={poster || undefined}
+          controls
+          autoPlay
+          playsInline
+          style={{ display: "block", width: "100%", maxHeight: 300, background: "#000", border: `1px solid ${c.line}` }}
+        />
+      ) : (
+        <button type="button" onClick={() => setStarted(true)}
+          aria-label="Play video"
+          style={{
+            position: "relative", display: "block", width: "100%",
+            border: `1px solid ${c.line}`, background: "#000", padding: 0, cursor: "pointer",
+          }}>
+          {poster ? (
+            <img src={poster} alt="Video" style={{ display: "block", width: "100%", maxHeight: 260, objectFit: "cover", opacity: .75 }} />
+          ) : (
+            <div className="flex items-center justify-center" style={{ height: 150, background: c.panelAlt }}>
+              <Film size={22} style={{ color: c.text4 }} />
+            </div>
+          )}
+
+          <span style={{
+            position: "absolute", inset: 0, display: "flex",
+            alignItems: "center", justifyContent: "center",
+          }}>
+            <span className="flex items-center justify-center"
+              style={{ width: 46, height: 46, background: "rgba(63,143,95,.92)", color: "#fff" }}>
+              <Play size={20} />
+            </span>
+          </span>
+
+          {duration > 0 && (
+            <span className="mono" style={{
+              position: "absolute", bottom: 8, right: 8,
+              background: "rgba(14,16,19,.85)", color: "#fff",
+              fontSize: 10, padding: "3px 6px",
+            }}>
+              {fmt(duration)}
+            </span>
+          )}
+        </button>
+      )}
+
+      {caption && (
+        <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
+          {caption}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -120,6 +221,8 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
   const [previewPlaying, setPreviewPlaying] = useState(false);
 
   const fileRef = useRef(null);
+  const videoRef = useRef(null);
+  const videoRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
@@ -141,6 +244,40 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     r.readAsDataURL(file);
   });
 
+  const pickVideo = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_VIDEO_BYTES) {
+      setMicError("That video is over 30MB. Record a shorter clip.");
+      setTimeout(() => setMicError(""), 5000);
+      return;
+    }
+
+    // read its length before uploading
+    const url = URL.createObjectURL(file);
+    const probe = document.createElement("video");
+    probe.preload = "metadata";
+    probe.src = url;
+
+    const secs = await new Promise((resolve) => {
+      probe.onloadedmetadata = () => resolve(Math.round(probe.duration) || 0);
+      probe.onerror = () => resolve(0);
+      setTimeout(() => resolve(0), 4000);
+    });
+    URL.revokeObjectURL(url);
+
+    if (secs > MAX_VIDEO_SECONDS) {
+      setMicError(`Videos are limited to ${MAX_VIDEO_SECONDS} seconds. Trim it and try again.`);
+      setTimeout(() => setMicError(""), 5000);
+      return;
+    }
+
+    const dataUrl = await toDataUrl(file);
+    setPreview({ dataUrl, kind: "video", duration: secs, name: file.name });
+  };
+
   const pickImage = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -152,6 +289,40 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
     }
     const dataUrl = await toDataUrl(file);
     setPreview({ dataUrl, kind: "image", name: file.name });
+  };
+
+  const pickVideo = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_VIDEO_BYTES) {
+      setMicError("That video is over 30MB. Try a shorter clip.");
+      setTimeout(() => setMicError(""), 5000);
+      return;
+    }
+
+    // read its length before accepting it
+    const url = URL.createObjectURL(file);
+    const probe = document.createElement("video");
+    probe.preload = "metadata";
+    probe.src = url;
+
+    const secs = await new Promise((resolve) => {
+      probe.onloadedmetadata = () => resolve(probe.duration || 0);
+      probe.onerror = () => resolve(0);
+      setTimeout(() => resolve(0), 4000);
+    });
+    URL.revokeObjectURL(url);
+
+    if (secs > MAX_VIDEO_SECONDS + 1) {
+      setMicError(`Videos are limited to ${MAX_VIDEO_SECONDS} seconds. Trim it and try again.`);
+      setTimeout(() => setMicError(""), 5000);
+      return;
+    }
+
+    const dataUrl = await toDataUrl(file);
+    setPreview({ dataUrl, kind: "video", duration: Math.round(secs), name: file.name });
   };
 
   /* ── Recording ── */
@@ -282,6 +453,11 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
           style={{ padding: T.space.md, borderBottom: `1px solid ${c.lineSoft}` }}>
           {preview.kind === "image" ? (
             <img src={preview.dataUrl} alt="" style={{ width: 46, height: 46, objectFit: "cover", border: `1px solid ${c.line}` }} />
+          ) : preview.kind === "video" ? (
+            <div className="flex items-center justify-center shrink-0"
+              style={{ width: 46, height: 46, background: "rgba(63,143,95,.12)", border: `1px solid rgba(63,143,95,.3)` }}>
+              <Film size={17} style={{ color: c.gain }} />
+            </div>
           ) : (
             <button type="button" onClick={togglePreviewAudio}
               aria-label={previewPlaying ? "Pause" : "Play back"}
@@ -293,7 +469,9 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: T.size.xs, color: c.text2 }}>
-              {preview.kind === "image" ? "Image ready" : `Voice note · ${fmt(preview.duration || 0)}`}
+              {preview.kind === "image" ? "Image ready"
+                : preview.kind === "video" ? `Video · ${fmt(preview.duration || 0)}`
+                : `Voice note · ${fmt(preview.duration || 0)}`}
             </p>
             <p className="mono truncate" style={{ fontSize: T.size.micro, color: c.text4 }}>
               {preview.kind === "audio"
@@ -355,6 +533,22 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
             className="flex items-center justify-center shrink-0"
             style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
             <ImageIcon size={16} />
+          </button>
+
+          <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
+
+          <button type="button" onClick={() => videoRef.current?.click()} aria-label="Attach video"
+            className="flex items-center justify-center shrink-0"
+            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+            <Video size={16} />
+          </button>
+
+          <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
+
+          <button type="button" onClick={() => videoRef.current?.click()} aria-label="Attach video"
+            className="flex items-center justify-center shrink-0"
+            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+            <Video size={16} />
           </button>
 
           <button type="button" onClick={startRecording} aria-label="Record voice note"
