@@ -260,9 +260,8 @@ function AppInner() {
             <Route path="/messages" element={token ? <Messages /> : <Navigate to="/login" />} />
             <Route path="/kyc" element={token ? <KYC /> : <Navigate to="/login" />} />
             <Route path="/settings" element={<UserSettings />} />
-            <Route path="/history" element={<History />} /><Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            
+            <Route path="/history" element={token ? <History /> : <Navigate to="/login" />} />
+            <Route path="/chat" element={token ? <Chat /> : <Navigate to="/login" />} />
             
             {/* ── PROTECTED USER ROUTES ─────────────────────────────────── */}
             <Route
