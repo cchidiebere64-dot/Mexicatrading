@@ -1,582 +1,431 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, Image as ImageIcon, Mic, X, Play, Pause, Trash2, Video, Film } from "lucide-react";
-import { T, Spinner, inputStyle } from "./system.jsx";
+import { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft, Send, RefreshCw, Search, MessageSquare, Mail, ChevronRight,
+} from "lucide-react";
+import { T, ThemeStyles, Spinner, StatusPill, EmptyState, inputStyle, LedgerRow } from "./system.jsx";
+import { Composer, MessageBody } from "./ChatComposer.jsx";
 
+const API_URL = "https://mexicatradingbackend.onrender.com";
+const THREADS_POLL = 8000;
+const THREAD_POLL = 4000;
 const c = T.color;
-const MAX_SECONDS = 120;          // voice notes
-const MAX_VIDEO_SECONDS = 60;
-const MAX_VIDEO_BYTES = 30 * 1024 * 1024;          // voice notes
-const MAX_VIDEO_SECONDS = 60;     // screen recordings
-const MAX_VIDEO_BYTES = 30 * 1024 * 1024;
 
-/* ═══════════════════════════════════════════════════════════
-   Bubble content — renders text, image or voice note
-═══════════════════════════════════════════════════════════ */
-export function MessageBody({ m }) {
-  if (m.kind === "image" && m.mediaUrl) {
-    return (
-      <>
-        <a href={m.mediaUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
-          <img src={m.mediaUrl} alt="Attachment"
-            style={{
-              display: "block", maxWidth: "100%", maxHeight: 260,
-              objectFit: "cover", border: `1px solid ${c.line}`,
-            }} />
-        </a>
-        {m.body && (
-          <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
-            {m.body}
-          </p>
-        )}
-      </>
-    );
-  }
+export default function AdminChat() {
+  const token = sessionStorage.getItem("adminToken");
+  const auth = { headers: { Authorization: `Bearer ${token}` } };
 
-  if (m.kind === "video" && m.mediaUrl) {
-    return <VideoPlayer src={m.mediaUrl} poster={m.mediaPoster} duration={m.mediaDuration} caption={m.body} />;
-  }
+  const [threads, setThreads] = useState([]);
+  const [totalUnread, setTotalUnread] = useState(0);
+  const [loadingThreads, setLoadingThreads] = useState(true);
+  const [search, setSearch] = useState("");
 
-  if (m.kind === "video" && m.mediaUrl) {
-    return (
-      <>
-        <video
-          src={m.mediaUrl}
-          poster={m.mediaThumb || undefined}
-          controls
-          playsInline
-          preload="metadata"
-          style={{
-            display: "block", width: "100%", maxWidth: 320, maxHeight: 300,
-            border: `1px solid ${c.line}`, background: "#000",
-          }} />
-        {m.mediaDuration > 0 && (
-          <p className="mono" style={{ fontSize: T.size.micro, color: c.text4, marginTop: 5 }}>
-            {Math.floor(m.mediaDuration / 60)}:{String(Math.round(m.mediaDuration % 60)).padStart(2, "0")}
-          </p>
-        )}
-        {m.body && (
-          <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
-            {m.body}
-          </p>
-        )}
-      </>
-    );
-  }
+  const [openUser, setOpenUser] = useState(null);   // { _id, name, email, ... }
+  const [messages, setMessages] = useState([]);
+  const [loadingThread, setLoadingThread] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [memberTyping, setMemberTyping] = useState(false);
 
-  if (m.kind === "audio" && m.mediaUrl) {
-    return <VoicePlayer src={m.mediaUrl} duration={m.mediaDuration} caption={m.body} />;
-  }
+  const typingSentAt = useRef(0);
+  const bottomRef = useRef(null);
+  const listRef = useRef(null);
+  const stick = useRef(true);
 
-  return (
-    <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, whiteSpace: "pre-line", wordBreak: "break-word" }}>
-      {m.body}
-    </p>
-  );
-}
-
-/* ── Video player — poster first, loads only when tapped ── */
-function VideoPlayer({ src, poster, duration, caption }) {
-  const [started, setStarted] = useState(false);
-
-  const fmt = (s) => {
-    const n = Math.max(0, Math.round(s || 0));
-    return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
-  };
-
-  return (
-    <>
-      {started ? (
-        <video
-          src={src}
-          poster={poster || undefined}
-          controls
-          autoPlay
-          playsInline
-          style={{ display: "block", width: "100%", maxHeight: 300, background: "#000", border: `1px solid ${c.line}` }}
-        />
-      ) : (
-        <button type="button" onClick={() => setStarted(true)}
-          aria-label="Play video"
-          style={{
-            position: "relative", display: "block", width: "100%",
-            border: `1px solid ${c.line}`, background: "#000", padding: 0, cursor: "pointer",
-          }}>
-          {poster ? (
-            <img src={poster} alt="Video" style={{ display: "block", width: "100%", maxHeight: 260, objectFit: "cover", opacity: .75 }} />
-          ) : (
-            <div className="flex items-center justify-center" style={{ height: 150, background: c.panelAlt }}>
-              <Film size={22} style={{ color: c.text4 }} />
-            </div>
-          )}
-
-          <span style={{
-            position: "absolute", inset: 0, display: "flex",
-            alignItems: "center", justifyContent: "center",
-          }}>
-            <span className="flex items-center justify-center"
-              style={{ width: 46, height: 46, background: "rgba(63,143,95,.92)", color: "#fff" }}>
-              <Play size={20} />
-            </span>
-          </span>
-
-          {duration > 0 && (
-            <span className="mono" style={{
-              position: "absolute", bottom: 8, right: 8,
-              background: "rgba(14,16,19,.85)", color: "#fff",
-              fontSize: 10, padding: "3px 6px",
-            }}>
-              {fmt(duration)}
-            </span>
-          )}
-        </button>
-      )}
-
-      {caption && (
-        <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
-          {caption}
-        </p>
-      )}
-    </>
-  );
-}
-
-/* ── Voice note player ── */
-function VoicePlayer({ src, duration, caption }) {
-  const audioRef = useRef(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  const fmt = (s) => {
-    const n = Math.max(0, Math.round(s || 0));
-    return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
-  };
-
-  const toggle = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (playing) { a.pause(); } else { a.play().catch(() => {}); }
-  };
-
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnd = () => { setPlaying(false); setProgress(0); };
-    const onTime = () => {
-      if (a.duration && isFinite(a.duration)) setProgress((a.currentTime / a.duration) * 100);
-    };
-    a.addEventListener("play", onPlay);
-    a.addEventListener("pause", onPause);
-    a.addEventListener("ended", onEnd);
-    a.addEventListener("timeupdate", onTime);
-    return () => {
-      a.removeEventListener("play", onPlay);
-      a.removeEventListener("pause", onPause);
-      a.removeEventListener("ended", onEnd);
-      a.removeEventListener("timeupdate", onTime);
-    };
+  /* ── Threads ── */
+  const loadThreads = useCallback(async (silent = false) => {
+    try {
+      const res = await axios.get(`${API_URL}/api/chat/admin/threads`, auth);
+      setThreads(res.data.threads || []);
+      setTotalUnread(res.data.totalUnread || 0);
+    } catch (err) {
+      if (!silent) setError("Couldn't load conversations.");
+    } finally {
+      if (!silent) setLoadingThreads(false);
+    }
   }, []);
 
-  return (
-    <>
-      <div className="flex items-center gap-3" style={{ minWidth: 190 }}>
-        <button onClick={toggle} aria-label={playing ? "Pause" : "Play"}
-          className="flex items-center justify-center shrink-0"
-          style={{ width: 34, height: 34, background: c.gain, color: "#fff", border: "none" }}>
-          {playing ? <Pause size={15} /> : <Play size={15} />}
-        </button>
+  useEffect(() => { loadThreads(false); }, [loadThreads]);
 
-        <div style={{ flex: 1 }}>
-          <div style={{ height: 2, background: "rgba(255,255,255,.12)" }}>
-            <div style={{ width: `${progress}%`, height: "100%", background: c.gain, transition: "width .15s linear" }} />
-          </div>
-          <p className="mono" style={{ fontSize: T.size.micro, color: c.text4, marginTop: 5 }}>
-            {fmt(duration)}
-          </p>
-        </div>
-      </div>
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible" && !openUser) loadThreads(true);
+    }, THREADS_POLL);
+    return () => clearInterval(id);
+  }, [loadThreads, openUser]);
 
-      <audio ref={audioRef} src={src} preload="metadata" style={{ display: "none" }} />
+  /* ── One thread ── */
+  const loadThread = useCallback(async (userId, silent = false) => {
+    if (!silent) setLoadingThread(true);
+    try {
+      const res = await axios.get(`${API_URL}/api/chat/admin/${userId}`, auth);
+      setOpenUser(res.data.user);
+      setMessages((prev) => {
+        const next = res.data.messages || [];
+        const local = prev.filter((m) => m.pending || m.failed);
+        if (!local.length &&
+            prev.length === next.length &&
+            prev[prev.length - 1]?._id === next[next.length - 1]?._id) return prev;
+        return [...next, ...local];
+      });
+      setMemberTyping(Boolean(res.data.memberTyping));
+      setError("");
+    } catch (err) {
+      if (!silent) setError("Couldn't load that conversation.");
+    } finally {
+      if (!silent) setLoadingThread(false);
+    }
+  }, []);
 
-      {caption && (
-        <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
-          {caption}
-        </p>
-      )}
-    </>
-  );
-}
+  useEffect(() => {
+    if (!openUser) return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") loadThread(openUser._id, true);
+    }, THREAD_POLL);
+    return () => clearInterval(id);
+  }, [openUser, loadThread]);
 
-/* ═══════════════════════════════════════════════════════════
-   Composer — text, image picker, voice recorder
-   onSend({ body, file, kind, duration })
-═══════════════════════════════════════════════════════════ */
-export function Composer({ onSend, sending, placeholder = "Type your message", onTyping }) {
-  const [draft, setDraft] = useState("");
-  const [preview, setPreview] = useState(null);   // { dataUrl, kind, duration, name }
-  const [recording, setRecording] = useState(false);
-  const [seconds, setSeconds] = useState(0);
-  const [micError, setMicError] = useState("");
-  const [previewPlaying, setPreviewPlaying] = useState(false);
+  useEffect(() => {
+    if (stick.current) bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages]);
 
-  const fileRef = useRef(null);
-  const videoRef = useRef(null);
-  const videoRef = useRef(null);
-  const recorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const timerRef = useRef(null);
-  const secondsRef = useRef(0);
-  const previewAudioRef = useRef(null);
+  const onScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
 
-  const toDataUrl = (file) => new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => {
-      // "data:audio/webm;codecs=opus;base64,..." breaks upstream parsers.
-      // Reduce it to a single clean parameter: "data:audio/webm;base64,..."
-      const out = String(r.result).replace(
-        /^data:([^;,]+)(;[^,]*)?;base64,/,
-        (_all, mime) => `data:${mime};base64,`
-      );
-      resolve(out);
+  /* ── Reply ── */
+  const reply = async ({ body, file, kind, duration }) => {
+    if (sending || !openUser) return;
+    if (!body && !file) return;
+
+    setSending(true); setError("");
+    stick.current = true;
+
+    const temp = {
+      _id: `temp-${Date.now()}`,
+      from: "admin",
+      body: body || "",
+      kind: kind || "text",
+      mediaUrl: (kind === "image" || kind === "video") ? file : "",
+      mediaDuration: duration || 0,
+      senderName: "Support",
+      createdAt: new Date().toISOString(),
+      pending: true,
     };
-    r.onerror = reject;
-    r.readAsDataURL(file);
+    setMessages((m) => [...m, temp]);
+
+    try {
+      const res = await axios.post(`${API_URL}/api/chat/admin/${openUser._id}`, { body, file, kind, duration }, auth);
+      setMessages((m) => m.map((x) => (x._id === temp._id ? res.data.message : x)));
+      loadThreads(true);
+    } catch (err) {
+      setMessages((m) => m.map((x) => (x._id === temp._id ? { ...x, failed: true, pending: false } : x)));
+      setError(
+        err.response?.status === 413
+          ? "That file is too large for the server. Try a shorter recording or smaller image."
+          : err.response?.data?.message || `Reply didn't send (${err.response?.status || "no response"}).`
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const closeThread = () => {
+    setOpenUser(null);
+    setMessages([]);
+    setDraft("");
+    loadThreads(true);
+  };
+
+  const money = (v) => Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const fmtTime = (d) => new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  const fmtWhen = (d) => {
+    const date = new Date(d);
+    const today = new Date();
+    const yest = new Date(Date.now() - 86400000);
+    if (date.toDateString() === today.toDateString()) return fmtTime(d);
+    if (date.toDateString() === yest.toDateString()) return "Yesterday";
+    return date.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+  };
+
+  const fmtDay = (d) => {
+    const date = new Date(d);
+    const today = new Date();
+    const yest = new Date(Date.now() - 86400000);
+    if (date.toDateString() === today.toDateString()) return "Today";
+    if (date.toDateString() === yest.toDateString()) return "Yesterday";
+    return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  };
+
+  const filtered = threads.filter((t) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return t.user?.name?.toLowerCase().includes(q)
+      || t.user?.email?.toLowerCase().includes(q)
+      || t.lastMessage?.toLowerCase().includes(q);
   });
 
-  const pickVideo = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  const groups = messages.reduce((acc, m) => {
+    const key = fmtDay(m.createdAt);
+    (acc[key] = acc[key] || []).push(m);
+    return acc;
+  }, {});
 
-    if (file.size > MAX_VIDEO_BYTES) {
-      setMicError("That video is over 30MB. Record a shorter clip.");
-      setTimeout(() => setMicError(""), 5000);
-      return;
-    }
+  /* ══════════ THREAD VIEW ══════════ */
+  if (openUser) {
+    return (
+      <div className="ui" style={{ color: c.text }}>
+        <ThemeStyles />
+        <style>{`
+          .chat-dots i {
+            width: 4px; height: 4px; border-radius: 50%;
+            background: ${c.brass}; display: inline-block;
+            animation: chatDot 1.2s ease-in-out infinite;
+          }
+          .chat-dots i:nth-child(2) { animation-delay: .18s; }
+          .chat-dots i:nth-child(3) { animation-delay: .36s; }
+          @keyframes chatDot { 0%,60%,100% { opacity:.25; } 30% { opacity:1; } }
+          @media (prefers-reduced-motion: reduce) { .chat-dots i { animation: none; opacity:.6; } }
+        `}</style>
 
-    // read its length before uploading
-    const url = URL.createObjectURL(file);
-    const probe = document.createElement("video");
-    probe.preload = "metadata";
-    probe.src = url;
+        <button onClick={closeThread}
+          className="mono flex items-center gap-2"
+          style={{ fontSize: T.size.tiny, letterSpacing: ".14em", textTransform: "uppercase", color: c.text3, marginBottom: T.space.lg }}>
+          <ArrowLeft size={12} /> All conversations
+        </button>
 
-    const secs = await new Promise((resolve) => {
-      probe.onloadedmetadata = () => resolve(Math.round(probe.duration) || 0);
-      probe.onerror = () => resolve(0);
-      setTimeout(() => resolve(0), 4000);
-    });
-    URL.revokeObjectURL(url);
-
-    if (secs > MAX_VIDEO_SECONDS) {
-      setMicError(`Videos are limited to ${MAX_VIDEO_SECONDS} seconds. Trim it and try again.`);
-      setTimeout(() => setMicError(""), 5000);
-      return;
-    }
-
-    const dataUrl = await toDataUrl(file);
-    setPreview({ dataUrl, kind: "video", duration: secs, name: file.name });
-  };
-
-  const pickImage = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024) {
-      setMicError("That image is over 8MB. Try a smaller one.");
-      setTimeout(() => setMicError(""), 4000);
-      return;
-    }
-    const dataUrl = await toDataUrl(file);
-    setPreview({ dataUrl, kind: "image", name: file.name });
-  };
-
-  const pickVideo = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (file.size > MAX_VIDEO_BYTES) {
-      setMicError("That video is over 30MB. Try a shorter clip.");
-      setTimeout(() => setMicError(""), 5000);
-      return;
-    }
-
-    // read its length before accepting it
-    const url = URL.createObjectURL(file);
-    const probe = document.createElement("video");
-    probe.preload = "metadata";
-    probe.src = url;
-
-    const secs = await new Promise((resolve) => {
-      probe.onloadedmetadata = () => resolve(probe.duration || 0);
-      probe.onerror = () => resolve(0);
-      setTimeout(() => resolve(0), 4000);
-    });
-    URL.revokeObjectURL(url);
-
-    if (secs > MAX_VIDEO_SECONDS + 1) {
-      setMicError(`Videos are limited to ${MAX_VIDEO_SECONDS} seconds. Trim it and try again.`);
-      setTimeout(() => setMicError(""), 5000);
-      return;
-    }
-
-    const dataUrl = await toDataUrl(file);
-    setPreview({ dataUrl, kind: "video", duration: Math.round(secs), name: file.name });
-  };
-
-  /* ── Recording ── */
-  const startRecording = async () => {
-    setMicError("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Pick a format this browser actually supports
-      let mimeType = "";
-      const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
-      for (const t of candidates) {
-        if (window.MediaRecorder?.isTypeSupported?.(t)) { mimeType = t; break; }
-      }
-
-      const rec = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-      chunksRef.current = [];
-      secondsRef.current = 0;
-
-      rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
-
-      rec.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-
-        const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
-        const secs = secondsRef.current;
-
-        if (!blob.size || secs < 1) {
-          setMicError("That recording was too short. Hold on a moment before sending.");
-          setTimeout(() => setMicError(""), 4000);
-          setPreview(null);
-          setSeconds(0);
-          return;
-        }
-
-        const dataUrl = await toDataUrl(blob);
-        setPreview({ dataUrl, kind: "audio", duration: secs });
-      };
-
-      recorderRef.current = rec;
-      // timeslice keeps chunks flowing so nothing is lost on stop
-      rec.start(500);
-      setRecording(true);
-      setSeconds(0);
-
-      timerRef.current = setInterval(() => {
-        secondsRef.current += 1;
-        setSeconds(secondsRef.current);
-        if (secondsRef.current >= MAX_SECONDS) stopRecording();
-      }, 1000);
-    } catch (err) {
-      setMicError("Microphone blocked. Allow access in your browser settings.");
-      setTimeout(() => setMicError(""), 5000);
-    }
-  };
-
-  const stopRecording = () => {
-    clearInterval(timerRef.current);
-    setRecording(false);
-    try { recorderRef.current?.stop(); } catch {}
-  };
-
-  const cancelRecording = () => {
-    clearInterval(timerRef.current);
-    setRecording(false);
-    chunksRef.current = [];
-    secondsRef.current = 0;
-    try {
-      recorderRef.current?.stream?.getTracks?.().forEach((t) => t.stop());
-      recorderRef.current?.stop();
-    } catch {}
-    setSeconds(0);
-    setPreview(null);
-  };
-
-  const togglePreviewAudio = () => {
-    const a = previewAudioRef.current;
-    if (!a) return;
-    if (previewPlaying) a.pause();
-    else a.play().catch(() => {
-      setMicError("Couldn't play that back on this device.");
-      setTimeout(() => setMicError(""), 4000);
-    });
-  };
-
-  // stop playback when the attachment changes or is removed
-  useEffect(() => {
-    setPreviewPlaying(false);
-    const a = previewAudioRef.current;
-    if (a) { a.pause(); a.currentTime = 0; }
-  }, [preview]);
-
-  useEffect(() => () => clearInterval(timerRef.current), []);
-
-  const submit = (e) => {
-    e?.preventDefault();
-    if (sending) return;
-    if (!draft.trim() && !preview) return;
-
-    onSend({
-      body: draft.trim(),
-      file: preview?.dataUrl || null,
-      kind: preview?.kind || "text",
-      duration: preview?.duration || 0,
-    });
-
-    setDraft("");
-    setPreview(null);
-    setSeconds(0);
-    secondsRef.current = 0;
-  };
-
-  const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const canSend = Boolean(draft.trim() || preview);
-
-  return (
-    <div style={{ borderTop: `1px solid ${c.line}` }}>
-
-      {micError && (
-        <p style={{ fontSize: T.size.xs, color: c.loss, padding: `10px ${T.space.md}px 0` }}>
-          {micError}
-        </p>
-      )}
-
-      {/* ── Attachment preview ── */}
-      {preview && (
-        <div className="flex items-center gap-3"
-          style={{ padding: T.space.md, borderBottom: `1px solid ${c.lineSoft}` }}>
-          {preview.kind === "image" ? (
-            <img src={preview.dataUrl} alt="" style={{ width: 46, height: 46, objectFit: "cover", border: `1px solid ${c.line}` }} />
-          ) : preview.kind === "video" ? (
-            <div className="flex items-center justify-center shrink-0"
-              style={{ width: 46, height: 46, background: "rgba(63,143,95,.12)", border: `1px solid rgba(63,143,95,.3)` }}>
-              <Film size={17} style={{ color: c.gain }} />
+        {/* member header */}
+        <div style={{ border: `1px solid ${c.line}`, padding: T.space.lg, marginBottom: T.space.lg }}>
+          <div className="flex items-start justify-between gap-3" style={{ marginBottom: T.space.md }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 className="display truncate" style={{ fontSize: T.size.xl, lineHeight: 1.15 }}>
+                {openUser.name}
+              </h2>
+              <a href={`mailto:${openUser.email}`} className="mono truncate flex items-center gap-1.5"
+                style={{ fontSize: T.size.tiny, color: c.gain, marginTop: 4 }}>
+                <Mail size={10} /> {openUser.email}
+              </a>
             </div>
-          ) : (
-            <button type="button" onClick={togglePreviewAudio}
-              aria-label={previewPlaying ? "Pause" : "Play back"}
-              className="flex items-center justify-center shrink-0"
-              style={{ width: 46, height: 46, background: c.gain, border: `1px solid ${c.gain}`, color: "#fff" }}>
-              {previewPlaying ? <Pause size={17} /> : <Play size={17} />}
-            </button>
-          )}
+          </div>
+          <div style={{ borderTop: `1px solid ${c.lineSoft}` }}>
+            <LedgerRow small label="Balance" value={`$${money(openUser.balance)}`} accent={c.gain} />
+            <LedgerRow small label="Country" value={openUser.country || "—"} last />
+          </div>
+        </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: T.size.xs, color: c.text2 }}>
-              {preview.kind === "image" ? "Image ready"
-                : preview.kind === "video" ? `Video · ${fmt(preview.duration || 0)}`
-                : `Voice note · ${fmt(preview.duration || 0)}`}
-            </p>
-            <p className="mono truncate" style={{ fontSize: T.size.micro, color: c.text4 }}>
-              {preview.kind === "audio"
-                ? (previewPlaying ? "Playing…" : "Tap play to listen back")
-                : (preview.name || "Tap send to share")}
-            </p>
+        {/* thread */}
+        <div style={{ border: `1px solid ${c.line}`, display: "flex", flexDirection: "column", height: "56vh", minHeight: 320 }}>
+          <div ref={listRef} onScroll={onScroll} style={{ flex: 1, overflowY: "auto", padding: T.space.lg }}>
+            {loadingThread ? (
+              <div className="flex justify-center" style={{ padding: T.space.xxxl }}><Spinner size={24} /></div>
+            ) : messages.length === 0 ? (
+              <EmptyState icon={<MessageSquare size={20} />} title="No messages" text="Nothing here yet." />
+            ) : (
+              Object.entries(groups).map(([day, items]) => (
+                <div key={day}>
+                  <div className="flex items-center gap-3" style={{ margin: `${T.space.md}px 0 ${T.space.lg}px` }}>
+                    <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
+                    <span className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".2em", textTransform: "uppercase", color: c.text4 }}>
+                      {day}
+                    </span>
+                    <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
+                  </div>
+
+                  {items.map((m) => {
+                    const mine = m.from === "admin";
+                    return (
+                      <motion.div key={m._id}
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .22 }}
+                        style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: T.space.md }}>
+                        <div style={{ maxWidth: "82%" }}>
+                          {!mine && (
+                            <p className="mono" style={{
+                              fontSize: T.size.micro, letterSpacing: ".18em",
+                              textTransform: "uppercase", color: c.text4, marginBottom: 5,
+                            }}>
+                              {openUser.name?.split(" ")[0]}
+                            </p>
+                          )}
+                          <div style={{
+                            background: mine ? "rgba(63,143,95,.1)" : c.panelAlt,
+                            border: `1px solid ${mine ? "rgba(63,143,95,.25)" : c.line}`,
+                            borderLeft: mine ? undefined : `2px solid ${c.brass}`,
+                            padding: "11px 14px",
+                            opacity: m.pending ? .6 : 1,
+                          }}>
+                            <MessageBody m={m} />
+                          </div>
+                          <p className="mono" style={{
+                            fontSize: T.size.micro,
+                            color: m.failed ? c.loss : c.text4,
+                            marginTop: 4, textAlign: mine ? "right" : "left",
+                          }}>
+                            {m.failed ? "Not sent" : m.pending ? "Sending…" : fmtTime(m.createdAt)}
+                          </p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+            {memberTyping && (
+              <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: T.space.md }}>
+                <div style={{
+                  background: c.panelAlt,
+                  border: `1px solid ${c.line}`,
+                  borderLeft: `2px solid ${c.brass}`,
+                  padding: "10px 14px",
+                  display: "flex", alignItems: "center", gap: 7,
+                }}>
+                  <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
+                    <i /><i /><i />
+                  </span>
+                  <span className="mono" style={{
+                    fontSize: T.size.micro, letterSpacing: ".16em",
+                    textTransform: "uppercase", color: c.text3,
+                  }}>
+                    {openUser.name?.split(" ")[0]} is typing
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div ref={bottomRef} />
           </div>
 
-          <button onClick={() => setPreview(null)} aria-label="Remove attachment"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 30, height: 30, background: c.fill, border: `1px solid ${c.line}`, color: c.text4 }}>
-            <X size={13} />
-          </button>
-
-          {preview.kind === "audio" && (
-            <audio
-              ref={previewAudioRef}
-              src={preview.dataUrl}
-              preload="metadata"
-              onPlay={() => setPreviewPlaying(true)}
-              onPause={() => setPreviewPlaying(false)}
-              onEnded={() => setPreviewPlaying(false)}
-              style={{ display: "none" }}
-            />
-          )}
+          <Composer
+            sending={sending}
+            placeholder="Type your reply"
+            onSend={reply}
+            onTyping={(val) => {
+              const now = Date.now();
+              if (val && openUser && now - typingSentAt.current > 3000) {
+                typingSentAt.current = now;
+                axios.post(`${API_URL}/api/chat/admin/${openUser._id}/typing`, {}, auth).catch(() => {});
+              }
+            }}
+          />
         </div>
-      )}
 
-      {/* ── Recording bar ── */}
-      {recording ? (
-        <div className="flex items-center gap-3" style={{ padding: T.space.md }}>
-          <span style={{
-            width: 9, height: 9, borderRadius: "50%", background: c.loss,
-            animation: "recPulse 1.1s ease-in-out infinite", flexShrink: 0,
-          }} />
-          <p className="mono tabular" style={{ fontSize: T.size.sm, color: c.text, flex: 1 }}>
-            {fmt(seconds)} <span style={{ color: c.text4 }}>/ {fmt(MAX_SECONDS)}</span>
+        {error && <p style={{ fontSize: T.size.xs, color: c.loss, marginTop: 10 }}>{error}</p>}
+
+        <p style={{ fontSize: T.size.xs, color: c.text4, lineHeight: 1.7, marginTop: T.space.lg }}>
+          Never ask a member for their password, withdrawal PIN, card number or CVV.
+        </p>
+      </div>
+    );
+  }
+
+  /* ══════════ INBOX ══════════ */
+  return (
+    <div className="ui" style={{ color: c.text }}>
+      <ThemeStyles />
+      <style>{`
+        .chat-dots i {
+          width: 4px; height: 4px; border-radius: 50%;
+          background: ${c.brass}; display: inline-block;
+          animation: chatDot 1.2s ease-in-out infinite;
+        }
+        .chat-dots i:nth-child(2) { animation-delay: .18s; }
+        .chat-dots i:nth-child(3) { animation-delay: .36s; }
+        @keyframes chatDot { 0%,60%,100% { opacity:.25; } 30% { opacity:1; } }
+        @media (prefers-reduced-motion: reduce) { .chat-dots i { animation: none; opacity:.6; } }
+      `}</style>
+
+      <div className="flex items-end justify-between gap-3" style={{ marginBottom: T.space.xl }}>
+        <div>
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Support</p>
+          <h1 className="display" style={{ fontSize: T.size.xl, lineHeight: 1.1 }}>Conversations</h1>
+          <p className="mono" style={{
+            fontSize: T.size.xs, color: totalUnread > 0 ? c.brass : c.text3, marginTop: 6,
+          }}>
+            {totalUnread > 0 ? `${totalUnread} unread` : `${threads.length} total`}
           </p>
-
-          <button onClick={cancelRecording} aria-label="Cancel recording"
-            className="flex items-center justify-center"
-            style={{ width: 40, height: 40, background: c.fill, border: `1px solid ${c.line}`, color: c.loss }}>
-            <Trash2 size={15} />
-          </button>
-          <button onClick={stopRecording} aria-label="Stop recording"
-            className="flex items-center justify-center"
-            style={{ width: 46, height: 40, background: c.gain, border: `1px solid ${c.gain}`, color: "#fff" }}>
-            <Send size={15} />
-          </button>
-
-          <style>{`@keyframes recPulse { 0%,100% { opacity:1; } 50% { opacity:.25; } }`}</style>
         </div>
+        <button onClick={() => loadThreads(false)} aria-label="Refresh"
+          className="flex items-center justify-center shrink-0"
+          style={{ width: 36, height: 36, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
+          <RefreshCw size={14} />
+        </button>
+      </div>
+
+      <div style={{ position: "relative", marginBottom: T.space.xl }}>
+        <Search size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: c.text4 }} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, email or message"
+          style={{ ...inputStyle, paddingLeft: 36 }} />
+      </div>
+
+      {loadingThreads ? (
+        <div className="flex justify-center" style={{ padding: T.space.xxxl }}><Spinner size={26} /></div>
+      ) : filtered.length === 0 ? (
+        <EmptyState icon={<MessageSquare size={20} />}
+          title={threads.length === 0 ? "No conversations yet" : "Nothing matches"}
+          text={threads.length === 0
+            ? "When a member messages you, their conversation appears here."
+            : "Try a different search term."} />
       ) : (
-        <form onSubmit={submit} style={{ padding: T.space.md, display: "flex", gap: 8, alignItems: "flex-end" }}>
+        <div style={{ border: `1px solid ${c.line}` }}>
+          {filtered.map((t, i) => (
+            <button key={t._id} onClick={() => loadThread(t._id)}
+              className="w-full text-left hover-fill flex items-center gap-3"
+              style={{
+                padding: T.space.lg,
+                borderBottom: i < filtered.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                borderLeft: `2px solid ${t.unread > 0 ? c.brass : "transparent"}`,
+                background: t.unread > 0 ? "rgba(192,138,62,.04)" : "transparent",
+                transition: "background .2s",
+              }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="flex items-center gap-2" style={{ marginBottom: 3 }}>
+                  <span className="truncate" style={{
+                    fontSize: T.size.sm,
+                    color: c.text,
+                    fontWeight: t.unread > 0 ? 600 : 400,
+                  }}>
+                    {t.user?.name}
+                  </span>
+                  {t.unread > 0 && <StatusPill tone="brass">{t.unread}</StatusPill>}
+                </div>
+                {t.typing ? (
+                  <span className="flex items-center gap-2">
+                    <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
+                      <i /><i /><i />
+                    </span>
+                    <span className="mono" style={{
+                      fontSize: T.size.micro, letterSpacing: ".16em",
+                      textTransform: "uppercase", color: c.brass,
+                    }}>
+                      Typing
+                    </span>
+                  </span>
+                ) : (
+                  <p className="truncate" style={{ fontSize: T.size.xs, color: c.text3 }}>
+                    {t.lastFrom === "admin" && <span style={{ color: c.text4 }}>You: </span>}
+                    {t.lastKind === "image" ? "📷 Image"
+                      : t.lastKind === "video" ? "🎬 Video"
+                      : t.lastKind === "audio" ? "🎤 Voice note"
+                      : t.lastMessage}
+                  </p>
+                )}
+              </div>
 
-          <input ref={fileRef} type="file" accept="image/*" onChange={pickImage} style={{ display: "none" }} />
+              <div className="text-right shrink-0">
+                <p className="mono" style={{ fontSize: T.size.micro, color: c.text4 }}>
+                  {fmtWhen(t.lastAt)}
+                </p>
+              </div>
 
-          <button type="button" onClick={() => fileRef.current?.click()} aria-label="Attach image"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
-            <ImageIcon size={16} />
-          </button>
-
-          <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
-
-          <button type="button" onClick={() => videoRef.current?.click()} aria-label="Attach video"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
-            <Video size={16} />
-          </button>
-
-          <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
-
-          <button type="button" onClick={() => videoRef.current?.click()} aria-label="Attach video"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
-            <Video size={16} />
-          </button>
-
-          <button type="button" onClick={startRecording} aria-label="Record voice note"
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 44, height: 44, background: c.fill, border: `1px solid ${c.line}`, color: c.text3 }}>
-            <Mic size={16} />
-          </button>
-
-          <textarea
-            value={draft}
-            onChange={(e) => { setDraft(e.target.value); onTyping?.(e.target.value); }}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
-            rows={1}
-            placeholder={placeholder}
-            style={{ ...inputStyle, flex: 1, resize: "none", minHeight: 44, maxHeight: 120, lineHeight: 1.5 }} />
-
-          <button type="submit" disabled={!canSend || sending} aria-label="Send"
-            className="flex items-center justify-center shrink-0"
-            style={{
-              width: 46, height: 44,
-              background: canSend ? c.gain : c.fill,
-              border: `1px solid ${canSend ? c.gain : c.line}`,
-              color: canSend ? "#fff" : c.text4,
-              transition: "background .2s, border-color .2s, color .2s",
-            }}>
-            {sending ? <Spinner size={14} tone="#fff" /> : <Send size={15} />}
-          </button>
-        </form>
+              <ChevronRight size={14} style={{ color: c.text4, flexShrink: 0 }} />
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
