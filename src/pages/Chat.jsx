@@ -8,6 +8,17 @@ import { Composer, MessageBody } from "./ChatComposer.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const POLL_MS = 4000;
+
+/* Tappable openers so nobody has to think about how to start */
+const QUICK_ASKS = [
+  { key: "deposit",          label: "How do I make a deposit?" },
+  { key: "deposit_missing",  label: "My deposit hasn't shown up yet" },
+  { key: "withdraw",         label: "How do I withdraw my funds?" },
+  { key: "withdraw_missing", label: "Where is my withdrawal?" },
+  { key: "plans",            label: "How do the investment plans work?" },
+  { key: "verification",     label: "I need help with verification" },
+  { key: "other",            label: "Something else" },
+];
 const c = T.color;
 
 export default function Chat() {
@@ -20,6 +31,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [supportTyping, setSupportTyping] = useState(false);
+  const [showAsks, setShowAsks] = useState(true);
 
   const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
@@ -76,7 +88,7 @@ export default function Chat() {
     if (stickToBottom.current) scrollToBottom(!loading);
   }, [messages, loading]);
 
-  const send = async ({ body, file, kind, duration }) => {
+  const send = async ({ body, file, kind, duration, ask }) => {
     if (sending) return;
     if (!body && !file) return;
 
@@ -90,7 +102,7 @@ export default function Chat() {
       from: "user",
       body: body || "",
       kind: kind || "text",
-      mediaUrl: kind === "image" ? file : "",
+      mediaUrl: (kind === "image" || kind === "video") ? file : "",
       mediaDuration: duration || 0,
       createdAt: new Date().toISOString(),
       pending: true,
@@ -98,8 +110,11 @@ export default function Chat() {
     setMessages((m) => [...m, temp]);
 
     try {
-      const res = await axios.post(`${API_URL}/api/chat`, { body, file, kind, duration }, auth);
-      setMessages((m) => m.map((x) => (x._id === temp._id ? res.data.message : x)));
+      const res = await axios.post(`${API_URL}/api/chat`, { body, file, kind, duration, ask }, auth);
+      setMessages((m) => {
+        const swapped = m.map((x) => (x._id === temp._id ? res.data.message : x));
+        return res.data.autoMessage ? [...swapped, res.data.autoMessage] : swapped;
+      });
     } catch (err) {
       setMessages((m) => m.map((x) => (x._id === temp._id ? { ...x, failed: true, pending: false } : x)));
       setError(
@@ -181,12 +196,32 @@ export default function Chat() {
               <Spinner size={24} />
             </div>
           ) : messages.length === 0 ? (
-            <div style={{ padding: `${T.space.xl}px 0` }}>
-              <EmptyState
-                icon={<MessageSquare size={20} />}
-                title="No messages yet"
-                text="Ask us anything — deposits, withdrawals, verification, or how a plan works."
-              />
+            <div style={{ padding: `${T.space.lg}px 0` }}>
+              <div style={{ textAlign: "center", marginBottom: T.space.xl }}>
+                <MessageSquare size={20} style={{ color: c.text4, marginBottom: 10 }} />
+                <p className="display" style={{ fontSize: T.size.base, color: c.text, marginBottom: 6 }}>
+                  How can we help?
+                </p>
+                <p style={{ fontSize: T.size.xs, color: c.text3, maxWidth: 300, margin: "0 auto", lineHeight: 1.6 }}>
+                  Tap one of these, or type your own message below.
+                </p>
+              </div>
+
+              <div style={{ border: `1px solid ${c.line}` }}>
+                {QUICK_ASKS.map((q, i) => (
+                  <button key={q.key}
+                    onClick={() => send({ body: q.label, file: null, kind: "text", duration: 0, ask: q.key })}
+                    className="w-full text-left hover-fill flex items-center justify-between gap-3"
+                    style={{
+                      padding: `13px ${T.space.lg}px`,
+                      borderBottom: i < QUICK_ASKS.length - 1 ? `1px solid ${c.lineSoft}` : "none",
+                      transition: "background .2s",
+                    }}>
+                    <span style={{ fontSize: T.size.sm, color: c.text2 }}>{q.label}</span>
+                    <Send size={12} style={{ color: c.text4, flexShrink: 0 }} />
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             Object.entries(groups).map(([day, items]) => (
@@ -222,7 +257,7 @@ export default function Chat() {
                             fontSize: T.size.micro, letterSpacing: ".18em",
                             textTransform: "uppercase", color: c.gain, marginBottom: 5,
                           }}>
-                            {m.senderName || "Support"}
+                            {m.isAuto ? "Assistant · automated" : (m.senderName || "Support")}
                           </p>
                         )}
 
@@ -233,7 +268,7 @@ export default function Chat() {
                           padding: "11px 14px",
                           opacity: m.pending ? .6 : 1,
                         }}>
-                          <MessageBody m={m} />
+                          <MessageBody m={m} onAction={(path) => navigate(path)} />
                         </div>
 
                         <p className="mono" style={{
