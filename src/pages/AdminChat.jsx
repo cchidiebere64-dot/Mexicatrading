@@ -63,8 +63,11 @@ export default function AdminChat() {
       setOpenUser(res.data.user);
       setMessages((prev) => {
         const next = res.data.messages || [];
-        if (prev.length === next.length && prev[prev.length - 1]?._id === next[next.length - 1]?._id) return prev;
-        return next;
+        const local = prev.filter((m) => m.pending || m.failed);
+        if (!local.length &&
+            prev.length === next.length &&
+            prev[prev.length - 1]?._id === next[next.length - 1]?._id) return prev;
+        return [...next, ...local];
       });
       setMemberTyping(Boolean(res.data.memberTyping));
       setError("");
@@ -120,7 +123,11 @@ export default function AdminChat() {
       loadThreads(true);
     } catch (err) {
       setMessages((m) => m.map((x) => (x._id === temp._id ? { ...x, failed: true, pending: false } : x)));
-      setError(err.response?.data?.message || "Reply didn't send.");
+      setError(
+        err.response?.status === 413
+          ? "That file is too large for the server. Try a shorter recording or smaller image."
+          : err.response?.data?.message || `Reply didn't send (${err.response?.status || "no response"}).`
+      );
     } finally {
       setSending(false);
     }
