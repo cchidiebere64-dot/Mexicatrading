@@ -16,7 +16,45 @@ const fmt = (s) => {
 /* ═══════════════════════════════════════════════════════════
    Bubble content — text, image, video or voice note
 ═══════════════════════════════════════════════════════════ */
+/* The little quoted strip above a reply */
+export function QuotedBlock({ body, from, kind, onPaper }) {
+  const label =
+    kind === "image" ? "Photo" :
+    kind === "video" ? "Video" :
+    kind === "audio" ? "Voice note" :
+    (body || "").length > 90 ? body.slice(0, 90) + "…" : body;
+
+  return (
+    <div style={{
+      borderLeft: `2px solid ${from === "user" ? c.text3 : c.gain}`,
+      background: "rgba(255,255,255,.04)",
+      padding: "7px 10px",
+      marginBottom: 9,
+      borderRadius: 4,
+    }}>
+      <p className="mono" style={{
+        fontSize: T.size.micro, letterSpacing: ".16em", textTransform: "uppercase",
+        color: from === "user" ? c.text4 : c.gain, marginBottom: 3,
+      }}>
+        {from === "user" ? "You" : "Support"}
+      </p>
+      <p style={{
+        fontSize: T.size.xs, color: c.text3, lineHeight: 1.5,
+        display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+      }}>
+        {label}
+      </p>
+    </div>
+  );
+}
+
 export function MessageBody({ m, onAction }) {
+  const Quote = () =>
+    m.replyToBody || m.replyToKind ? (
+      <QuotedBlock body={m.replyToBody} from={m.replyToFrom} kind={m.replyToKind} />
+    ) : null;
+
   const Action = () =>
     m.actionLabel && m.actionPath ? (
       <button
@@ -39,6 +77,7 @@ export function MessageBody({ m, onAction }) {
   if (m.kind === "image" && m.mediaUrl) {
     return (
       <>
+        <Quote />
         <a href={m.mediaUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
           <img src={m.mediaUrl} alt="Attachment"
             style={{
@@ -58,6 +97,7 @@ export function MessageBody({ m, onAction }) {
   if (m.kind === "video" && m.mediaUrl) {
     return (
       <>
+        <Quote />
         <video
           src={m.mediaUrl}
           poster={m.mediaThumb || undefined}
@@ -83,11 +123,17 @@ export function MessageBody({ m, onAction }) {
   }
 
   if (m.kind === "audio" && m.mediaUrl) {
-    return <VoicePlayer src={m.mediaUrl} duration={m.mediaDuration} caption={m.body} />;
+    return (
+      <>
+        <Quote />
+        <VoicePlayer src={m.mediaUrl} duration={m.mediaDuration} caption={m.body} />
+      </>
+    );
   }
 
   return (
     <>
+      <Quote />
       <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, whiteSpace: "pre-line", wordBreak: "break-word" }}>
         {m.body}
       </p>
@@ -164,7 +210,7 @@ function VoicePlayer({ src, duration, caption }) {
    Composer
    onSend({ body, file, kind, duration })
 ═══════════════════════════════════════════════════════════ */
-export function Composer({ onSend, sending, placeholder = "Type your message", onTyping }) {
+export function Composer({ onSend, sending, placeholder = "Type your message", onTyping, replyTo, onCancelReply }) {
   const [draft, setDraft] = useState("");
   const [preview, setPreview] = useState(null);   // { dataUrl, kind, duration, name }
   const [recording, setRecording] = useState(false);
@@ -331,6 +377,9 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
       file: preview?.dataUrl || null,
       kind: preview?.kind || "text",
       duration: preview?.duration || 0,
+      replyTo: replyTo
+        ? { id: replyTo._id, body: replyTo.body, from: replyTo.from, kind: replyTo.kind }
+        : null,
     });
 
     setDraft("");
@@ -349,6 +398,33 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
 
   return (
     <div style={{ borderTop: `1px solid ${c.line}` }}>
+
+      {/* ── Replying to ── */}
+      {replyTo && (
+        <div className="flex items-start gap-3"
+          style={{ padding: "10px 14px", borderBottom: `1px solid ${c.lineSoft}`, background: "rgba(255,255,255,.02)" }}>
+          <div style={{ width: 2, alignSelf: "stretch", background: c.gain, flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p className="mono" style={{
+              fontSize: T.size.micro, letterSpacing: ".18em",
+              textTransform: "uppercase", color: c.gain, marginBottom: 3,
+            }}>
+              Replying to {replyTo.from === "user" ? "yourself" : "Support"}
+            </p>
+            <p className="truncate" style={{ fontSize: T.size.xs, color: c.text3 }}>
+              {replyTo.kind === "image" ? "Photo"
+                : replyTo.kind === "video" ? "Video"
+                : replyTo.kind === "audio" ? "Voice note"
+                : replyTo.body}
+            </p>
+          </div>
+          <button type="button" onClick={onCancelReply} aria-label="Cancel reply"
+            className="flex items-center justify-center shrink-0"
+            style={{ width: 28, height: 28, background: c.fill, border: `1px solid ${c.line}`, color: c.text4 }}>
+            <X size={12} />
+          </button>
+        </div>
+      )}
 
       {micError && (
         <p style={{ fontSize: T.size.xs, color: c.loss, padding: `10px ${T.space.md}px 0`, lineHeight: 1.5 }}>
