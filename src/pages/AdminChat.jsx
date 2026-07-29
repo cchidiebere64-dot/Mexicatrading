@@ -37,11 +37,22 @@ export default function AdminChat() {
   const [error, setError] = useState("");
   const [memberTyping, setMemberTyping] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
+  const [flashId, setFlashId] = useState(null);
 
   const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
   const listRef = useRef(null);
   const stick = useRef(true);
+  const msgRefs = useRef({});
+
+  const jumpTo = (id) => {
+    const el = msgRefs.current[id];
+    if (!el) return;
+    stick.current = false;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setFlashId(id);
+    setTimeout(() => setFlashId(null), 1400);
+  };
 
   /* ── Threads ── */
   const loadThreads = useCallback(async (silent = false) => {
@@ -255,7 +266,7 @@ export default function AdminChat() {
 
         {/* thread */}
         <div style={{ border: `1px solid ${c.line}`, display: "flex", flexDirection: "column", height: "56vh", minHeight: 320 }}>
-          <div ref={listRef} onScroll={onScroll} style={{ flex: 1, overflowY: "auto", padding: T.space.lg }}>
+          <div ref={listRef} onScroll={onScroll} style={{ flex: 1, overflowY: "auto", padding: "26px 20px 12px" }}>
             {loadingThread ? (
               <div className="flex justify-center" style={{ padding: T.space.xxxl }}><Spinner size={24} /></div>
             ) : messages.length === 0 ? (
@@ -263,7 +274,7 @@ export default function AdminChat() {
             ) : (
               Object.entries(groups).map(([day, items]) => (
                 <div key={day}>
-                  <div className="flex items-center gap-3" style={{ margin: `${T.space.md}px 0 ${T.space.lg}px` }}>
+                  <div className="flex items-center gap-3" style={{ margin: "26px 0 30px" }}>
                     <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
                     <span className="mono" style={{ fontSize: T.size.micro, letterSpacing: ".2em", textTransform: "uppercase", color: c.text4 }}>
                       {day}
@@ -275,9 +286,18 @@ export default function AdminChat() {
                     const mine = m.from === "admin";
                     return (
                       <motion.div key={m._id}
+                        ref={(el) => { if (el) msgRefs.current[m._id] = el; }}
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .22 }}
-                        style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: T.space.md }}>
-                        <div style={{ maxWidth: "min(74%, 460px)", minWidth: 0 }}>
+                        style={{
+                          display: "flex",
+                          justifyContent: mine ? "flex-end" : "flex-start",
+                          marginBottom: 26,
+                          background: flashId === m._id ? "rgba(63,143,95,.10)" : "transparent",
+                          borderRadius: 12,
+                          padding: flashId === m._id ? "8px 6px" : "0",
+                          transition: "background .4s ease, padding .3s ease",
+                        }}>
+                        <div style={{ maxWidth: "min(78%, 520px)", minWidth: 0 }}>
                           {mine && m.isAuto && (
                             <p className="mono" style={{
                               fontSize: T.size.micro, letterSpacing: ".18em",
@@ -304,16 +324,16 @@ export default function AdminChat() {
                           <div style={{
                             background: mine ? "rgba(63,143,95,.14)" : "#242A33",
                             border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
-                            padding: "12px 15px",
+                            padding: "15px 18px",
                             borderRadius: mine ? "16px 16px 6px 16px" : "16px 16px 16px 6px",
                             opacity: m.pending ? .65 : 1,
                           }}>
-                            <MessageBody m={m} />
+                            <MessageBody m={m} onJump={jumpTo} />
                           </div>
                           </MessageActions>
                           <div className="flex items-center gap-1.5"
                             style={{
-                              marginTop: 5,
+                              marginTop: 7,
                               justifyContent: mine ? "flex-end" : "flex-start",
                             }}>
                             <span className="mono" style={{
