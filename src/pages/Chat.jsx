@@ -6,7 +6,7 @@ import {
   ArrowLeft, Send, MessageSquare, AlertTriangle,
   HelpCircle, ChevronDown, ShieldCheck, Check, CheckCheck, Clock,
 } from "lucide-react";
-import { T, ThemeStyles, Spinner, inputStyle } from "./system.jsx";
+import { T, ThemeStyles, Spinner } from "./system.jsx";
 import { Composer, MessageBody } from "./ChatComposer.jsx";
 import MessageActions from "./MessageActions.jsx";
 
@@ -14,14 +14,24 @@ const API_URL = "https://mexicatradingbackend.onrender.com";
 const POLL_MS = 4000;
 const c = T.color;
 
-/* Chat gets its own, slightly lifted surfaces so the conversation
-   reads as a space rather than a panel dropped on a black page. */
 const SURFACE = {
-  page:   "#15181E",   // warmer and lighter than the app ink
-  thread: "#1A1E25",   // the conversation itself
-  mine:   "rgba(63,143,95,.16)",
+  page:   "#15181E",
+  thread: "#1A1E25",
+  mine:   "rgba(63,143,95,.15)",
   theirs: "#242A33",
 };
+
+/* Aztec step-fret (greca) — the motif woven into Mexican textiles.
+   Kept very faint so it reads as texture, never as decoration. */
+const GRECA = encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+  <g fill="none" stroke="#3F8F5F" stroke-width="1.4" stroke-linecap="square">
+    <path d="M6 30h12V18h12v12h12V18h12"/>
+    <path d="M6 42h24V30"/>
+    <path d="M42 42h12V30"/>
+    <path d="M18 6v6h24V6"/>
+  </g>
+</svg>`.replace(/\s+/g, " ").trim());
 
 const QUICK_ASKS = [
   { key: "deposit",          label: "How do I make a deposit?" },
@@ -35,17 +45,16 @@ const QUICK_ASKS = [
 
 function AskList({ onPick, compact }) {
   return (
-    <div style={{ border: `1px solid ${c.line}` }}>
+    <div style={{ border: `1px solid ${c.line}`, background: SURFACE.page }}>
       {QUICK_ASKS.map((q, i) => (
-        <button key={q.key}
-          onClick={() => onPick(q)}
+        <button key={q.key} onClick={() => onPick(q)}
           className="w-full text-left hover-fill flex items-center justify-between gap-3"
           style={{
-            padding: compact ? `12px 16px` : `15px 18px`,
+            padding: compact ? "11px 15px" : "13px 16px",
             borderBottom: i < QUICK_ASKS.length - 1 ? `1px solid ${c.lineSoft}` : "none",
             transition: "background .2s",
           }}>
-          <span style={{ fontSize: T.size.sm, color: c.text2, lineHeight: 1.5 }}>{q.label}</span>
+          <span style={{ fontSize: 14, color: c.text2, lineHeight: 1.45 }}>{q.label}</span>
           <Send size={12} style={{ color: c.text4, flexShrink: 0 }} />
         </button>
       ))}
@@ -53,13 +62,11 @@ function AskList({ onPick, compact }) {
   );
 }
 
-/* Delivery state, WhatsApp-style:
-   sending → clock, sent → one tick, seen → two green ticks */
 function Ticks({ m }) {
-  if (m.failed)  return <AlertTriangle size={11} style={{ color: c.loss }} />;
-  if (m.pending) return <Clock size={11} style={{ color: c.text4 }} />;
-  if (m.isRead)  return <CheckCheck size={12} style={{ color: c.gain }} />;
-  return <Check size={12} style={{ color: c.text4 }} />;
+  if (m.failed)  return <AlertTriangle size={10} style={{ color: c.loss }} />;
+  if (m.pending) return <Clock size={10} style={{ color: c.text4 }} />;
+  if (m.isRead)  return <CheckCheck size={11} style={{ color: c.gain }} />;
+  return <Check size={11} style={{ color: c.text4 }} />;
 }
 
 export default function Chat() {
@@ -80,14 +87,13 @@ export default function Chat() {
   const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
   const listRef = useRef(null);
-  const stickToBottom = useRef(true);
+  const stick = useRef(true);
   const msgRefs = useRef({});
 
-  /* Tap a quote to jump back to what it's quoting */
   const jumpTo = (id) => {
     const el = msgRefs.current[id];
     if (!el) return;
-    stickToBottom.current = false;
+    stick.current = false;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     setFlashId(id);
     setTimeout(() => setFlashId(null), 1400);
@@ -96,7 +102,7 @@ export default function Chat() {
   const onScroll = () => {
     const el = listRef.current;
     if (!el) return;
-    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 140;
+    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 130;
   };
 
   const load = useCallback(async (silent = false) => {
@@ -108,15 +114,13 @@ export default function Chat() {
         const local = prev.filter((m) => m.pending || m.failed);
         if (!local.length &&
             prev.length === next.length &&
-            prev[prev.length - 1]?._id === next[next.length - 1]?._id) {
-          return prev;
-        }
+            prev[prev.length - 1]?._id === next[next.length - 1]?._id) return prev;
         return [...next, ...local];
       });
       setSupportTyping(Boolean(res.data.supportTyping));
       setError("");
     } catch (err) {
-      if (!silent) setError("Couldn't load your messages. Tap refresh to retry.");
+      if (!silent) setError("Couldn't load your messages.");
     } finally {
       if (!silent) setLoading(false);
     }
@@ -132,7 +136,7 @@ export default function Chat() {
   }, [load]);
 
   useEffect(() => {
-    if (stickToBottom.current) {
+    if (stick.current) {
       bottomRef.current?.scrollIntoView({ behavior: loading ? "auto" : "smooth", block: "end" });
     }
   }, [messages, loading, supportTyping]);
@@ -143,7 +147,7 @@ export default function Chat() {
 
     setSending(true);
     setError("");
-    stickToBottom.current = true;
+    stick.current = true;
 
     const temp = {
       _id: `temp-${Date.now()}`,
@@ -152,6 +156,9 @@ export default function Chat() {
       kind: kind || "text",
       mediaUrl: kind === "image" ? file : "",
       mediaDuration: duration || 0,
+      replyToBody: quoted?.body || "",
+      replyToFrom: quoted?.from || "",
+      replyToKind: quoted?.kind || "",
       createdAt: new Date().toISOString(),
       pending: true,
     };
@@ -159,7 +166,11 @@ export default function Chat() {
     setReplyTo(null);
 
     try {
-      const res = await axios.post(`${API_URL}/api/chat`, { body, file, kind, duration, ask, replyTo: quoted }, auth);
+      const res = await axios.post(
+        `${API_URL}/api/chat`,
+        { body, file, kind, duration, ask, replyTo: quoted },
+        auth
+      );
       setMessages((m) => {
         const swapped = m.map((x) => (x._id === temp._id ? res.data.message : x));
         return res.data.autoMessage ? [...swapped, res.data.autoMessage] : swapped;
@@ -168,8 +179,8 @@ export default function Chat() {
       setMessages((m) => m.map((x) => (x._id === temp._id ? { ...x, failed: true, pending: false } : x)));
       setError(
         err.response?.status === 413
-          ? "That file is too large for the server. Try a shorter recording or smaller image."
-          : err.response?.data?.message || `Didn't send (${err.response?.status || "no response"}). Check your connection.`
+          ? "That file is too large. Try a shorter recording or smaller image."
+          : err.response?.data?.message || "Message didn't send. Check your connection."
       );
     } finally {
       setSending(false);
@@ -177,7 +188,6 @@ export default function Chat() {
   };
 
   const react = async (msg, emoji) => {
-    // optimistic
     setMessages((list) => list.map((x) =>
       x._id === msg._id
         ? { ...x, reactions: [...(x.reactions || []).filter(r => r.by !== "user"), { by: "user", emoji }] }
@@ -210,7 +220,7 @@ export default function Chat() {
   const initial = (me?.name || "?").charAt(0).toUpperCase();
 
   return (
-    <div className="ui" style={{ background: SURFACE.page, color: c.text, minHeight: "100vh" }}>
+    <div className="ui" style={{ background: SURFACE.page, color: c.text, height: "100dvh", overflow: "hidden" }}>
       <ThemeStyles />
       <style>{`
         .chat-dots i {
@@ -224,246 +234,228 @@ export default function Chat() {
         @media (prefers-reduced-motion: reduce) { .chat-dots i { animation: none; opacity:.6; } }
       `}</style>
 
-      {/* ══ HEADER ══ */}
-      <header style={{
-        position: "sticky", top: 0, zIndex: 20,
-        background: SURFACE.page,
-        borderBottom: `1px solid ${c.line}`,
+      <div className="mx-auto" style={{
+        maxWidth: 780, height: "100%",
+        display: "flex", flexDirection: "column",
       }}>
-        <div className="mx-auto flex items-center gap-3" style={{ maxWidth: 760, padding: "14px 18px" }}>
+
+        {/* ══ HEADER ══ */}
+        <header className="flex items-center gap-3 shrink-0"
+          style={{ padding: "11px 16px", borderBottom: `1px solid ${c.line}`, background: SURFACE.page }}>
           <button onClick={() => navigate("/dashboard")} aria-label="Back"
             className="flex items-center justify-center shrink-0"
-            style={{ width: 36, height: 36, border: `1px solid ${c.line}`, background: c.fill, color: c.text2 }}>
+            style={{ width: 34, height: 34, border: `1px solid ${c.line}`, background: c.fill, color: c.text2 }}>
             <ArrowLeft size={15} />
           </button>
 
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 className="display" style={{ fontSize: T.size.lg, lineHeight: 1.1 }}>
-              MexicaTrading Support
-            </h1>
+            <h1 className="display" style={{ fontSize: 17, lineHeight: 1.15 }}>MexicaTrading Support</h1>
             <p className="mono flex items-center gap-1.5" style={{
-              fontSize: T.size.micro, letterSpacing: ".16em",
-              textTransform: "uppercase", color: c.gain, marginTop: 3,
+              fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase",
+              color: c.gain, marginTop: 2,
             }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: c.gain, display: "inline-block" }} />
               {supportTyping ? "Typing…" : "Online"}
             </p>
           </div>
 
-          <ShieldCheck size={15} style={{ color: c.text4, flexShrink: 0 }} />
-        </div>
-      </header>
+          <ShieldCheck size={14} style={{ color: c.text4, flexShrink: 0 }} />
+        </header>
 
-      {/* ══ CONVERSATION ══ */}
-      <div className="mx-auto" style={{
-        maxWidth: 760,
-        display: "flex", flexDirection: "column",
-        height: "calc(100dvh - 66px)",
-      }}>
-
+        {/* ══ THREAD ══ */}
         <div ref={listRef} onScroll={onScroll}
           style={{
-            flex: 1, overflowY: "auto",
+            flex: 1, minHeight: 0, overflowY: "auto",
             background: SURFACE.thread,
-            padding: "28px 20px 12px",
+            backgroundImage: `url("data:image/svg+xml,${GRECA}")`,
+            backgroundSize: "60px 60px",
+            backgroundBlendMode: "overlay",
+            padding: "14px 14px 6px",
           }}>
 
-          {loading ? (
-            <div className="flex justify-center" style={{ padding: 60 }}>
-              <Spinner size={24} />
-            </div>
-          ) : messages.length === 0 ? (
-            <div style={{ padding: "24px 0", maxWidth: 460, margin: "0 auto" }}>
-              <div style={{ textAlign: "center", marginBottom: 28 }}>
-                <div className="flex items-center justify-center mx-auto"
-                  style={{
-                    width: 52, height: 52, marginBottom: 16,
-                    background: "rgba(63,143,95,.12)", border: `1px solid rgba(63,143,95,.28)`,
-                  }}>
-                  <MessageSquare size={21} style={{ color: c.gain }} />
-                </div>
-                <p className="display" style={{ fontSize: 24, color: c.text, marginBottom: 8, lineHeight: 1.2 }}>
-                  How can we help?
-                </p>
-                <p style={{ fontSize: T.size.sm, color: c.text3, lineHeight: 1.7 }}>
-                  Pick a question below, or write your own. You can send photos,
-                  screen recordings and voice notes too.
-                </p>
+          {/* keeps the pattern from overpowering the text */}
+          <div style={{ position: "relative" }}>
+
+            {loading ? (
+              <div className="flex justify-center" style={{ padding: 50 }}>
+                <Spinner size={22} />
               </div>
-
-              <AskList onPick={(q) =>
-                send({ body: q.label, file: null, kind: "text", duration: 0, ask: q.key })
-              } />
-            </div>
-          ) : (
-            Object.entries(groups).map(([day, items]) => (
-              <div key={day}>
-                <div className="flex items-center gap-3" style={{ margin: "26px 0 30px" }}>
-                  <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
-                  <span className="mono" style={{
-                    fontSize: T.size.micro, letterSpacing: ".2em",
-                    textTransform: "uppercase", color: c.text4,
-                  }}>
-                    {day}
-                  </span>
-                  <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
+            ) : messages.length === 0 ? (
+              <div style={{ padding: "14px 0", maxWidth: 440, margin: "0 auto" }}>
+                <div style={{ textAlign: "center", marginBottom: 18 }}>
+                  <div className="flex items-center justify-center mx-auto"
+                    style={{
+                      width: 44, height: 44, marginBottom: 12,
+                      background: "rgba(63,143,95,.14)", border: `1px solid rgba(63,143,95,.3)`,
+                    }}>
+                    <MessageSquare size={19} style={{ color: c.gain }} />
+                  </div>
+                  <p className="display" style={{ fontSize: 21, color: c.text, marginBottom: 6, lineHeight: 1.2 }}>
+                    How can we help?
+                  </p>
+                  <p style={{ fontSize: 13, color: c.text3, lineHeight: 1.6 }}>
+                    Pick a question, or write your own. Photos, screen recordings
+                    and voice notes all work here.
+                  </p>
                 </div>
+                <AskList onPick={(q) => send({ body: q.label, kind: "text", ask: q.key })} />
+              </div>
+            ) : (
+              Object.entries(groups).map(([day, items]) => (
+                <div key={day}>
+                  <div className="flex items-center gap-3" style={{ margin: "10px 0 14px" }}>
+                    <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
+                    <span className="mono" style={{
+                      fontSize: 9, letterSpacing: ".2em", textTransform: "uppercase",
+                      color: c.text4, background: SURFACE.thread, padding: "0 8px",
+                    }}>
+                      {day}
+                    </span>
+                    <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
+                  </div>
 
-                {items.map((m, idx) => {
-                  const mine = m.from === "user";
-                  const prev = items[idx - 1];
-                  const grouped = prev && prev.from === m.from;
+                  {items.map((m, idx) => {
+                    const mine = m.from === "user";
+                    const prev = items[idx - 1];
+                    const grouped = prev && prev.from === m.from;
 
-                  return (
-                    <motion.div
-                      key={m._id}
-                      ref={(el) => { if (el) msgRefs.current[m._id] = el; }}
-                      initial={{ opacity: 0, y: 8, x: mine ? 10 : -10 }}
-                      animate={{ opacity: 1, y: 0, x: 0 }}
-                      transition={{ duration: .26, ease: [.22, 1, .36, 1] }}
-                      style={{
-                        display: "flex",
-                        gap: 12,
-                        justifyContent: mine ? "flex-end" : "flex-start",
-                        marginBottom: grouped ? 10 : 28,
-                        background: flashId === m._id ? "rgba(63,143,95,.10)" : "transparent",
-                        borderRadius: 12,
-                        padding: flashId === m._id ? "8px 6px" : "0",
-                        transition: "background .4s ease, padding .3s ease",
-                      }}>
+                    return (
+                      <motion.div
+                        key={m._id}
+                        ref={(el) => { if (el) msgRefs.current[m._id] = el; }}
+                        initial={{ opacity: 0, y: 6, x: mine ? 8 : -8 }}
+                        animate={{ opacity: 1, y: 0, x: 0 }}
+                        transition={{ duration: .22, ease: [.22, 1, .36, 1] }}
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          justifyContent: mine ? "flex-end" : "flex-start",
+                          marginBottom: grouped ? 4 : 12,
+                          background: flashId === m._id ? "rgba(63,143,95,.12)" : "transparent",
+                          borderRadius: 10,
+                          padding: flashId === m._id ? "6px 4px" : "0",
+                          transition: "background .4s ease, padding .3s ease",
+                        }}>
 
-                      {/* avatar — support side only, and only on the first of a run */}
-                      {!mine && (
-                        <div style={{ width: 34, flexShrink: 0 }}>
-                          {!grouped && (
-                            <div className="flex items-center justify-center"
-                              style={{
-                                width: 34, height: 34, borderRadius: "50%",
-                                background: "rgba(63,143,95,.14)",
-                                border: `1px solid rgba(63,143,95,.3)`,
-                              }}>
-                              <span className="mono" style={{ fontSize: 12, color: c.gain, fontWeight: 600 }}>
-                                {m.isAuto ? "A" : "S"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div style={{ maxWidth: "min(78%, 520px)", minWidth: 0 }}>
-                        {!mine && !grouped && (
-                          <p className="mono" style={{
-                            fontSize: T.size.micro, letterSpacing: ".18em",
-                            textTransform: "uppercase",
-                            color: m.isAuto ? c.brass : c.gain,
-                            marginBottom: 9,
-                          }}>
-                            {m.isAuto ? "Assistant · automated" : (m.senderName || "Support")}
-                          </p>
+                        {!mine && (
+                          <div style={{ width: 26, flexShrink: 0 }}>
+                            {!grouped && (
+                              <div className="flex items-center justify-center"
+                                style={{
+                                  width: 26, height: 26, borderRadius: "50%",
+                                  background: "rgba(63,143,95,.15)",
+                                  border: `1px solid rgba(63,143,95,.3)`,
+                                }}>
+                                <span className="mono" style={{ fontSize: 10, color: c.gain, fontWeight: 600 }}>
+                                  {m.isAuto ? "A" : "S"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         )}
 
-                        <MessageActions
-                          m={m}
-                          mine={mine}
-                          canDelete={false}
-                          onReply={(msg) => setReplyTo(msg)}
-                          onReact={react}>
-                        <div style={{
-                          background: mine ? SURFACE.mine : SURFACE.theirs,
-                          border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
-                          padding: "15px 18px",
-                          opacity: m.pending ? .65 : 1,
-                          // Rounded, with the corner nearest the speaker squared off —
-                          // the classic messenger shape. Softened when grouped.
-                          borderRadius: mine
-                            ? (grouped ? "16px 6px 6px 16px" : "16px 16px 6px 16px")
-                            : (grouped ? "6px 16px 16px 6px" : "16px 16px 16px 6px"),
-                          transition: "opacity .2s",
-                        }}>
-                          <MessageBody m={m} onAction={(path) => navigate(path)} onJump={jumpTo} />
-                        </div>
-                        </MessageActions>
-
-                        <div className="flex items-center gap-1.5"
-                          style={{
-                            marginTop: 7,
-                            justifyContent: mine ? "flex-end" : "flex-start",
-                            paddingLeft: mine ? 0 : 4,
-                            paddingRight: mine ? 4 : 0,
-                          }}>
-                          <span className="mono" style={{
-                            fontSize: T.size.micro,
-                            color: m.failed ? c.loss : c.text4,
-                          }}>
-                            {m.failed ? "Not sent" : m.pending ? "Sending" : fmtTime(m.createdAt)}
-                          </span>
-                          {mine && <Ticks m={m} />}
-                        </div>
-                      </div>
-
-                      {/* your own initial, mirrored */}
-                      {mine && (
-                        <div style={{ width: 34, flexShrink: 0 }}>
-                          {!grouped && (
-                            <div className="flex items-center justify-center"
-                              style={{
-                                width: 34, height: 34, borderRadius: "50%",
-                                background: "rgba(255,255,255,.05)",
-                                border: `1px solid ${c.line}`,
-                              }}>
-                              <span className="mono" style={{ fontSize: 12, color: c.text3, fontWeight: 600 }}>
-                                {initial}
-                              </span>
-                            </div>
+                        <div style={{ maxWidth: "min(76%, 480px)", minWidth: 0 }}>
+                          {!mine && !grouped && (
+                            <p className="mono" style={{
+                              fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase",
+                              color: m.isAuto ? c.brass : c.gain, marginBottom: 4,
+                            }}>
+                              {m.isAuto ? "Assistant" : (m.senderName || "Support")}
+                            </p>
                           )}
+
+                          <MessageActions
+                            m={m} mine={mine} canDelete={false}
+                            onReply={(x) => setReplyTo(x)}
+                            onReact={react}>
+                            <div style={{
+                              background: mine ? SURFACE.mine : SURFACE.theirs,
+                              border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
+                              padding: "9px 13px",
+                              borderRadius: mine
+                                ? (grouped ? "14px 5px 5px 14px" : "14px 14px 5px 14px")
+                                : (grouped ? "5px 14px 14px 5px" : "14px 14px 14px 5px"),
+                              opacity: m.pending ? .65 : 1,
+                            }}>
+                              <MessageBody m={m} onAction={(p) => navigate(p)} onJump={jumpTo} />
+                            </div>
+                          </MessageActions>
+
+                          <div className="flex items-center gap-1"
+                            style={{
+                              marginTop: 3,
+                              justifyContent: mine ? "flex-end" : "flex-start",
+                            }}>
+                            <span className="mono" style={{
+                              fontSize: 10, color: m.failed ? c.loss : c.text4,
+                            }}>
+                              {m.failed ? "Not sent" : m.pending ? "Sending" : fmtTime(m.createdAt)}
+                            </span>
+                            {mine && <Ticks m={m} />}
+                          </div>
                         </div>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
-            ))
-          )}
 
-          {supportTyping && messages.length > 0 && (
-            <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
-              <div style={{ width: 34, flexShrink: 0 }} />
-              <div style={{
-                background: SURFACE.theirs,
-                border: `1px solid rgba(255,255,255,.08)`,
-                padding: "14px 17px",
-                borderRadius: "16px 16px 16px 6px",
-                display: "flex", alignItems: "center", gap: 8,
-              }}>
-                <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
-                  <i /><i /><i />
-                </span>
-                <span className="mono" style={{
-                  fontSize: T.size.micro, letterSpacing: ".16em",
-                  textTransform: "uppercase", color: c.text3,
+                        {mine && (
+                          <div style={{ width: 26, flexShrink: 0 }}>
+                            {!grouped && (
+                              <div className="flex items-center justify-center"
+                                style={{
+                                  width: 26, height: 26, borderRadius: "50%",
+                                  background: "rgba(255,255,255,.06)",
+                                  border: `1px solid ${c.line}`,
+                                }}>
+                                <span className="mono" style={{ fontSize: 10, color: c.text3, fontWeight: 600 }}>
+                                  {initial}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+
+            {supportTyping && messages.length > 0 && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 26, flexShrink: 0 }} />
+                <div style={{
+                  background: SURFACE.theirs,
+                  border: `1px solid rgba(255,255,255,.08)`,
+                  padding: "9px 13px",
+                  borderRadius: "14px 14px 14px 5px",
+                  display: "flex", alignItems: "center", gap: 7,
                 }}>
-                  Support is typing
-                </span>
+                  <span className="chat-dots" style={{ display: "inline-flex", gap: 3 }}>
+                    <i /><i /><i />
+                  </span>
+                  <span className="mono" style={{
+                    fontSize: 9, letterSpacing: ".16em", textTransform: "uppercase", color: c.text3,
+                  }}>
+                    Typing
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div ref={bottomRef} />
+            <div ref={bottomRef} />
+          </div>
         </div>
 
         {/* ══ COMMON QUESTIONS ══ */}
         {messages.length > 0 && (
-          <div style={{ background: SURFACE.page, borderTop: `1px solid ${c.line}` }}>
+          <div className="shrink-0" style={{ background: SURFACE.page, borderTop: `1px solid ${c.line}` }}>
             <button onClick={() => setShowAsks((v) => !v)}
               className="w-full flex items-center justify-between hover-fill"
-              style={{ padding: "12px 18px", transition: "background .2s" }}>
+              style={{ padding: "9px 16px", transition: "background .2s" }}>
               <span className="mono flex items-center gap-2" style={{
-                fontSize: T.size.tiny, letterSpacing: ".16em",
-                textTransform: "uppercase", color: c.text3,
+                fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase", color: c.text3,
               }}>
-                <HelpCircle size={12} /> Common questions
+                <HelpCircle size={11} /> Common questions
               </span>
-              <ChevronDown size={13} style={{
+              <ChevronDown size={12} style={{
                 color: c.text4,
                 transform: showAsks ? "rotate(180deg)" : "none",
                 transition: "transform .2s",
@@ -476,12 +468,12 @@ export default function Chat() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: .25, ease: [.22, 1, .36, 1] }}
+                  transition={{ duration: .24, ease: [.22, 1, .36, 1] }}
                   style={{ overflow: "hidden", borderTop: `1px solid ${c.lineSoft}` }}>
-                  <div style={{ padding: 14, maxHeight: 260, overflowY: "auto" }}>
+                  <div style={{ padding: 10, maxHeight: 230, overflowY: "auto" }}>
                     <AskList compact onPick={(q) => {
                       setShowAsks(false);
-                      send({ body: q.label, file: null, kind: "text", duration: 0, ask: q.key });
+                      send({ body: q.label, kind: "text", ask: q.key });
                     }} />
                   </div>
                 </motion.div>
@@ -491,7 +483,7 @@ export default function Chat() {
         )}
 
         {/* ══ COMPOSER ══ */}
-        <div style={{ background: SURFACE.page }}>
+        <div className="shrink-0" style={{ background: SURFACE.page }}>
           <Composer
             sending={sending}
             onSend={send}
@@ -508,17 +500,10 @@ export default function Chat() {
 
           {error && (
             <p className="flex items-center gap-1.5"
-              style={{ fontSize: T.size.xs, color: c.loss, padding: "0 18px 10px" }}>
+              style={{ fontSize: 12, color: c.loss, padding: "0 16px 8px" }}>
               <AlertTriangle size={11} /> {error}
             </p>
           )}
-
-          <p style={{
-            fontSize: T.size.micro, color: c.text4,
-            textAlign: "center", padding: "0 18px 14px", lineHeight: 1.6,
-          }}>
-            We'll never ask for your password, withdrawal PIN, card number or CVV.
-          </p>
         </div>
       </div>
     </div>
