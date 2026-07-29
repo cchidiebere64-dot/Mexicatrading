@@ -75,11 +75,23 @@ export default function Chat() {
   const [supportTyping, setSupportTyping] = useState(false);
   const [showAsks, setShowAsks] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
+  const [flashId, setFlashId] = useState(null);
 
   const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
   const listRef = useRef(null);
   const stickToBottom = useRef(true);
+  const msgRefs = useRef({});
+
+  /* Tap a quote to jump back to what it's quoting */
+  const jumpTo = (id) => {
+    const el = msgRefs.current[id];
+    if (!el) return;
+    stickToBottom.current = false;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setFlashId(id);
+    setTimeout(() => setFlashId(null), 1400);
+  };
 
   const onScroll = () => {
     const el = listRef.current;
@@ -253,7 +265,7 @@ export default function Chat() {
           style={{
             flex: 1, overflowY: "auto",
             background: SURFACE.thread,
-            padding: "22px 18px 8px",
+            padding: "28px 20px 12px",
           }}>
 
           {loading ? (
@@ -286,7 +298,7 @@ export default function Chat() {
           ) : (
             Object.entries(groups).map(([day, items]) => (
               <div key={day}>
-                <div className="flex items-center gap-3" style={{ margin: "18px 0 22px" }}>
+                <div className="flex items-center gap-3" style={{ margin: "26px 0 30px" }}>
                   <div style={{ flex: 1, borderBottom: `1px solid ${c.lineSoft}` }} />
                   <span className="mono" style={{
                     fontSize: T.size.micro, letterSpacing: ".2em",
@@ -305,27 +317,32 @@ export default function Chat() {
                   return (
                     <motion.div
                       key={m._id}
+                      ref={(el) => { if (el) msgRefs.current[m._id] = el; }}
                       initial={{ opacity: 0, y: 8, x: mine ? 10 : -10 }}
                       animate={{ opacity: 1, y: 0, x: 0 }}
                       transition={{ duration: .26, ease: [.22, 1, .36, 1] }}
                       style={{
                         display: "flex",
-                        gap: 10,
+                        gap: 12,
                         justifyContent: mine ? "flex-end" : "flex-start",
-                        marginBottom: grouped ? 8 : 20,
+                        marginBottom: grouped ? 10 : 28,
+                        background: flashId === m._id ? "rgba(63,143,95,.10)" : "transparent",
+                        borderRadius: 12,
+                        padding: flashId === m._id ? "8px 6px" : "0",
+                        transition: "background .4s ease, padding .3s ease",
                       }}>
 
                       {/* avatar — support side only, and only on the first of a run */}
                       {!mine && (
-                        <div style={{ width: 30, flexShrink: 0 }}>
+                        <div style={{ width: 34, flexShrink: 0 }}>
                           {!grouped && (
                             <div className="flex items-center justify-center"
                               style={{
-                                width: 30, height: 30, borderRadius: "50%",
+                                width: 34, height: 34, borderRadius: "50%",
                                 background: "rgba(63,143,95,.14)",
                                 border: `1px solid rgba(63,143,95,.3)`,
                               }}>
-                              <span className="mono" style={{ fontSize: 11, color: c.gain, fontWeight: 600 }}>
+                              <span className="mono" style={{ fontSize: 12, color: c.gain, fontWeight: 600 }}>
                                 {m.isAuto ? "A" : "S"}
                               </span>
                             </div>
@@ -333,13 +350,13 @@ export default function Chat() {
                         </div>
                       )}
 
-                      <div style={{ maxWidth: "min(72%, 460px)", minWidth: 0 }}>
+                      <div style={{ maxWidth: "min(78%, 520px)", minWidth: 0 }}>
                         {!mine && !grouped && (
                           <p className="mono" style={{
                             fontSize: T.size.micro, letterSpacing: ".18em",
                             textTransform: "uppercase",
                             color: m.isAuto ? c.brass : c.gain,
-                            marginBottom: 7,
+                            marginBottom: 9,
                           }}>
                             {m.isAuto ? "Assistant · automated" : (m.senderName || "Support")}
                           </p>
@@ -354,7 +371,7 @@ export default function Chat() {
                         <div style={{
                           background: mine ? SURFACE.mine : SURFACE.theirs,
                           border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
-                          padding: "12px 15px",
+                          padding: "15px 18px",
                           opacity: m.pending ? .65 : 1,
                           // Rounded, with the corner nearest the speaker squared off —
                           // the classic messenger shape. Softened when grouped.
@@ -363,13 +380,13 @@ export default function Chat() {
                             : (grouped ? "6px 16px 16px 6px" : "16px 16px 16px 6px"),
                           transition: "opacity .2s",
                         }}>
-                          <MessageBody m={m} onAction={(path) => navigate(path)} />
+                          <MessageBody m={m} onAction={(path) => navigate(path)} onJump={jumpTo} />
                         </div>
                         </MessageActions>
 
                         <div className="flex items-center gap-1.5"
                           style={{
-                            marginTop: 5,
+                            marginTop: 7,
                             justifyContent: mine ? "flex-end" : "flex-start",
                             paddingLeft: mine ? 0 : 4,
                             paddingRight: mine ? 4 : 0,
@@ -386,15 +403,15 @@ export default function Chat() {
 
                       {/* your own initial, mirrored */}
                       {mine && (
-                        <div style={{ width: 30, flexShrink: 0 }}>
+                        <div style={{ width: 34, flexShrink: 0 }}>
                           {!grouped && (
                             <div className="flex items-center justify-center"
                               style={{
-                                width: 30, height: 30, borderRadius: "50%",
+                                width: 34, height: 34, borderRadius: "50%",
                                 background: "rgba(255,255,255,.05)",
                                 border: `1px solid ${c.line}`,
                               }}>
-                              <span className="mono" style={{ fontSize: 11, color: c.text3, fontWeight: 600 }}>
+                              <span className="mono" style={{ fontSize: 12, color: c.text3, fontWeight: 600 }}>
                                 {initial}
                               </span>
                             </div>
@@ -409,12 +426,12 @@ export default function Chat() {
           )}
 
           {supportTyping && messages.length > 0 && (
-            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-              <div style={{ width: 30, flexShrink: 0 }} />
+            <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
+              <div style={{ width: 34, flexShrink: 0 }} />
               <div style={{
                 background: SURFACE.theirs,
                 border: `1px solid rgba(255,255,255,.08)`,
-                padding: "12px 15px",
+                padding: "14px 17px",
                 borderRadius: "16px 16px 16px 6px",
                 display: "flex", alignItems: "center", gap: 8,
               }}>
