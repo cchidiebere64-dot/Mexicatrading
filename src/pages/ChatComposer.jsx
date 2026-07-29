@@ -86,7 +86,7 @@ export function MessageBody({ m, onAction, onJump }) {
         <a href={m.mediaUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
           <img src={m.mediaUrl} alt="Attachment"
             style={{
-              display: "block", maxWidth: "100%", maxHeight: 260,
+              display: "block", maxWidth: "100%", maxHeight: 200,
               objectFit: "cover", border: `1px solid ${c.line}`,
             }} />
         </a>
@@ -110,7 +110,7 @@ export function MessageBody({ m, onAction, onJump }) {
           playsInline
           preload="metadata"
           style={{
-            display: "block", width: "100%", maxWidth: 320, maxHeight: 300,
+            display: "block", width: "100%", maxWidth: 280, maxHeight: 220,
             border: `1px solid ${c.line}`, background: "#000",
           }} />
         {m.mediaDuration > 0 && (
@@ -396,7 +396,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
   const canSend = Boolean(draft.trim() || preview);
 
   const toolBtn = {
-    width: 50, height: 50,
+    width: 42, height: 42,
     background: c.fill, border: `1px solid ${c.line}`, color: c.text3,
     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
   };
@@ -517,7 +517,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
           <style>{`@keyframes recPulse { 0%,100% { opacity:1; } 50% { opacity:.25; } }`}</style>
         </div>
       ) : (
-        <form onSubmit={submit} style={{ padding: 14, display: "flex", gap: 9, alignItems: "flex-end" }}>
+        <form onSubmit={submit} style={{ padding: 10, display: "flex", gap: 7, alignItems: "flex-end" }}>
 
           <input ref={imageRef} type="file" accept="image/*" onChange={pickImage} style={{ display: "none" }} />
           <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
@@ -540,12 +540,12 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
             rows={1}
             placeholder={placeholder}
-            style={{ ...inputStyle, flex: 1, resize: "none", minHeight: 50, maxHeight: 140, lineHeight: 1.6, fontSize: 15, padding: "14px 16px" }} />
+            style={{ ...inputStyle, flex: 1, resize: "none", minHeight: 42, maxHeight: 110, lineHeight: 1.5, fontSize: 14, padding: "11px 13px" }} />
 
           <button type="submit" disabled={!canSend || sending} aria-label="Send"
             className="flex items-center justify-center shrink-0"
             style={{
-              width: 52, height: 50,
+              width: 44, height: 42,
               background: canSend ? c.gain : c.fill,
               border: `1px solid ${canSend ? c.gain : c.line}`,
               color: canSend ? "#fff" : c.text4,
