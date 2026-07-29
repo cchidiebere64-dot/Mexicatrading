@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { T, ThemeStyles, Spinner, StatusPill, EmptyState, inputStyle, LedgerRow } from "./system.jsx";
 import { Composer, MessageBody } from "./ChatComposer.jsx";
+import MessageActions from "./MessageActions.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const THREADS_POLL = 8000;
@@ -35,6 +36,7 @@ export default function AdminChat() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [memberTyping, setMemberTyping] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
 
   const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
@@ -105,7 +107,7 @@ export default function AdminChat() {
   };
 
   /* ── Reply ── */
-  const reply = async ({ body, file, kind, duration }) => {
+  const reply = async ({ body, file, kind, duration, replyTo: quoted }) => {
     if (sending || !openUser) return;
     if (!body && !file) return;
 
@@ -124,9 +126,10 @@ export default function AdminChat() {
       pending: true,
     };
     setMessages((m) => [...m, temp]);
+    setReplyTo(null);
 
     try {
-      const res = await axios.post(`${API_URL}/api/chat/admin/${openUser._id}`, { body, file, kind, duration }, auth);
+      const res = await axios.post(`${API_URL}/api/chat/admin/${openUser._id}`, { body, file, kind, duration, replyTo: quoted }, auth);
       setMessages((m) => m.map((x) => (x._id === temp._id ? res.data.message : x)));
       loadThreads(true);
     } catch (err) {
@@ -141,10 +144,34 @@ export default function AdminChat() {
     }
   };
 
+  const react = async (msg, emoji) => {
+    setMessages((list) => list.map((x) =>
+      x._id === msg._id
+        ? { ...x, reactions: [...(x.reactions || []).filter(r => r.by !== "admin"), { by: "admin", emoji }] }
+        : x
+    ));
+    try {
+      await axios.post(`${API_URL}/api/chat/${msg._id}/react`, { emoji }, auth);
+    } catch {
+      loadThread(openUser._id, true);
+    }
+  };
+
+  const removeMessage = async (msg) => {
+    setMessages((list) => list.filter((x) => x._id !== msg._id));
+    try {
+      await axios.delete(`${API_URL}/api/chat/admin/message/${msg._id}`, auth);
+      loadThreads(true);
+    } catch {
+      setError("Couldn't delete that message.");
+      loadThread(openUser._id, true);
+    }
+  };
+
   const closeThread = () => {
     setOpenUser(null);
     setMessages([]);
-    setDraft("");
+    setReplyTo(null);
     loadThreads(true);
   };
 
@@ -267,6 +294,13 @@ export default function AdminChat() {
                               {openUser.name?.split(" ")[0]}
                             </p>
                           )}
+                          <MessageActions
+                            m={m}
+                            mine={mine}
+                            canDelete
+                            onReply={(x) => setReplyTo(x)}
+                            onReact={react}
+                            onDelete={removeMessage}>
                           <div style={{
                             background: mine ? "rgba(63,143,95,.14)" : "#242A33",
                             border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
@@ -276,6 +310,7 @@ export default function AdminChat() {
                           }}>
                             <MessageBody m={m} />
                           </div>
+                          </MessageActions>
                           <div className="flex items-center gap-1.5"
                             style={{
                               marginTop: 5,
@@ -325,6 +360,8 @@ export default function AdminChat() {
             sending={sending}
             placeholder="Type your reply"
             onSend={reply}
+            replyTo={replyTo}
+            onCancelReply={() => setReplyTo(null)}
             onTyping={(val) => {
               const now = Date.now();
               if (val && openUser && now - typingSentAt.current > 3000) {
