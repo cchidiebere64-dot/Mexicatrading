@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { T, ThemeStyles, Spinner, inputStyle } from "./system.jsx";
 import { Composer, MessageBody } from "./ChatComposer.jsx";
+import MessageActions from "./MessageActions.jsx";
 
 const API_URL = "https://mexicatradingbackend.onrender.com";
 const POLL_MS = 4000;
@@ -73,6 +74,7 @@ export default function Chat() {
   const [error, setError] = useState("");
   const [supportTyping, setSupportTyping] = useState(false);
   const [showAsks, setShowAsks] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
 
   const typingSentAt = useRef(0);
   const bottomRef = useRef(null);
@@ -123,7 +125,7 @@ export default function Chat() {
     }
   }, [messages, loading, supportTyping]);
 
-  const send = async ({ body, file, kind, duration, ask }) => {
+  const send = async ({ body, file, kind, duration, ask, replyTo: quoted }) => {
     if (sending) return;
     if (!body && !file) return;
 
@@ -142,9 +144,10 @@ export default function Chat() {
       pending: true,
     };
     setMessages((m) => [...m, temp]);
+    setReplyTo(null);
 
     try {
-      const res = await axios.post(`${API_URL}/api/chat`, { body, file, kind, duration, ask }, auth);
+      const res = await axios.post(`${API_URL}/api/chat`, { body, file, kind, duration, ask, replyTo: quoted }, auth);
       setMessages((m) => {
         const swapped = m.map((x) => (x._id === temp._id ? res.data.message : x));
         return res.data.autoMessage ? [...swapped, res.data.autoMessage] : swapped;
@@ -158,6 +161,20 @@ export default function Chat() {
       );
     } finally {
       setSending(false);
+    }
+  };
+
+  const react = async (msg, emoji) => {
+    // optimistic
+    setMessages((list) => list.map((x) =>
+      x._id === msg._id
+        ? { ...x, reactions: [...(x.reactions || []).filter(r => r.by !== "user"), { by: "user", emoji }] }
+        : x
+    ));
+    try {
+      await axios.post(`${API_URL}/api/chat/${msg._id}/react`, { emoji }, auth);
+    } catch {
+      load(true);
     }
   };
 
@@ -328,6 +345,12 @@ export default function Chat() {
                           </p>
                         )}
 
+                        <MessageActions
+                          m={m}
+                          mine={mine}
+                          canDelete={false}
+                          onReply={(msg) => setReplyTo(msg)}
+                          onReact={react}>
                         <div style={{
                           background: mine ? SURFACE.mine : SURFACE.theirs,
                           border: `1px solid ${mine ? "rgba(63,143,95,.3)" : "rgba(255,255,255,.08)"}`,
@@ -342,6 +365,7 @@ export default function Chat() {
                         }}>
                           <MessageBody m={m} onAction={(path) => navigate(path)} />
                         </div>
+                        </MessageActions>
 
                         <div className="flex items-center gap-1.5"
                           style={{
@@ -454,6 +478,8 @@ export default function Chat() {
           <Composer
             sending={sending}
             onSend={send}
+            replyTo={replyTo}
+            onCancelReply={() => setReplyTo(null)}
             onTyping={(val) => {
               const now = Date.now();
               if (val && now - typingSentAt.current > 3000) {
