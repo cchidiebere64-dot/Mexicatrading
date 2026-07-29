@@ -17,7 +17,7 @@ const fmt = (s) => {
    Bubble content — text, image, video or voice note
 ═══════════════════════════════════════════════════════════ */
 /* The little quoted strip above a reply */
-export function QuotedBlock({ body, from, kind, onPaper }) {
+export function QuotedBlock({ body, from, kind, onJump }) {
   const label =
     kind === "image" ? "Photo" :
     kind === "video" ? "Video" :
@@ -25,34 +25,39 @@ export function QuotedBlock({ body, from, kind, onPaper }) {
     (body || "").length > 90 ? body.slice(0, 90) + "…" : body;
 
   return (
-    <div style={{
-      borderLeft: `2px solid ${from === "user" ? c.text3 : c.gain}`,
-      background: "rgba(255,255,255,.04)",
-      padding: "7px 10px",
-      marginBottom: 9,
-      borderRadius: 4,
-    }}>
+    <button
+      onClick={(e) => { e.stopPropagation(); onJump?.(); }}
+      className="w-full text-left"
+      style={{
+        borderLeft: `3px solid ${from === "user" ? c.text3 : c.gain}`,
+        background: "rgba(255,255,255,.05)",
+        padding: "10px 13px",
+        marginBottom: 12,
+        borderRadius: 6,
+        cursor: onJump ? "pointer" : "default",
+      }}>
       <p className="mono" style={{
-        fontSize: T.size.micro, letterSpacing: ".16em", textTransform: "uppercase",
-        color: from === "user" ? c.text4 : c.gain, marginBottom: 3,
+        fontSize: T.size.tiny, letterSpacing: ".16em", textTransform: "uppercase",
+        color: from === "user" ? c.text3 : c.gain, marginBottom: 5,
       }}>
         {from === "user" ? "You" : "Support"}
       </p>
       <p style={{
-        fontSize: T.size.xs, color: c.text3, lineHeight: 1.5,
+        fontSize: T.size.sm, color: c.text3, lineHeight: 1.6,
         display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
         overflow: "hidden",
       }}>
         {label}
       </p>
-    </div>
+    </button>
   );
 }
 
-export function MessageBody({ m, onAction }) {
+export function MessageBody({ m, onAction, onJump }) {
   const Quote = () =>
     m.replyToBody || m.replyToKind ? (
-      <QuotedBlock body={m.replyToBody} from={m.replyToFrom} kind={m.replyToKind} />
+      <QuotedBlock body={m.replyToBody} from={m.replyToFrom} kind={m.replyToKind}
+        onJump={m.replyToId ? () => onJump?.(m.replyToId) : undefined} />
     ) : null;
 
   const Action = () =>
@@ -61,8 +66,8 @@ export function MessageBody({ m, onAction }) {
         onClick={() => onAction?.(m.actionPath)}
         className="mono w-full flex items-center justify-center gap-2"
         style={{
-          marginTop: 12,
-          padding: "11px 0",
+          marginTop: 14,
+          padding: "13px 0",
           fontSize: T.size.tiny,
           letterSpacing: ".14em",
           textTransform: "uppercase",
@@ -86,7 +91,7 @@ export function MessageBody({ m, onAction }) {
             }} />
         </a>
         {m.body && (
-          <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
+          <p style={{ fontSize: T.size.base, color: c.text, lineHeight: 1.72, marginTop: 10, whiteSpace: "pre-line" }}>
             {m.body}
           </p>
         )}
@@ -114,7 +119,7 @@ export function MessageBody({ m, onAction }) {
           </p>
         )}
         {m.body && (
-          <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
+          <p style={{ fontSize: T.size.base, color: c.text, lineHeight: 1.72, marginTop: 10, whiteSpace: "pre-line" }}>
             {m.body}
           </p>
         )}
@@ -134,7 +139,7 @@ export function MessageBody({ m, onAction }) {
   return (
     <>
       <Quote />
-      <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, whiteSpace: "pre-line", wordBreak: "break-word" }}>
+      <p style={{ fontSize: T.size.base, color: c.text, lineHeight: 1.72, whiteSpace: "pre-line", wordBreak: "break-word" }}>
         {m.body}
       </p>
       <Action />
@@ -198,7 +203,7 @@ function VoicePlayer({ src, duration, caption }) {
       <audio ref={audioRef} src={src} preload="metadata" style={{ display: "none" }} />
 
       {caption && (
-        <p style={{ fontSize: T.size.sm, color: c.text, lineHeight: 1.65, marginTop: 8, whiteSpace: "pre-line" }}>
+        <p style={{ fontSize: T.size.base, color: c.text, lineHeight: 1.72, marginTop: 10, whiteSpace: "pre-line" }}>
           {caption}
         </p>
       )}
@@ -391,7 +396,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
   const canSend = Boolean(draft.trim() || preview);
 
   const toolBtn = {
-    width: 44, height: 44,
+    width: 50, height: 50,
     background: c.fill, border: `1px solid ${c.line}`, color: c.text3,
     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
   };
@@ -512,7 +517,7 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
           <style>{`@keyframes recPulse { 0%,100% { opacity:1; } 50% { opacity:.25; } }`}</style>
         </div>
       ) : (
-        <form onSubmit={submit} style={{ padding: T.space.md, display: "flex", gap: 8, alignItems: "flex-end" }}>
+        <form onSubmit={submit} style={{ padding: 14, display: "flex", gap: 9, alignItems: "flex-end" }}>
 
           <input ref={imageRef} type="file" accept="image/*" onChange={pickImage} style={{ display: "none" }} />
           <input ref={videoRef} type="file" accept="video/*" onChange={pickVideo} style={{ display: "none" }} />
@@ -535,12 +540,12 @@ export function Composer({ onSend, sending, placeholder = "Type your message", o
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
             rows={1}
             placeholder={placeholder}
-            style={{ ...inputStyle, flex: 1, resize: "none", minHeight: 44, maxHeight: 120, lineHeight: 1.5 }} />
+            style={{ ...inputStyle, flex: 1, resize: "none", minHeight: 50, maxHeight: 140, lineHeight: 1.6, fontSize: 15, padding: "14px 16px" }} />
 
           <button type="submit" disabled={!canSend || sending} aria-label="Send"
             className="flex items-center justify-center shrink-0"
             style={{
-              width: 46, height: 44,
+              width: 52, height: 50,
               background: canSend ? c.gain : c.fill,
               border: `1px solid ${canSend ? c.gain : c.line}`,
               color: canSend ? "#fff" : c.text4,
